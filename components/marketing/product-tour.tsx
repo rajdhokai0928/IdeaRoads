@@ -322,33 +322,33 @@ export function ProductTour() {
 
         <LoopStrip />
 
-        <div className="mt-16 space-y-16 lg:space-y-24">
-          {FRAMES.map(({ step, eyebrow, heading, caption, Mockup }, i) => (
-            <div
-              className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16"
-              key={step}
-            >
-              <div className={i % 2 === 1 ? "lg:order-2" : ""}>
-                <div className="flex items-center gap-3">
-                  <span className="mk-display flex size-9 items-center justify-center rounded-mk bg-brand-500 text-sm font-bold text-white shadow-mk-brand">
+        <div className="mt-16 divide-y divide-border border-t border-border">
+          {FRAMES.map(({ step, heading, caption, Mockup }, index) => {
+            const isEven = index % 2 === 0;
+            return (
+              <div
+                className={`grid gap-8 py-12 lg:items-start lg:gap-16 ${
+                  isEven ? "lg:grid-cols-[5fr_7fr]" : "lg:grid-cols-[7fr_5fr]"
+                }`}
+                key={step}
+              >
+                {/* Caption */}
+                <div className={`lg:pt-2 ${isEven ? "" : "lg:order-last"}`}>
+                  <span className="font-mono text-2xs text-muted-foreground">
                     {step}
                   </span>
-                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">
-                    {eyebrow}
-                  </span>
+                  <h3 className="mt-2 font-bold text-xl text-foreground">
+                    {heading}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {caption}
+                  </p>
                 </div>
-                <h3 className="mk-display mt-5 text-2xl font-bold text-ink sm:text-3xl">
-                  {heading}
-                </h3>
-                <p className="mt-3 max-w-md text-base leading-7 text-ink-soft">
-                  {caption}
-                </p>
-              </div>
-              <div className={i % 2 === 1 ? "lg:order-1" : ""}>
+                {/* Mockup */}
                 <Mockup />
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

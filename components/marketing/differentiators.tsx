@@ -22,7 +22,7 @@ export function Differentiators() {
   return (
     <section className="bg-background">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
-        <p className="font-bold text-xs uppercase tracking-eyebrow text-success">
+        <p className="font-bold text-xs uppercase tracking-eyebrow text-brand-500">
           Why Different
         </p>
 

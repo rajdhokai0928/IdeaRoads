@@ -9,7 +9,6 @@ import { Hero } from "@/components/marketing/hero";
 import { LiveDemo } from "@/components/marketing/live-demo";
 import { LogosStrip } from "@/components/marketing/logos-strip";
 import { Nav } from "@/components/marketing/nav";
-import { OpenSource } from "@/components/marketing/open-source";
 import { ProblemFraming } from "@/components/marketing/problem-framing";
 import { ProductTour } from "@/components/marketing/product-tour";
 import { SocialProof } from "@/components/marketing/social-proof";
@@ -25,6 +24,9 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const session = await getCurrentSession();
+  if (session) {
+    redirect("/dashboard");
+  }
   if (session) {
     redirect("/dashboard");
   }
@@ -46,7 +48,6 @@ export default async function HomePage() {
         <LiveDemo />
         <Comparison />
         <SocialProof />
-        <OpenSource />
         <FinalCta />
       </main>
       <Footer />

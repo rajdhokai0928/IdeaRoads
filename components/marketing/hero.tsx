@@ -1,7 +1,7 @@
-import { ArrowRight, Sparkles, Star } from "lucide-react";
-import { CtaButton } from "@/components/marketing/cta-button";
+import { Star } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { HeroMockup } from "@/components/marketing/hero-mockup";
-import { GITHUB_REPO_URL } from "@/config/platform";
 
 const AVATARS = [
   { initials: "AM", tint: "from-brand-500 to-grape-500" },
@@ -12,27 +12,60 @@ const AVATARS = [
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-canvas">
-      {/* Ambient background */}
-      <div aria-hidden="true" className="mk-aura absolute inset-0" />
-      <div
-        aria-hidden="true"
-        className="mk-grid absolute inset-0 mask-[radial-gradient(70%_55%_at_50%_0%,black,transparent)]"
-      />
-
-      <div className="relative mx-auto max-w-7xl px-5 pt-16 pb-20 sm:px-8 sm:pt-24 lg:pb-28">
-        <div className="grid items-center gap-14 lg:grid-cols-[1fr_1.05fr] lg:gap-12">
-          {/* Copy */}
-          <div className="max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50/70 px-3 py-1.5 text-xs font-semibold text-brand-700">
-              <Sparkles aria-hidden="true" className="size-3.5" />
-              Open source · MIT licensed · Self-hostable
-            </span>
-
-            <h1 className="mk-display mt-6 text-[2.75rem] font-extrabold leading-[1.05] text-ink sm:text-6xl">
-              Ship what your
-              <br className="hidden sm:block" /> users{" "}
-              <span className="mk-gradient-text">actually want.</span>
+    <section className="bg-background">
+      <div className="mx-auto max-w-6xl px-4 pt-10 pb-24 sm:px-8 sm:pt-14 sm:pb-32">
+        <div className="grid gap-12 lg:grid-cols-[5fr_7fr] lg:items-center lg:gap-16">
+          <div>
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+              .word-flip-container {
+                position: relative;
+                display: inline-flex;
+                flex-direction: column;
+                overflow: hidden;
+                height: 1.15em;
+                vertical-align: -0.15em;
+              }
+              .word-flip-list {
+                display: flex;
+                flex-direction: column;
+                white-space: nowrap;
+                animation: word-flip 9s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+              }
+              .word-flip-item {
+                height: 1.15em;
+                display: flex;
+                align-items: center;
+              }
+              @keyframes word-flip {
+                0% { transform: translateY(0); }
+                28% { transform: translateY(0); }
+                33% { transform: translateY(-1.15em); }
+                61% { transform: translateY(-1.15em); }
+                66% { transform: translateY(-2.3em); }
+                94% { transform: translateY(-2.3em); }
+                99% { transform: translateY(-3.45em); }
+                100% { transform: translateY(-3.45em); }
+              }
+              @media (prefers-reduced-motion: reduce) {
+                .word-flip-list {
+                  animation: none;
+                }
+              }
+            `,
+              }}
+            />
+            <h1 className="font-black text-5xl tracking-normal text-foreground sm:text-6xl lg:text-7xl">
+              Ship what your users actually{" "}
+              <span className="word-flip-container text-brand-400">
+                <span className="word-flip-list">
+                  <span className="word-flip-item">want.</span>
+                  <span className="word-flip-item">need.</span>
+                  <span className="word-flip-item">value.</span>
+                  <span className="word-flip-item">want.</span>
+                </span>
+              </span>
             </h1>
 
             <p className="mt-6 text-lg leading-8 text-ink-soft">
@@ -41,18 +74,24 @@ export function Hero() {
               One platform that closes the loop.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <CtaButton href="/login">
-                Start free
-                <ArrowRight
-                  aria-hidden="true"
-                  className="size-4 transition-transform duration-150 group-hover/cta:translate-x-0.5"
-                />
-              </CtaButton>
-              <CtaButton external href={GITHUB_REPO_URL} variant="secondary">
-                <Star aria-hidden="true" className="size-4" />
-                View on GitHub
-              </CtaButton>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button
+                asChild
+                className="btn-liquid"
+                data-text="Start Free"
+                size="lg"
+              >
+                <Link href="/login">Start Free</Link>
+              </Button>
+              <Button
+                asChild
+                className="btn-liquid"
+                data-text="View Demo"
+                size="lg"
+                variant="outline"
+              >
+                <Link href="#how-it-works">View Demo</Link>
+              </Button>
             </div>
 
             {/* Social proof */}

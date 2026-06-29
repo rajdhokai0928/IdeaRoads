@@ -1,6 +1,7 @@
 import { ChevronUp, MessageSquare, Settings2, Users } from "lucide-react";
 import type { Metadata } from "next";
-import { CtaButton } from "@/components/marketing/cta-button";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { FinalCta } from "@/components/marketing/final-cta";
 
 export const metadata: Metadata = {
@@ -291,10 +292,12 @@ export default function DemoPage() {
             what happens automatically when you ship. No account required.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <CtaButton href="/login">Start free</CtaButton>
-            <CtaButton href="/features" variant="secondary">
-              See all features
-            </CtaButton>
+            <Button asChild className="btn-liquid" data-text="Start Free" size="lg">
+              <Link href="/login">Start Free</Link>
+            </Button>
+            <Button asChild className="btn-liquid" data-text="See All Features" size="lg" variant="outline">
+              <Link href="/features">See All Features</Link>
+            </Button>
           </div>
         </div>
       </section>

@@ -1,5 +1,6 @@
 import { ArrowRight, Settings2, Users } from "lucide-react";
-import { CtaButton } from "@/components/marketing/cta-button";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 const BOARDS: {
   name: string;
@@ -96,36 +97,22 @@ export function LiveDemo() {
             <h2 className="mk-display mt-5 text-3xl font-bold text-ink sm:text-4xl">
               One workspace for your whole team.
             </h2>
-            <p className="mt-4 text-lg leading-8 text-ink-soft">
-              Your team gets a dashboard to manage boards, triage posts, and
-              track everything in one place — while users see a clean, branded
-              feedback portal.
+
+            <p className="mt-3 text-lg text-muted-foreground">
+              Your team gets a workspace dashboard to manage boards, triage
+              posts, and track everything in one place — while users see a
+              clean, branded feedback portal.
             </p>
-            <ul className="mt-7 space-y-3">
-              {[
-                "Manage every board from a single view",
-                "Roles & permissions for the whole team",
-                "Merge duplicates, change status, build the roadmap",
-              ].map((item) => (
-                <li
-                  className="flex items-start gap-3 text-sm text-ink"
-                  key={item}
-                >
-                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-500 text-[0.6rem] font-bold text-white">
-                    ✓
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-9">
-              <CtaButton href="/login">
-                Start free
-                <ArrowRight
-                  aria-hidden="true"
-                  className="size-4 transition-transform duration-150 group-hover/cta:translate-x-0.5"
-                />
-              </CtaButton>
+
+            <div className="mt-8">
+              <Button
+                asChild
+                className="btn-liquid"
+                data-text="Start Free"
+                size="lg"
+              >
+                <Link href="/login">Start Free</Link>
+              </Button>
             </div>
           </div>
 

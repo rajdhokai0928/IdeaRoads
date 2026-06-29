@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
-import { CtaButton } from "@/components/marketing/cta-button";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 type Benefit = { heading: string; body: string };
 
@@ -44,10 +45,12 @@ export function FeatureDetail({
             {subtitle}
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <CtaButton href="/login">Start free</CtaButton>
-            <CtaButton href="/demo" variant="secondary">
-              View demo
-            </CtaButton>
+            <Button asChild className="btn-liquid" data-text="Start Free" size="lg">
+              <Link href="/login">Start Free</Link>
+            </Button>
+            <Button asChild className="btn-liquid" data-text="View Demo" size="lg" variant="outline">
+              <Link href="/demo">View Demo</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -118,16 +121,12 @@ export function FeatureDetail({
               </h2>
               <p className="mt-4 text-lg text-white/80">{ctaSubtitle}</p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <CtaButton href="/login" variant="light">
-                  Start free
-                </CtaButton>
-                <CtaButton
-                  className="border border-white/25 bg-white/10 text-white shadow-none hover:bg-white/15"
-                  href="/features"
-                  variant="ghost"
-                >
-                  See all features
-                </CtaButton>
+                <Button asChild className="btn-liquid" data-text="Start Free" data-variant="light" size="lg">
+                  <Link href="/login">Start Free</Link>
+                </Button>
+                <Button asChild className="btn-liquid" data-text="See All Features" data-variant="ghost-light" size="lg">
+                  <Link href="/features">See All Features</Link>
+                </Button>
               </div>
             </div>
           </div>

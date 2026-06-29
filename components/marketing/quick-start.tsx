@@ -26,7 +26,7 @@ export function QuickStart() {
   return (
     <section className="bg-primary text-primary-foreground">
       <div className="mx-auto max-w-6xl px-4 py-24 sm:px-8">
-        <p className="font-bold text-xs uppercase tracking-eyebrow text-success-light">
+        <p className="font-bold text-xs uppercase tracking-eyebrow text-brand-300">
           Quick Start
         </p>
 
@@ -94,7 +94,7 @@ export function QuickStart() {
                 >
                   <span
                     aria-hidden="true"
-                    className="mt-0.5 font-mono text-success-light"
+                    className="mt-0.5 font-mono text-brand-300"
                   >
                     ✓
                   </span>

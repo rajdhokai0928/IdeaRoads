@@ -195,35 +195,35 @@ body {
    ════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* ── Brand — indigo → violet ───────────────────────────────── */
-  --color-brand-50: oklch(0.972 0.014 285);
-  --color-brand-100: oklch(0.94 0.03 285);
-  --color-brand-200: oklch(0.89 0.06 285);
-  --color-brand-300: oklch(0.81 0.11 285);
-  --color-brand-400: oklch(0.70 0.17 285);
-  --color-brand-500: oklch(0.605 0.21 283);
-  --color-brand-600: oklch(0.535 0.23 283);
-  --color-brand-700: oklch(0.47 0.21 284);
-  --color-brand-800: oklch(0.40 0.17 285);
-  --color-brand-900: oklch(0.32 0.12 286);
+  /* ── Brand — terracotta ─────────────────────────────────────── */
+  --color-brand-50: oklch(0.964 0.018 40);
+  --color-brand-100: oklch(0.936 0.030 40);
+  --color-brand-200: oklch(0.882 0.048 40);
+  --color-brand-300: oklch(0.800 0.065 40);
+  --color-brand-400: oklch(0.720 0.070 40);
+  --color-brand-500: oklch(0.575 0.092 40);
+  --color-brand-600: oklch(0.512 0.088 40);
+  --color-brand-700: oklch(0.452 0.082 40);
+  --color-brand-800: oklch(0.385 0.070 40);
+  --color-brand-900: oklch(0.308 0.055 40);
 
-  /* ── Companion accents (gradient partners) ─────────────────── */
-  --color-grape-400: oklch(0.66 0.22 312);
-  --color-grape-500: oklch(0.585 0.24 315);
-  --color-sun-300: oklch(0.86 0.13 80);
-  --color-sun-400: oklch(0.80 0.16 70);
-  --color-mint-400: oklch(0.74 0.14 165);
+  /* ── Companion accents (warm sienna / amber) ─────────────────── */
+  --color-grape-400: oklch(0.600 0.095 35);
+  --color-grape-500: oklch(0.528 0.100 32);
+  --color-sun-300: oklch(0.870 0.115 75);
+  --color-sun-400: oklch(0.800 0.145 68);
+  --color-mint-400: oklch(0.760 0.040 72);
 
-  /* ── Marketing neutrals (cool slate) ───────────────────────── */
-  --color-ink: oklch(0.215 0.024 283);
-  --color-ink-soft: oklch(0.34 0.02 283);
-  --color-slate-1: oklch(0.50 0.018 283);
-  --color-slate-2: oklch(0.62 0.014 283);
-  --color-canvas: oklch(0.986 0.004 285);
-  --color-canvas-2: oklch(0.966 0.006 285);
+  /* ── Marketing neutrals (warm) ──────────────────────────────── */
+  --color-ink: oklch(0.152 0.008 50);
+  --color-ink-soft: oklch(0.315 0.010 50);
+  --color-slate-1: oklch(0.435 0.010 50);
+  --color-slate-2: oklch(0.570 0.008 50);
+  --color-canvas: oklch(0.981 0.005 80);
+  --color-canvas-2: oklch(0.966 0.008 80);
   --color-surface: oklch(1 0 0);
-  --color-hairline: oklch(0.922 0.006 285);
-  --color-hairline-strong: oklch(0.87 0.008 285);
+  --color-hairline: oklch(0.912 0.010 75);
+  --color-hairline-strong: oklch(0.862 0.014 75);
 
   /* ── Radius ─────────────────────────────────────────────────── */
   --radius-mk-sm: 0.5rem;
@@ -233,16 +233,20 @@ body {
   --radius-mk-2xl: 2rem;
 
   /* ── Soft, premium elevation ───────────────────────────────── */
-  --shadow-mk-xs: 0 1px 2px 0 oklch(0.21 0.02 283 / 0.06);
-  --shadow-mk-sm: 0 1px 3px 0 oklch(0.21 0.02 283 / 0.08),
-    0 1px 2px -1px oklch(0.21 0.02 283 / 0.08);
-  --shadow-mk: 0 6px 20px -6px oklch(0.21 0.02 283 / 0.12),
-    0 2px 6px -2px oklch(0.21 0.02 283 / 0.08);
-  --shadow-mk-lg: 0 20px 44px -14px oklch(0.30 0.06 283 / 0.24),
-    0 8px 16px -8px oklch(0.21 0.02 283 / 0.12);
-  --shadow-mk-xl: 0 36px 70px -18px oklch(0.30 0.08 284 / 0.30),
-    0 14px 26px -14px oklch(0.21 0.02 283 / 0.14);
-  --shadow-mk-brand: 0 18px 44px -12px oklch(0.535 0.20 283 / 0.42);
+  --shadow-mk-xs: 0 1px 2px 0 oklch(0.21 0.012 50 / 0.06);
+  --shadow-mk-sm:
+    0 1px 3px 0 oklch(0.21 0.012 50 / 0.08),
+    0 1px 2px -1px oklch(0.21 0.012 50 / 0.08);
+  --shadow-mk:
+    0 6px 20px -6px oklch(0.21 0.012 50 / 0.10),
+    0 2px 6px -2px oklch(0.21 0.012 50 / 0.07);
+  --shadow-mk-lg:
+    0 20px 44px -14px oklch(0.25 0.020 50 / 0.20),
+    0 8px 16px -8px oklch(0.21 0.012 50 / 0.10);
+  --shadow-mk-xl:
+    0 36px 70px -18px oklch(0.25 0.025 50 / 0.26),
+    0 14px 26px -14px oklch(0.21 0.012 50 / 0.12);
+  --shadow-mk-brand: 0 18px 44px -12px oklch(0.575 0.092 40 / 0.30);
 }
 
 @layer components {
@@ -270,17 +274,17 @@ body {
     background:
       radial-gradient(
         58% 46% at 50% -4%,
-        oklch(0.605 0.21 283 / 0.18),
+        oklch(0.575 0.092 40 / 0.14),
         transparent 70%
       ),
       radial-gradient(
         40% 40% at 88% 8%,
-        oklch(0.585 0.24 315 / 0.13),
+        oklch(0.528 0.100 32 / 0.10),
         transparent 70%
       ),
       radial-gradient(
         42% 42% at 6% 22%,
-        oklch(0.80 0.16 70 / 0.10),
+        oklch(0.800 0.145 68 / 0.08),
         transparent 72%
       );
   }
@@ -288,14 +292,10 @@ body {
   /* Faint grid texture */
   .mk-grid {
     background-image:
-      linear-gradient(
-        to right,
-        oklch(0.45 0.10 283 / 0.05) 1px,
-        transparent 1px
-      ),
+      linear-gradient(to right, oklch(0.45 0.012 60 / 0.05) 1px, transparent 1px),
       linear-gradient(
         to bottom,
-        oklch(0.45 0.10 283 / 0.05) 1px,
+        oklch(0.45 0.012 60 / 0.05) 1px,
         transparent 1px
       );
     background-size: 56px 56px;
@@ -303,30 +303,30 @@ body {
 
   .mk-dotgrid {
     background-image: radial-gradient(
-      oklch(0.45 0.10 283 / 0.12) 1px,
+      oklch(0.45 0.012 60 / 0.12) 1px,
       transparent 1px
     );
     background-size: 22px 22px;
   }
 
-  /* Deep brand panel for closing CTA */
+  /* Deep editorial panel for closing CTA */
   .mk-cta-panel {
     background:
       radial-gradient(
         80% 130% at 0% 0%,
-        oklch(0.585 0.24 315 / 0.55),
+        oklch(0.575 0.092 40 / 0.35),
         transparent 58%
       ),
       radial-gradient(
         85% 120% at 100% 100%,
-        oklch(0.70 0.16 70 / 0.30),
+        oklch(0.720 0.070 40 / 0.18),
         transparent 55%
       ),
       linear-gradient(
         120deg,
-        var(--color-brand-700),
-        var(--color-brand-600) 52%,
-        var(--color-brand-500)
+        oklch(0.152 0.008 50),
+        oklch(0.218 0.006 50) 52%,
+        oklch(0.152 0.008 50)
       );
   }
 
@@ -351,9 +351,222 @@ body {
     background:
       radial-gradient(
         120% 80% at 50% 0%,
-        oklch(0.605 0.21 283 / 0.05),
+        oklch(0.575 0.092 40 / 0.04),
         transparent 60%
       ),
       var(--color-surface);
+  }
+}
+
+/* ── Liquid button mask animation ── */
+.btn-liquid {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  color: transparent !important;
+  border-radius: 14px;
+  transition:
+    border-color 0.5s ease,
+    transform 0.2s ease;
+}
+
+/* Default state text layer */
+.btn-liquid::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  pointer-events: none;
+  content: attr(data-text);
+  transition: color 0.5s ease;
+}
+
+/* Hover state mask layer */
+.btn-liquid::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  pointer-events: none;
+  content: attr(data-text);
+  -webkit-mask: url("https://raw.githubusercontent.com/robin-dela/css-mask-animation/master/img/urban-sprite.png");
+  mask: url("https://raw.githubusercontent.com/robin-dela/css-mask-animation/master/img/urban-sprite.png");
+  -webkit-mask-size: 3000% 100%;
+  mask-size: 3000% 100%;
+  -webkit-animation: btn-liquid-ani2 0.7s steps(29) forwards;
+  animation: btn-liquid-ani2 0.7s steps(29) forwards;
+}
+
+.btn-liquid:hover::before {
+  -webkit-animation: btn-liquid-ani 0.7s steps(29) forwards;
+  animation: btn-liquid-ani 0.7s steps(29) forwards;
+}
+
+/* Default (Primary) variant styling */
+.btn-liquid[data-variant="default"] {
+  background: transparent !important;
+  border: 1px solid var(--color-brand-500) !important;
+}
+
+.btn-liquid[data-variant="default"]::after {
+  color: var(--color-brand-500);
+}
+
+.btn-liquid[data-variant="default"]::before {
+  color: oklch(1 0 0);
+  background: var(--color-brand-500);
+}
+
+.btn-liquid[data-variant="default"]:hover {
+  border-color: var(--color-brand-700) !important;
+}
+
+/* Outline variant styling */
+.btn-liquid[data-variant="outline"] {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+}
+
+.btn-liquid[data-variant="outline"]::after {
+  color: var(--foreground);
+}
+
+.btn-liquid[data-variant="outline"]::before {
+  color: var(--color-brand-700);
+  background: var(--color-brand-50);
+}
+
+.btn-liquid[data-variant="outline"]:hover {
+  border-color: var(--color-brand-300) !important;
+}
+
+/* Light variant — white/translucent on dark backgrounds */
+.btn-liquid[data-variant="light"] {
+  background: transparent !important;
+  border: 1px solid oklch(1 0 0 / 0.35) !important;
+}
+
+.btn-liquid[data-variant="light"]::after {
+  color: oklch(1 0 0);
+}
+
+.btn-liquid[data-variant="light"]::before {
+  color: var(--color-brand-700);
+  background: oklch(1 0 0);
+}
+
+.btn-liquid[data-variant="light"]:hover {
+  border-color: oklch(1 0 0 / 0.55) !important;
+}
+
+/* Ghost-light variant — subtle ghost on dark backgrounds */
+.btn-liquid[data-variant="ghost-light"] {
+  background: transparent !important;
+  border: 1px solid oklch(1 0 0 / 0.15) !important;
+}
+
+.btn-liquid[data-variant="ghost-light"]::after {
+  color: oklch(1 0 0 / 0.70);
+}
+
+.btn-liquid[data-variant="ghost-light"]::before {
+  color: oklch(1 0 0 / 0.90);
+  background: oklch(1 0 0 / 0.10);
+}
+
+.btn-liquid[data-variant="ghost-light"]:hover {
+  border-color: oklch(1 0 0 / 0.30) !important;
+}
+
+/* Ghost variant styling */
+.btn-liquid[data-variant="ghost"] {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+}
+
+.btn-liquid[data-variant="ghost"]::after {
+  color: var(--muted-foreground);
+}
+
+.btn-liquid[data-variant="ghost"]::before {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+/* Keyframes */
+@-webkit-keyframes btn-liquid-ani {
+  from {
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+  to {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+}
+
+@keyframes btn-liquid-ani {
+  from {
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+  to {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+}
+
+@-webkit-keyframes btn-liquid-ani2 {
+  from {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  to {
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+}
+
+@keyframes btn-liquid-ani2 {
+  from {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  to {
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-liquid::before {
+    opacity: 0;
+    -webkit-animation: none !important;
+    animation: none !important;
+  }
+  .btn-liquid:hover::before {
+    opacity: 1;
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
   }
 }

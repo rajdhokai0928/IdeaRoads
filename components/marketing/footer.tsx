@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { Logo } from "@/components/marketing/logo";
-import { DOCS_URL, GITHUB_REPO_URL } from "@/config/platform";
+import {LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 
 const LINKS = [
   {
@@ -14,14 +14,7 @@ const LINKS = [
       { label: "Live Demo", href: "/demo" },
     ],
   },
-  {
-    heading: "Developers",
-    items: [
-      { label: "Documentation", href: DOCS_URL, external: true },
-      { label: "GitHub", href: GITHUB_REPO_URL, external: true },
-      { label: "Self-hosting Guide", href: DOCS_URL, external: true },
-    ],
-  },
+  
   {
     heading: "Legal",
     items: [
@@ -41,7 +34,13 @@ export function Footer() {
               className="inline-flex rounded-mk-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
               href="/"
             >
-              <Logo />
+              <Image
+                alt={PRODUCT_NAME}
+                className="h-10 w-auto"
+                height={164}
+                src={LOGO_PATH}
+                width={500}
+              />
             </Link>
             <p className="mt-4 text-sm leading-6 text-slate-1">
               Open-source customer feedback, voting, and changelog for product
@@ -50,10 +49,8 @@ export function Footer() {
             <Link
               aria-label="GitHub"
               className="mt-5 inline-flex size-9 items-center justify-center rounded-mk border border-hairline text-ink-soft transition-colors duration-150 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-              href={GITHUB_REPO_URL}
               rel="noopener noreferrer"
-              target="_blank"
-            >
+              target="_blank" href={""}            >
               <Star aria-hidden="true" className="size-4" />
             </Link>
           </div>
@@ -86,7 +83,8 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-hairline pt-6 sm:flex-row sm:items-center">
           <p className="text-xs text-slate-2">
-            © 2026 IdeaRoads. Open source under the MIT License.
+© 2026  ideaRoads. All Rights Reserved
+
           </p>
           <p className="text-xs text-slate-2">Built for product teams.</p>
         </div>

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CtaButton } from "@/components/marketing/cta-button";
+import { Button } from "@/components/ui/button";
 import { FinalCta } from "@/components/marketing/final-cta";
 import { PRODUCT_NAME } from "@/config/platform";
 
@@ -132,10 +132,12 @@ export default function FeaturesPage() {
             manual sync.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <CtaButton href="/login">Start free</CtaButton>
-            <CtaButton href="/demo" variant="secondary">
-              View demo
-            </CtaButton>
+            <Button asChild className="btn-liquid" data-text="Start Free" size="lg">
+              <Link href="/login">Start Free</Link>
+            </Button>
+            <Button asChild className="btn-liquid" data-text="View Demo" size="lg" variant="outline">
+              <Link href="/demo">View Demo</Link>
+            </Button>
           </div>
         </div>
       </section>

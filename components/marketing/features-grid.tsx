@@ -7,6 +7,8 @@ import {
   LayoutGrid,
   Users,
 } from "lucide-react";
+import Link from "next/link";
+import { Button } from "../ui/button";
 
 type Feature = {
   icon: typeof LayoutGrid;
@@ -94,7 +96,7 @@ function NotifyPreview() {
         </p>
         <p className="text-[0.7rem] text-slate-1">Sent to 128 voters</p>
       </div>
-      <span className="rounded-full bg-mint-400/15 px-2 py-0.5 text-[0.65rem] font-semibold text-[oklch(0.5_0.12_165)]">
+      <span className="rounded-full bg-mint-400/15 px-2 py-0.5 text-[0.65rem] font-semibold text-mint-400">
         Auto
       </span>
     </div>
@@ -103,39 +105,86 @@ function NotifyPreview() {
 
 export function FeaturesGrid() {
   return (
-    <section className="bg-canvas" id="features">
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center rounded-full border border-hairline bg-canvas-2 px-3 py-1 text-xs font-semibold text-slate-1">
-            What you get
-          </span>
-          <h2 className="mk-display mt-5 text-3xl font-bold text-ink sm:text-4xl">
-            Everything a product team needs.
-            <br className="hidden sm:block" /> Nothing they don't.
-          </h2>
-        </div>
+    <section className="bg-muted" id="features">
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        .feature-card {
+          position: relative;
+          border-radius: 1.5rem;
+          overflow: hidden;
+          transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .feature-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .feature-card::before,
+        .feature-card::after {
+          content: '';
+          position: absolute;
+          height: 2px;
+          background: linear-gradient(to right, var(--color-brand-500), var(--color-brand-300));
+          transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          width: 0;
+        }
+        .feature-card::before {
+          top: 0;
+          left: 0;
+        }
+        .feature-card::after {
+          bottom: 0;
+          right: 0;
+        }
+        .feature-card:hover::before,
+        .feature-card:hover::after {
+          width: 100%;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .feature-card {
+            transition: none;
+            transform: none !important;
+          }
+          .feature-card::before,
+          .feature-card::after {
+            transition: none;
+          }
+        }
+      `,
+        }}
+      />
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
+        <p className="font-bold text-xs uppercase tracking-eyebrow text-brand-500">
+          What You Get
+        </p>
 
-        <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map(({ icon: Icon, title, description, wide, accent }) => (
+        <h2 className="mt-4 font-bold text-3xl text-foreground sm:text-4xl">
+          Everything a product team needs. Nothing they don't.
+        </h2>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ icon: Icon, title, description }) => (
             <div
-              className={`group flex flex-col rounded-mk-xl border border-hairline bg-linear-to-b p-6 shadow-mk-sm transition-all duration-150 hover:-translate-y-1 hover:shadow-mk ${
-                wide ? "sm:col-span-2 lg:col-span-2" : "lg:col-span-1"
-              } ${accent ?? "from-surface to-surface"}`}
+              className="feature-card border border-border bg-card p-6"
               key={title}
             >
-              <span className="flex size-11 items-center justify-center rounded-mk border border-hairline bg-surface text-brand-600 shadow-mk-xs transition-colors duration-150 group-hover:border-brand-200 group-hover:bg-brand-50">
-                <Icon aria-hidden="true" className="size-5" />
-              </span>
-              <h3 className="mk-display mt-4 text-lg font-bold text-ink">
+              <Icon aria-hidden="true" className="size-5 text-foreground" />
+              <h3 className="mt-3 font-semibold text-base text-foreground">
                 {title}
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-1">
                 {description}
               </p>
-              {wide && title === "Feedback Boards" && <BoardPreview />}
-              {wide && title === "Email Notifications" && <NotifyPreview />}
+              {title === "Feedback Boards" && <BoardPreview />}
+              {title === "Email Notifications" && <NotifyPreview />}
             </div>
           ))}
+        </div>
+
+        <div className="mt-12 flex justify-center">
+          <Button asChild className="btn-liquid" data-text="Start Free">
+            <Link href="/login">Start Free</Link>
+          </Button>
         </div>
       </div>
     </section>

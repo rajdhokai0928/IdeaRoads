@@ -6,7 +6,7 @@ type Variant = "primary" | "secondary" | "ghost" | "light";
 type Size = "md" | "lg";
 
 const BASE =
-  "group/cta inline-flex select-none items-center justify-center gap-2 rounded-mk font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:pointer-events-none disabled:opacity-60";
+  "group/cta inline-flex select-none items-center justify-center gap-2 rounded-[14px] font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:pointer-events-none disabled:opacity-60";
 
 const SIZES: Record<Size, string> = {
   md: "h-11 px-5 text-sm",

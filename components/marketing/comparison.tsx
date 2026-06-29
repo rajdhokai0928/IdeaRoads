@@ -1,6 +1,8 @@
 import { Check, Minus } from "lucide-react";
-import { CtaButton } from "@/components/marketing/cta-button";
-import { Logo } from "@/components/marketing/logo";
+import Image from "next/image";
+import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 type Cell = { text: string; ok: boolean };
 
@@ -89,7 +91,13 @@ export function Comparison() {
             {/* Header */}
             <div className="bg-canvas-2 px-5 py-4" />
             <div className="relative bg-brand-500 px-5 py-4">
-              <Logo tone="light" />
+              <Image
+                alt={PRODUCT_NAME}
+                className="h-8 w-auto brightness-0 invert"
+                height={164}
+                src={LOGO_PATH}
+                width={500}
+              />
             </div>
             <div className="bg-canvas-2 px-5 py-4 text-sm font-semibold text-slate-1">
               Canny
@@ -167,7 +175,14 @@ export function Comparison() {
         </p>
 
         <div className="mt-8 flex justify-center">
-          <CtaButton href="/login">Start free</CtaButton>
+          <Button
+            asChild
+            size="lg"
+            className="btn-liquid rounded-[14px]"
+            data-text="Start Free"
+          >
+            <Link href="/login">Start Free</Link>
+          </Button>
         </div>
       </div>
     </section>

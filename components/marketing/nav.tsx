@@ -2,16 +2,11 @@
 
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { NavFeaturesDropdown } from "@/components/marketing/nav-features-dropdown";
+import { Button } from "@/components/ui/button";
+import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 import { useState } from "react";
-import { CtaButton } from "@/components/marketing/cta-button";
-import { Logo } from "@/components/marketing/logo";
-
-const NAV_LINKS = [
-  { label: "Features", href: "/features" },
-  { label: "Demo", href: "/demo" },
-  { label: "Roadmap", href: "/features/roadmap" },
-  { label: "Changelog", href: "/features/changelog" },
-] as const;
 
 export function Nav() {
   const [open, setOpen] = useState(false);
@@ -20,50 +15,51 @@ export function Nav() {
     <header className="sticky top-0 z-50 border-b border-hairline/80 bg-canvas/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link
-          aria-label={`${"IdeaRoads"} home`}
-          className="rounded-mk-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+          className="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           href="/"
         >
-          <Logo />
+          <Image
+            alt={PRODUCT_NAME}
+            className="h-10 w-auto"
+            height={164}
+            priority
+            src={LOGO_PATH}
+            width={500}
+          />
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link
-              className="rounded-mk-sm px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors duration-150 hover:bg-brand-50 hover:text-brand-700"
-              href={href}
-              key={label}
-            >
-              {label}
-            </Link>
-          ))}
+        <nav
+          aria-label="Site navigation"
+          className="hidden items-center gap-1 md:flex"
+        >
+          <NavFeaturesDropdown />
+
+          <Link
+            className="rounded-none px-3 py-2 text-xs font-semibold uppercase tracking-ui text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+            href="/demo"
+          >
+            Demo
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            className="hidden rounded-mk-sm px-3.5 py-2 text-sm font-semibold text-ink-soft transition-colors duration-150 hover:text-ink sm:inline-flex"
-            href="/login"
+          <Button
+            asChild
+            className="hidden sm:inline-flex btn-liquid"
+            data-text="Sign In"
+            size="sm"
+            variant="ghost"
           >
-            Sign in
-          </Link>
-          <CtaButton className="hidden sm:inline-flex" href="/login" size="md">
-            Start free
-          </CtaButton>
-
-          <button
-            aria-controls="mobile-nav"
-            aria-expanded={open}
-            aria-label="Toggle menu"
-            className="flex size-10 items-center justify-center rounded-mk-sm text-ink transition-colors duration-150 hover:bg-brand-50 md:hidden"
-            onClick={() => setOpen((v) => !v)}
-            type="button"
+            <Link href="/login">Sign In</Link>
+          </Button>
+          <Button
+            asChild
+            className="btn-liquid"
+            data-text="Start Free"
+            size="sm"
           >
-            {open ? (
-              <X aria-hidden="true" className="size-5" />
-            ) : (
-              <Menu aria-hidden="true" className="size-5" />
-            )}
-          </button>
+            <Link href="/login">Start Free</Link>
+          </Button>
         </div>
       </div>
 
@@ -76,28 +72,26 @@ export function Nav() {
             aria-label="Mobile"
             className="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-4 sm:px-8"
           >
-            {NAV_LINKS.map(({ label, href }) => (
-              <Link
-                className="rounded-mk-sm px-3 py-2.5 text-base font-medium text-ink transition-colors duration-150 hover:bg-brand-50 hover:text-brand-700"
-                href={href}
-                key={label}
-                onClick={() => setOpen(false)}
-              >
-                {label}
-              </Link>
-            ))}
             <div className="mt-2 flex flex-col gap-2 border-t border-hairline pt-4">
-              <CtaButton
-                href="/login"
+              <Button
+                asChild
+                className="btn-liquid"
+                data-text="Sign In"
+                size="sm"
+                variant="outline"
                 onClick={() => setOpen(false)}
-                size="md"
-                variant="secondary"
               >
-                Sign in
-              </CtaButton>
-              <CtaButton href="/login" onClick={() => setOpen(false)} size="md">
-                Start free
-              </CtaButton>
+                <Link href="/login">Sign In</Link>
+              </Button>
+              <Button
+                asChild
+                className="btn-liquid"
+                data-text="Start Free"
+                size="sm"
+                onClick={() => setOpen(false)}
+              >
+                <Link href="/login">Start Free</Link>
+              </Button>
             </div>
           </nav>
         </div>

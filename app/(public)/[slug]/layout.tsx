@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 import { WorkspaceSuspendedPage } from "@/components/workspace/workspace-suspended";
-import { ADMIN_ROLE } from "@/config/platform";
-import { getCurrentSession } from "@/lib/authz";
 import { getWorkspaceBySlug } from "@/lib/workspaces/queries";
 
 interface Props {
@@ -17,12 +15,9 @@ export default async function PublicSlugLayout({ children, params }: Props) {
     return children;
   }
 
+  // A suspended workspace is unavailable to everyone (PLATFORM.md §6).
   if (workspace.isSuspended) {
-    const session = await getCurrentSession();
-    const isOrbitAdmin = session?.user.role === ADMIN_ROLE;
-    if (!isOrbitAdmin) {
-      return <WorkspaceSuspendedPage />;
-    }
+    return <WorkspaceSuspendedPage />;
   }
 
   return children;

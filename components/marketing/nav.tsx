@@ -43,10 +43,10 @@ export function Nav() {
             size="sm"
             variant="ghost"
           >
-            <Link href="/login">Sign In</Link>
+            <Link href="/signin">Sign In</Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/login">Start Free</Link>
+            <Link href="/signin">Start Free</Link>
           </Button>
         </div>
       </div>

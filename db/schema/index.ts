@@ -9,6 +9,7 @@ export * from "@/db/schema/invites";
 export * from "@/db/schema/categories";
 export * from "@/db/schema/workspace-statuses";
 export * from "@/db/schema/posts";
+export * from "@/db/schema/post-status-changes";
 export * from "@/db/schema/votes";
 export * from "@/db/schema/comments";
 export * from "@/db/schema/comment-reactions";

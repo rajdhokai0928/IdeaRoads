@@ -6,12 +6,12 @@ import { getInviteLinkByToken } from "@/lib/workspaces/invite-links";
 import { JoinButton } from "./_components/join-button";
 
 interface Props {
-  params: Promise<{ token: string }>;
+  params: Promise<{ linkToken: string }>;
 }
 
 export default async function JoinPage({ params }: Props) {
-  const { token } = await params;
-  const link = await getInviteLinkByToken(token);
+  const { linkToken } = await params;
+  const link = await getInviteLinkByToken(linkToken);
 
   if (!link) {
     notFound();
@@ -23,7 +23,7 @@ export default async function JoinPage({ params }: Props) {
     return (
       <JoinLayout>
         <JoinStateCard
-          body="This invite link has been deactivated by a workspace admin."
+          body="This invite link has been deactivated by a Brand Admin."
           heading="Link deactivated"
         />
       </JoinLayout>
@@ -34,7 +34,7 @@ export default async function JoinPage({ params }: Props) {
     return (
       <JoinLayout>
         <JoinStateCard
-          body="This invite link has expired. Ask a workspace admin for a new one."
+          body="This invite link has expired. Ask a Brand Admin for a new one."
           heading="Link expired"
         />
       </JoinLayout>
@@ -78,7 +78,7 @@ export default async function JoinPage({ params }: Props) {
         </p>
       </div>
       <div className="mt-6">
-        <JoinButton token={token} />
+        <JoinButton token={linkToken} />
       </div>
     </JoinLayout>
   );

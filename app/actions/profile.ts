@@ -3,7 +3,14 @@
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { account, session as sessionTable, user } from "@/db/schema";
+import {
+  account,
+  comments,
+  posts,
+  session as sessionTable,
+  user,
+  votes,
+} from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
 import { db } from "@/lib/db";
@@ -189,10 +196,31 @@ export async function deleteAccountAction(
   });
 
   await db.transaction(async (tx) => {
+    // Anonymise the user's feedback before removing the account (Feature 01):
+    // content and vote counts are preserved, but the denormalised authorship PII
+    // is scrubbed. The author/voter id columns are FK `set null` on user delete;
+    // these updates clear the denormalised name/email text. Must run before the
+    // user row is deleted (the WHERE matches on the still-present author/user id).
+    await tx
+      .update(posts)
+      .set({
+        authorName: "Anonymous",
+        authorEmail: "anonymous@deleted.invalid",
+      })
+      .where(eq(posts.authorId, freshUser.id));
+    await tx
+      .update(comments)
+      .set({ authorName: null, authorEmail: null, authorAvatar: null })
+      .where(eq(comments.authorId, freshUser.id));
+    await tx
+      .update(votes)
+      .set({ userName: null, userEmail: null })
+      .where(eq(votes.userId, freshUser.id));
+
     await tx.delete(sessionTable).where(eq(sessionTable.userId, freshUser.id));
     await tx.delete(account).where(eq(account.userId, freshUser.id));
     await tx.delete(user).where(eq(user.id, freshUser.id));
   });
 
-  redirect("/login");
+  redirect("/signin");
 }

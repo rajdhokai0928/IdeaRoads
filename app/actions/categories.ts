@@ -226,11 +226,13 @@ export async function updatePostCategoryAction(input: {
 }): Promise<ActionResult<undefined>> {
   const session = await requireSession();
 
+  // Assigning a category to a post is a triage action available to any workspace
+  // member (PLATFORM.md §4). Creating/editing/deleting categories stays Brand-Admin-only.
   const member = await getWorkspaceMember(input.workspaceId, session.user.id);
-  if (!member || member.role === WORKSPACE_MEMBER) {
+  if (!member) {
     return {
       success: false,
-      error: "Only admins and owners can set post categories.",
+      error: "Only workspace members can set post categories.",
     };
   }
 

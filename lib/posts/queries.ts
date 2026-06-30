@@ -1,5 +1,5 @@
-import { and, count, desc, eq, ilike, inArray, sql } from "drizzle-orm";
-import { posts, votes } from "@/db/schema";
+import { and, count, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
+import { postStatusChanges, posts, votes } from "@/db/schema";
 import { db } from "@/lib/db";
 import { POST_STATUSES, type PostStatus } from "@/lib/posts/constants";
 
@@ -56,11 +56,28 @@ export async function listBoardPosts(
     search?: string;
     userId?: string;
     myVotes?: boolean;
+    includeUnapproved?: boolean;
   } = {}
 ) {
-  const { sort = "newest", status, categoryId, search, userId, myVotes } = opts;
+  const {
+    sort = "newest",
+    status,
+    categoryId,
+    search,
+    userId,
+    myVotes,
+    includeUnapproved = false,
+  } = opts;
 
-  const conditions = [eq(posts.boardId, boardId)];
+  // Merged posts are hidden from active lists (Feature 05).
+  const conditions = [eq(posts.boardId, boardId), isNull(posts.mergedIntoId)];
+
+  // Moderation-held (unapproved) feedback is visible only to the team
+  // (Brand Admins and Team Members); the public sees approved posts only
+  // (Feature 05). Callers opt in to pending posts via `includeUnapproved`.
+  if (!includeUnapproved) {
+    conditions.push(eq(posts.isApproved, true));
+  }
 
   if (status) {
     conditions.push(eq(posts.status, status));
@@ -276,4 +293,61 @@ export async function setPinned(postId: string, isPinned: boolean) {
 
 export async function deletePost(postId: string) {
   await db.delete(posts).where(eq(posts.id, postId));
+}
+
+// ─── Status history ─────────────────────────────────────────────────────────
+
+export async function recordStatusChange(input: {
+  postId: string;
+  fromStatus: string | null;
+  toStatus: string;
+  changedBy: string | null;
+  changedByName?: string | null;
+  note?: string | null;
+}): Promise<void> {
+  await db.insert(postStatusChanges).values({
+    postId: input.postId,
+    fromStatus: input.fromStatus,
+    toStatus: input.toStatus,
+    changedBy: input.changedBy,
+    changedByName: input.changedByName ?? null,
+    note: input.note ?? null,
+  });
+}
+
+export async function listStatusHistory(postId: string) {
+  return db
+    .select()
+    .from(postStatusChanges)
+    .where(eq(postStatusChanges.postId, postId))
+    .orderBy(desc(postStatusChanges.createdAt));
+}
+
+// ─── Merge target search ──────────────────────────────────────────────────────
+
+/** Candidate posts to merge into: same workspace, approved, not merged, not self. */
+export async function searchPostsForMerge(
+  workspaceId: string,
+  query: string,
+  excludePostId: string
+) {
+  const conditions = [
+    eq(posts.workspaceId, workspaceId),
+    eq(posts.isApproved, true),
+    isNull(posts.mergedIntoId),
+    sql`${posts.id} <> ${excludePostId}`,
+  ];
+  if (query.trim()) {
+    conditions.push(ilike(posts.title, `%${query.trim()}%`));
+  }
+  return db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      upvotes: posts.upvotes,
+    })
+    .from(posts)
+    .where(and(...conditions))
+    .orderBy(desc(posts.upvotes), desc(posts.createdAt))
+    .limit(10);
 }

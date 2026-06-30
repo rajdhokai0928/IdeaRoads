@@ -89,12 +89,8 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
                   Roadmap
                 </Link>
               )}
-              <Link
-                className="px-3 py-1.5 text-sm font-medium text-foreground border-b-2 border-foreground"
-                href={`/${slug}/changelog`}
-              >
-                Changelog
-              </Link>
+              {/* Changelog index link hidden until a public changelog index
+                  exists (deferred — see Phase E). */}
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -115,7 +111,7 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
             ) : (
               <Link
                 className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                href="/login"
+                href="/signin"
               >
                 Sign in
               </Link>

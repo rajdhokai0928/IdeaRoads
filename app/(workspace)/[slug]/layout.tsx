@@ -66,6 +66,8 @@ export default async function WorkspaceLayout({
         initialUnreadCount={unreadCount}
         isAdminOrOwner={isAdminOrOwner}
         isOrbitAdmin={isOrbitAdmin}
+        userImage={session.user.image ?? null}
+        workspaceLogoUrl={workspace.logoUrl}
         workspaceName={workspace.name}
         workspaceSlug={workspace.slug}
         workspaces={userWorkspaces}

@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { and, eq, sql } from "drizzle-orm";
-import { boards, posts, votes } from "@/db/schema";
+import { boards, posts, user, votes } from "@/db/schema";
 import { db } from "@/lib/db";
 
 export class VoteBlockedError extends Error {
@@ -71,6 +71,14 @@ export async function castVote(
     return existing;
   }
 
+  // Fetch user details to store as fallback
+  const userRecord = await db
+    .select({ name: user.name, email: user.email })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
+    .then((r) => r[0] ?? null);
+
   return await db.transaction(async (tx) => {
     const [vote] = await tx
       .insert(votes)
@@ -79,8 +87,8 @@ export async function castVote(
         postId,
         workspaceId,
         userId,
-        userEmail: null,
-        userName: null,
+        userEmail: userRecord?.email ?? null,
+        userName: userRecord?.name ?? null,
       })
       .onConflictDoNothing()
       .returning({ id: votes.id });

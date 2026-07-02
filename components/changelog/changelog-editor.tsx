@@ -357,11 +357,11 @@ export function ChangelogEditor({
 
         {tab === "write" ? (
           <textarea
-            className="w-full border border-border bg-background px-3 py-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+            className="w-full min-h-40 border border-border bg-background px-3 pt-2.5 pb-5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
             maxLength={50_000}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Write your changelog in Markdown…&#10;&#10;## What's new&#10;&#10;- Feature A&#10;- Feature B"
-            rows={18}
+            rows={10}
             value={body}
           />
         ) : (

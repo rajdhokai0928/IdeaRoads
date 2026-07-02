@@ -18,6 +18,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/app/actions/auth";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { SquareAvatar } from "@/components/ui/square-avatar";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 
 interface Board {
@@ -27,6 +28,7 @@ interface Board {
 }
 
 interface WorkspaceOption {
+  logoUrl: string | null;
   name: string;
   slug: string;
 }
@@ -37,6 +39,8 @@ interface WorkspaceSidebarProps {
   initialUnreadCount?: number;
   isAdminOrOwner: boolean;
   isOrbitAdmin: boolean;
+  userImage: string | null;
+  workspaceLogoUrl: string | null;
   workspaceName: string;
   workspaceSlug: string;
   workspaces: WorkspaceOption[];
@@ -48,6 +52,8 @@ export function WorkspaceSidebar({
   initialUnreadCount = 0,
   isAdminOrOwner,
   isOrbitAdmin,
+  userImage,
+  workspaceLogoUrl,
   workspaceName,
   workspaceSlug,
   workspaces,
@@ -67,13 +73,14 @@ export function WorkspaceSidebar({
     <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Workspace switcher */}
       <WorkspaceSwitcher
+        currentLogoUrl={workspaceLogoUrl}
         currentName={workspaceName}
         currentSlug={workspaceSlug}
         workspaces={workspaces}
       />
 
       {/* Navigation */}
-      <nav className="flex flex-1 flex-col overflow-y-auto p-2">
+      <nav className="scrollbar-thin flex flex-1 flex-col overflow-y-auto p-2">
         {/* Notifications inbox */}
         <div className="space-y-0.5">
           <NotificationBell
@@ -214,9 +221,11 @@ export function WorkspaceSidebar({
       {/* User bar */}
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 shrink-0 items-center justify-center bg-sidebar-accent text-xs font-semibold text-sidebar-foreground">
-            {email.charAt(0).toUpperCase()}
-          </div>
+          <SquareAvatar
+            alt={email}
+            fallback={email.charAt(0).toUpperCase()}
+            imageUrl={userImage}
+          />
           <span
             className="flex-1 truncate text-xs text-sidebar-foreground/60"
             title={email}

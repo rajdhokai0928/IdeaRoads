@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { updateNotificationPreferencesAction } from "@/app/actions/notifications";
 
@@ -24,7 +24,8 @@ function PreferenceRow({
   inAppEnabled,
   onEmailChange,
   onInAppChange,
-  disabled,
+  emailDisabled,
+  inAppDisabled,
 }: {
   label: string;
   description: string;
@@ -32,7 +33,8 @@ function PreferenceRow({
   inAppEnabled: boolean;
   onEmailChange: (v: boolean) => void;
   onInAppChange: (v: boolean) => void;
-  disabled: boolean;
+  emailDisabled: boolean;
+  inAppDisabled: boolean;
 }) {
   return (
     <div className="flex items-start justify-between gap-6 py-4 border-b border-border last:border-0">
@@ -42,7 +44,7 @@ function PreferenceRow({
       </div>
       <div className="flex items-center gap-6 shrink-0">
         <label className="flex flex-col items-center gap-1 cursor-pointer">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
             Email
           </span>
           <button
@@ -50,7 +52,7 @@ function PreferenceRow({
             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed ${
               emailEnabled ? "bg-primary" : "bg-muted"
             }`}
-            disabled={disabled}
+            disabled={emailDisabled}
             onClick={() => onEmailChange(!emailEnabled)}
             role="switch"
             type="button"
@@ -63,7 +65,7 @@ function PreferenceRow({
           </button>
         </label>
         <label className="flex flex-col items-center gap-1 cursor-pointer">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
             In-app
           </span>
           <button
@@ -71,7 +73,7 @@ function PreferenceRow({
             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed ${
               inAppEnabled ? "bg-primary" : "bg-muted"
             }`}
-            disabled={disabled}
+            disabled={inAppDisabled}
             onClick={() => onInAppChange(!inAppEnabled)}
             role="switch"
             type="button"
@@ -92,21 +94,29 @@ export function NotificationPreferencesForm({
   initialPrefs,
 }: NotificationPreferencesFormProps) {
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs);
-  const [isPending, startTransition] = useTransition();
+  // Tracks which individual switches are in flight, so clicking one doesn't
+  // disable every switch in the form (each preference updates independently).
+  const [pendingKeys, setPendingKeys] = useState<Set<keyof Prefs>>(new Set());
 
   function handleChange(key: keyof Prefs, value: boolean) {
-    const updated = { ...prefs, [key]: value };
-    setPrefs(updated);
+    const previous = prefs[key];
+    setPrefs((p) => ({ ...p, [key]: value }));
+    setPendingKeys((prev) => new Set(prev).add(key));
 
-    startTransition(async () => {
-      const result = await updateNotificationPreferencesAction({
-        [key]: value,
+    updateNotificationPreferencesAction({ [key]: value })
+      .then((result) => {
+        if (!result.success) {
+          setPrefs((p) => ({ ...p, [key]: previous })); // rollback
+          toast.error(result.error);
+        }
+      })
+      .finally(() => {
+        setPendingKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
       });
-      if (!result.success) {
-        setPrefs(prefs); // rollback
-        toast.error(result.error);
-      }
-    });
   }
 
   return (
@@ -124,8 +134,9 @@ export function NotificationPreferencesForm({
       <div className="divide-y divide-border px-4">
         <PreferenceRow
           description="When a post you voted on changes status (e.g. Planned, In Progress)"
-          disabled={isPending}
+          emailDisabled={pendingKeys.has("emailStatusChange")}
           emailEnabled={prefs.emailStatusChange}
+          inAppDisabled={pendingKeys.has("inAppStatusChange")}
           inAppEnabled={prefs.inAppStatusChange}
           label="Status changes"
           onEmailChange={(v) => handleChange("emailStatusChange", v)}
@@ -133,8 +144,9 @@ export function NotificationPreferencesForm({
         />
         <PreferenceRow
           description="When someone comments on your post or replies to your comment"
-          disabled={isPending}
+          emailDisabled={pendingKeys.has("emailNewComment")}
           emailEnabled={prefs.emailNewComment}
+          inAppDisabled={pendingKeys.has("inAppNewComment")}
           inAppEnabled={prefs.inAppNewComment}
           label="Comments & Replies"
           onEmailChange={(v) => handleChange("emailNewComment", v)}
@@ -142,8 +154,9 @@ export function NotificationPreferencesForm({
         />
         <PreferenceRow
           description="When a new changelog entry is published for a post you voted on"
-          disabled={isPending}
+          emailDisabled={pendingKeys.has("emailChangelog")}
           emailEnabled={prefs.emailChangelog}
+          inAppDisabled={pendingKeys.has("inAppChangelog")}
           inAppEnabled={prefs.inAppChangelog}
           label="Changelog updates"
           onEmailChange={(v) => handleChange("emailChangelog", v)}

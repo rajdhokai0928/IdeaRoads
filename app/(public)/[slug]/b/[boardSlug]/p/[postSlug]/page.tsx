@@ -264,7 +264,7 @@ export default async function PostDetailPage({ params }: Props) {
 
           {/* Status history */}
           {statusHistory.length > 0 && (
-            <div className="mt-8 border-t border-border pt-6">
+            <div className="mt-6 border-t border-border pt-6">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
                 Status history
               </h2>
@@ -297,7 +297,7 @@ export default async function PostDetailPage({ params }: Props) {
           )}
 
           {/* Comments */}
-          <div className="mt-10 border-t border-border pt-8">
+          <div className="mt-6 border-t border-border pt-6">
             <CommentSection
               canModerate={isAdminOrOwner}
               currentUserId={session?.user.id ?? null}

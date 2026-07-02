@@ -33,6 +33,7 @@ export async function getUserWorkspaces(userId: string) {
     .select({
       slug: workspaces.slug,
       name: workspaces.name,
+      logoUrl: workspaces.logoUrl,
       role: workspaceMembers.role,
     })
     .from(workspaceMembers)

@@ -1,5 +1,6 @@
 "use client";
 
+import { ImageOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -72,6 +73,29 @@ function SectionHeader({
     <div className="mb-4">
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
+function LogoPreview({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false);
+  const trimmed = url.trim();
+
+  return (
+    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden border border-border bg-muted">
+      {trimmed && !failed ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt="Workspace logo preview"
+          className="size-full object-cover"
+          key={trimmed}
+          onError={() => setFailed(true)}
+          onLoad={() => setFailed(false)}
+          src={trimmed}
+        />
+      ) : (
+        <ImageOff className="size-4 text-muted-foreground" />
+      )}
     </div>
   );
 }
@@ -309,15 +333,18 @@ export function GeneralSettingsForm({
               htmlFor="ws-logo"
               label="Logo URL"
             >
-              <input
-                className={inputClass}
-                disabled={!canManage || isPending}
-                id="ws-logo"
-                onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://example.com/logo.png"
-                type="url"
-                value={logoUrl}
-              />
+              <div className="flex items-center gap-3">
+                <LogoPreview url={logoUrl} />
+                <input
+                  className={`${inputClass} flex-1`}
+                  disabled={!canManage || isPending}
+                  id="ws-logo"
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://example.com/logo.png"
+                  type="url"
+                  value={logoUrl}
+                />
+              </div>
             </FormField>
           </div>
 

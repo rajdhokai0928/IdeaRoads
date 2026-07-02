@@ -1,5 +1,6 @@
 "use server";
 
+import { del, put } from "@vercel/blob";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -19,6 +20,103 @@ import { db } from "@/lib/db";
 export interface ActionState {
   error?: string;
   success?: string;
+}
+
+const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
+export interface AvatarActionState extends ActionState {
+  imageUrl?: string | null;
+}
+
+export async function updateAvatarAction(
+  _state: AvatarActionState,
+  formData: FormData
+): Promise<AvatarActionState> {
+  const session = await requireSession();
+  const file = formData.get("avatar");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose an image to upload." };
+  }
+  if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
+    return { error: "Use a PNG, JPEG, WEBP, or GIF image." };
+  }
+  if (file.size > MAX_AVATAR_BYTES) {
+    return { error: "Image must be 4MB or smaller." };
+  }
+
+  const [freshUser] = await db
+    .select({ image: user.image })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1);
+
+  const extension = file.type.split("/")[1];
+  const blob = await put(
+    `avatars/${session.user.id}-${Date.now()}.${extension}`,
+    file,
+    { access: "public" }
+  );
+
+  await db
+    .update(user)
+    .set({ image: blob.url, updatedAt: new Date() })
+    .where(eq(user.id, session.user.id));
+
+  if (freshUser?.image) {
+    await del(freshUser.image).catch(() => {});
+  }
+
+  await audit({
+    action: "profile.avatar_updated",
+    actorEmail: session.user.email,
+    actorId: session.user.id,
+    description: "Updated profile picture",
+    entityId: session.user.id,
+    entityType: "user",
+  });
+
+  revalidatePath("/", "layout");
+  return { imageUrl: blob.url, success: "Profile picture updated." };
+}
+
+export async function removeAvatarAction(): Promise<AvatarActionState> {
+  const session = await requireSession();
+
+  const [freshUser] = await db
+    .select({ image: user.image })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1);
+
+  if (!freshUser?.image) {
+    return { imageUrl: null, success: "Profile picture removed." };
+  }
+
+  await db
+    .update(user)
+    .set({ image: null, updatedAt: new Date() })
+    .where(eq(user.id, session.user.id));
+
+  await del(freshUser.image).catch(() => {});
+
+  await audit({
+    action: "profile.avatar_removed",
+    actorEmail: session.user.email,
+    actorId: session.user.id,
+    description: "Removed profile picture",
+    entityId: session.user.id,
+    entityType: "user",
+  });
+
+  revalidatePath("/", "layout");
+  return { imageUrl: null, success: "Profile picture removed." };
 }
 
 export async function updateNameAction(

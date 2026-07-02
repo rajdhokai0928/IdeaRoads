@@ -2,7 +2,7 @@
 
 import { GitMerge } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { mergePostAction, searchMergeTargetsAction } from "@/app/actions/posts";
 
@@ -29,6 +29,20 @@ export default function MergePostButton({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MergeTarget[]>([]);
   const [selected, setSelected] = useState<MergeTarget | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   function runSearch(q: string) {
     setQuery(q);
@@ -66,7 +80,7 @@ export default function MergePostButton({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         disabled={isPending}

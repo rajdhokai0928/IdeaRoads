@@ -1,17 +1,36 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
-import { useActionState } from "react";
+import { Loader2, TriangleAlert, UserRound } from "lucide-react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import { toast } from "sonner";
 import {
   type ActionState,
+  type AvatarActionState,
   changeEmailAction,
   deleteAccountAction,
+  removeAvatarAction,
+  updateAvatarAction,
   updateNameAction,
 } from "@/app/actions/profile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const initialState: ActionState = {};
+const initialAvatarState: AvatarActionState = {};
+const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
 
 function ActionMessage({ state }: { state: ActionState }) {
   if (state.error) {
@@ -31,11 +50,140 @@ function ActionMessage({ state }: { state: ActionState }) {
   return null;
 }
 
+function AvatarUploadRow({
+  image,
+  name,
+}: {
+  image: string | null;
+  name: string;
+}) {
+  const [avatarState, avatarAction, avatarPending] = useActionState(
+    updateAvatarAction,
+    initialAvatarState
+  );
+  const [isRemoving, startRemoveTransition] = useTransition();
+  const [previewUrl, setPreviewUrl] = useState(image);
+  const previousPreviewRef = useRef(image);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (avatarState.error) {
+      toast.error(avatarState.error);
+      setPreviewUrl(previousPreviewRef.current);
+    } else if (avatarState.success && avatarState.imageUrl !== undefined) {
+      setPreviewUrl(avatarState.imageUrl);
+      previousPreviewRef.current = avatarState.imageUrl;
+      toast.success(avatarState.success);
+    }
+  }, [avatarState]);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
+      toast.error("Use a PNG, JPEG, WEBP, or GIF image.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error("Image must be 4MB or smaller.");
+      e.target.value = "";
+      return;
+    }
+
+    previousPreviewRef.current = previewUrl;
+    setPreviewUrl(URL.createObjectURL(file));
+    formRef.current?.requestSubmit();
+  }
+
+  function handleRemove() {
+    startRemoveTransition(async () => {
+      const result = await removeAvatarAction();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      previousPreviewRef.current = null;
+      setPreviewUrl(null);
+      toast.success(result.success ?? "Profile picture removed.");
+    });
+  }
+
+  const pending = avatarPending || isRemoving;
+  const initials = name.trim().charAt(0).toUpperCase();
+
+  return (
+    <div className="px-5 py-4">
+      <div className="flex items-start gap-6">
+        <div className="w-40 shrink-0 pt-0.5">
+          <p className="text-sm font-medium text-foreground">Profile picture</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            PNG, JPEG, WEBP, or GIF. Max 4MB.
+          </p>
+        </div>
+        <form action={avatarAction} className="flex-1 min-w-0" ref={formRef}>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Avatar size="lg">
+                {previewUrl && <AvatarImage alt={name} src={previewUrl} />}
+                <AvatarFallback>
+                  {initials || <UserRound className="size-4" />}
+                </AvatarFallback>
+              </Avatar>
+              {pending && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70">
+                  <Loader2 className="size-4 animate-spin text-foreground" />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={pending}
+                onClick={() => fileInputRef.current?.click()}
+                size="sm"
+                type="button"
+                variant="secondary"
+              >
+                {previewUrl ? "Change photo" : "Upload photo"}
+              </Button>
+              {previewUrl && (
+                <Button
+                  disabled={pending}
+                  onClick={handleRemove}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+            <input
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="hidden"
+              name="avatar"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              type="file"
+            />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function AccountIdentityForms({
   email,
+  image,
   name,
 }: {
   email: string;
+  image: string | null;
   name: string;
 }) {
   const [nameState, nameAction, namePending] = useActionState(
@@ -49,6 +197,9 @@ export function AccountIdentityForms({
 
   return (
     <div className="border border-border divide-y divide-border">
+      {/* Profile picture */}
+      <AvatarUploadRow image={image} name={name} />
+
       {/* Display name */}
       <div className="px-5 py-4">
         <div className="flex items-start gap-6">

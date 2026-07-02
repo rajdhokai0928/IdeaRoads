@@ -50,7 +50,11 @@ export async function AccountSettingsContent({
             Your display name and email address for this account.
           </p>
         </div>
-        <AccountIdentityForms email={freshUser.email} name={freshUser.name} />
+        <AccountIdentityForms
+          email={freshUser.email}
+          image={freshUser.image}
+          name={freshUser.name}
+        />
       </section>
 
       {/* Active sessions */}

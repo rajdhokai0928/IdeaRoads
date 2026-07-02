@@ -20,6 +20,25 @@ body {
   background-size: 32px 32px;
 }
 
+/* Thin, theme-matched scrollbar for compact panels like the sidebar nav */
+.scrollbar-thin {
+  scrollbar-color: var(--sidebar-border) transparent;
+  scrollbar-width: thin;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--sidebar-border);
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: var(--sidebar-ring);
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
@@ -184,6 +203,18 @@ body {
   button,
   input {
     font: inherit;
+  }
+  /* Clickable elements should always show a pointer on hover, regardless of
+     whether an individual component remembered to add cursor-pointer. Excludes
+     disabled buttons, which keep the browser's default (non-interactive) cursor. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  [role="switch"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  label[for],
+  summary {
+    cursor: pointer;
   }
 }
 

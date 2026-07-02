@@ -91,9 +91,9 @@ export function SessionsCard({ sessions }: { sessions: SessionRow[] }) {
           </p>
         )}
         {sessions.map((session) => (
-          <div className="flex items-start gap-3 px-4 py-3.5" key={session.id}>
+          <div className="flex items-center gap-3 px-4 py-3.5" key={session.id}>
             {/* Device icon */}
-            <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center border border-border bg-muted">
+            <div className="flex size-8 shrink-0 items-center justify-center border border-border bg-muted">
               <DeviceIcon userAgent={session.userAgent} />
             </div>
 
@@ -126,9 +126,11 @@ export function SessionsCard({ sessions }: { sessions: SessionRow[] }) {
             </div>
 
             {/* Action */}
-            <div className="shrink-0 pt-0.5">
+            <div className="shrink-0">
               {session.isCurrent ? (
-                <span className="text-xs text-muted-foreground">Protected</span>
+                <span className="text-dark bg-accent p-2 text-xs px-3 font-medium text-nowrap">
+                  Protected
+                </span>
               ) : (
                 <form action={revokeSessionAction}>
                   <input name="sessionId" type="hidden" value={session.id} />

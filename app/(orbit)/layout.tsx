@@ -15,6 +15,7 @@ export default async function AdminLayout({
     <div className="flex h-screen overflow-hidden bg-page">
       <AdminSidebar
         email={session.user.email}
+        image={session.user.image ?? null}
         workspaceSlug={workspace?.slug}
       />
       <main className="flex-1 overflow-y-auto p-8">{children}</main>

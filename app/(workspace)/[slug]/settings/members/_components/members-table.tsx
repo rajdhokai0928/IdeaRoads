@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SquareAvatar } from "@/components/ui/square-avatar";
 import {
   WORKSPACE_ADMIN,
   WORKSPACE_MEMBER,
@@ -32,6 +33,7 @@ interface Member {
   user: {
     name: string | null;
     email: string;
+    image: string | null;
   };
   userId: string;
 }
@@ -45,7 +47,11 @@ interface MembersTableProps {
 }
 
 interface PendingConfirm {
-  action: () => Promise<{ success: boolean; error?: string }>;
+  action: () => Promise<{
+    success: boolean;
+    error?: string;
+    redirectTo?: string;
+  }>;
   confirmLabel: string;
   description: string;
   memberId: string;
@@ -75,7 +81,11 @@ export function MembersTable({
 
   async function handleAction(
     memberId: string,
-    action: () => Promise<{ success: boolean; error?: string }>
+    action: () => Promise<{
+      success: boolean;
+      error?: string;
+      redirectTo?: string;
+    }>
   ) {
     setLoadingId(memberId);
     setErrors((prev) => ({ ...prev, [memberId]: "" }));
@@ -83,6 +93,8 @@ export function MembersTable({
     setLoadingId(null);
     if (!result.success && result.error) {
       setErrors((prev) => ({ ...prev, [memberId]: result.error! }));
+    } else if (result.redirectTo) {
+      router.replace(result.redirectTo);
     } else {
       router.refresh();
     }
@@ -101,7 +113,11 @@ export function MembersTable({
       toast.error(result.error);
     } else {
       toast.success(successMessage);
-      router.refresh();
+      if (result.redirectTo) {
+        router.replace(result.redirectTo);
+      } else {
+        router.refresh();
+      }
     }
   }
 
@@ -111,7 +127,11 @@ export function MembersTable({
         {members.map((member) => {
           const isSelf = member.userId === actorUserId;
           const isOwner = member.role === WORKSPACE_OWNER;
-          const canChangeRole = actorRole === WORKSPACE_OWNER && !isOwner;
+          const canChangeRole =
+            (actorRole === WORKSPACE_OWNER && !isOwner) ||
+            (actorRole === WORKSPACE_ADMIN &&
+              member.role === WORKSPACE_MEMBER &&
+              !isSelf);
           const canRemove =
             !isOwner &&
             !isSelf &&
@@ -127,9 +147,12 @@ export function MembersTable({
               className="flex items-center gap-4 bg-background px-6 py-4"
               key={member.id}
             >
-              <div className="flex size-9 shrink-0 items-center justify-center bg-muted text-sm font-semibold text-muted-foreground uppercase">
-                {(member.user.name || member.user.email).charAt(0)}
-              </div>
+              <SquareAvatar
+                alt={member.user.name ?? member.user.email}
+                className="size-9 bg-muted text-sm font-semibold text-muted-foreground uppercase"
+                fallback={(member.user.name || member.user.email).charAt(0)}
+                imageUrl={member.user.image}
+              />
               <div className="flex-1 min-w-0">
                 {member.user.name && (
                   <p className="text-sm font-medium text-foreground truncate">

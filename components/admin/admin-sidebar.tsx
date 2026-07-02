@@ -15,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { SquareAvatar } from "@/components/ui/square-avatar";
 import { PRODUCT_NAME } from "@/config/platform";
 import { signOut } from "@/lib/auth-client";
 
@@ -49,9 +50,11 @@ const navLinkClass = (isActive: boolean) =>
 
 export function AdminSidebar({
   email,
+  image,
   workspaceSlug,
 }: {
   email: string;
+  image?: string | null;
   workspaceSlug?: string;
 }) {
   const pathname = usePathname();
@@ -73,7 +76,7 @@ export function AdminSidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-5">
+      <nav className="scrollbar-thin flex-1 overflow-y-auto px-3 py-5">
         <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-ui text-sidebar-foreground/30">
           Navigation
         </p>
@@ -110,9 +113,11 @@ export function AdminSidebar({
         {/* Compact user bar */}
         <div className="p-3">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 shrink-0 items-center justify-center bg-sidebar-accent text-xs font-semibold text-sidebar-foreground">
-              {email.charAt(0).toUpperCase()}
-            </div>
+            <SquareAvatar
+              alt={email}
+              fallback={email.charAt(0).toUpperCase()}
+              imageUrl={image}
+            />
             <span
               className="flex-1 truncate text-xs text-sidebar-foreground/60"
               title={email}

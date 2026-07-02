@@ -111,11 +111,11 @@ export function AuditLogTable({
             <input name="entityType" type="hidden" value={filterEntityType} />
           )}
           <input
-            aria-label="Filter by actor email"
+            aria-label="Search audit log"
             className="h-8 border border-border bg-background px-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             defaultValue={filterActor ?? ""}
             name="actor"
-            placeholder="Filter by actor email…"
+            placeholder="Search by actor, action, or entity…"
             type="search"
           />
         </form>

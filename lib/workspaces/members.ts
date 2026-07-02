@@ -14,6 +14,7 @@ export async function listMembers(workspaceId: string) {
       user: {
         name: user.name,
         email: user.email,
+        image: user.image,
       },
     })
     .from(workspaceMembers)

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike } from "drizzle-orm";
+import { and, count, desc, eq, ilike, or } from "drizzle-orm";
 import { auditLogs } from "@/db/schema";
 import { db } from "@/lib/db";
 
@@ -30,7 +30,20 @@ export async function listAuditLogs(
     conditions.push(eq(auditLogs.actorId, actorId));
   }
   if (actorEmail) {
-    conditions.push(ilike(auditLogs.actorEmail, `%${actorEmail}%`));
+    // The UI's search box is a general filter, not strictly actor-email — match
+    // it against actor, action, entity type/name, and description too, so
+    // searching "post" returns the same rows as the entity-type dropdown does.
+    const term = `%${actorEmail}%`;
+    conditions.push(
+      or(
+        ilike(auditLogs.actorEmail, term),
+        ilike(auditLogs.actorName, term),
+        ilike(auditLogs.action, term),
+        ilike(auditLogs.entityType, term),
+        ilike(auditLogs.entityName, term),
+        ilike(auditLogs.description, term)
+      )!
+    );
   }
   if (entityType) {
     conditions.push(eq(auditLogs.entityType, entityType));

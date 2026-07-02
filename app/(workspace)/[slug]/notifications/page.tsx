@@ -38,7 +38,7 @@ export default async function NotificationsPage({ params }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
-      <div className="max-w-2xl w-full mx-auto">
+      <div className="max-w-5xl w-full mx-auto">
         <NotificationList
           hasMore={hasMore}
           initialItems={items}

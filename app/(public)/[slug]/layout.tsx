@@ -65,6 +65,8 @@ export default async function PublicSlugLayout({ children, params }: Props) {
         initialUnreadCount={unreadCount}
         isAdminOrOwner={member.role !== WORKSPACE_MEMBER}
         isOrbitAdmin={session.user.role === ADMIN_ROLE}
+        userImage={session.user.image ?? null}
+        workspaceLogoUrl={workspace.logoUrl}
         workspaceName={workspace.name}
         workspaceSlug={workspace.slug}
         workspaces={userWorkspaces}

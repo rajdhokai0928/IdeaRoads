@@ -58,9 +58,9 @@ export default async function InvitesPage({ params }: Props) {
             workspaceId={workspace.id}
           />
           <div>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-eyebrow text-muted-foreground">
+            {/* <h2 className="mb-4 text-sm font-semibold uppercase tracking-eyebrow text-muted-foreground">
               Shareable invite link
-            </h2>
+            </h2> */}
             <InviteLinksList
               appUrl={appUrl}
               canManage={canManage}

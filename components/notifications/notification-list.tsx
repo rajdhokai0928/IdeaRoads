@@ -97,7 +97,7 @@ export function NotificationList({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div>
-          <h1 className="text-base font-semibold text-foreground">
+          <h1 className="text-xl font-semibold text-foreground">
             Notifications
           </h1>
           {total > 0 && (

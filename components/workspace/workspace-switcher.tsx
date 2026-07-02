@@ -3,19 +3,23 @@
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { SquareAvatar } from "@/components/ui/square-avatar";
 
 interface WorkspaceOption {
+  logoUrl: string | null;
   name: string;
   slug: string;
 }
 
 interface WorkspaceSwitcherProps {
+  currentLogoUrl: string | null;
   currentName: string;
   currentSlug: string;
   workspaces: WorkspaceOption[];
 }
 
 export function WorkspaceSwitcher({
+  currentLogoUrl,
   currentName,
   currentSlug,
   workspaces,
@@ -42,11 +46,16 @@ export function WorkspaceSwitcher({
         onClick={() => setOpen((v) => !v)}
         type="button"
       >
-        <div className="flex size-7 shrink-0 items-center justify-center bg-primary text-primary-foreground">
-          <span className="text-xs font-black">
-            {currentName.charAt(0).toUpperCase()}
-          </span>
-        </div>
+        <SquareAvatar
+          alt={currentName}
+          className="bg-primary text-primary-foreground"
+          fallback={
+            <span className="text-xs font-black">
+              {currentName.charAt(0).toUpperCase()}
+            </span>
+          }
+          imageUrl={currentLogoUrl}
+        />
         <span
           className="flex-1 truncate text-sm font-semibold text-sidebar-foreground"
           title={currentName}
@@ -57,35 +66,51 @@ export function WorkspaceSwitcher({
       </button>
 
       {open && (
-        <div className="absolute left-2 right-2 top-[52px] z-20 border border-sidebar-border bg-sidebar shadow-lg">
+        <div className="absolute left-2 right-2 top-13 z-50 overflow-hidden rounded-md border border-zinc-500 bg-zinc-800 shadow-2xl">
           <div className="max-h-64 overflow-y-auto py-1">
             {workspaces.map((ws) => {
               const isCurrent = ws.slug === currentSlug;
+
               return (
                 <Link
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  href={`/${ws.slug}`}
                   key={ws.slug}
+                  href={`/${ws.slug}`}
                   onClick={() => setOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-sm transition-colors duration-150
+            ${
+              isCurrent
+                ? "bg-zinc-800 text-white"
+                : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+            }`}
                 >
-                  <span className="flex size-5 shrink-0 items-center justify-center bg-primary/10 text-[10px] font-black text-primary">
-                    {ws.name.charAt(0).toUpperCase()}
-                  </span>
+                  <SquareAvatar
+                    alt={ws.name}
+                    className={`size-5 text-2xs font-semibold ${
+                      isCurrent
+                        ? "bg-zinc-500 text-white"
+                        : "bg-zinc-700 text-zinc-200"
+                    }`}
+                    fallback={ws.name.charAt(0).toUpperCase()}
+                    imageUrl={ws.logoUrl}
+                  />
+
                   <span className="flex-1 truncate" title={ws.name}>
                     {ws.name}
                   </span>
+
                   {isCurrent && (
-                    <Check className="size-3.5 shrink-0 text-sidebar-foreground/60" />
+                    <Check className="size-3.5 shrink-0 text-green-400" />
                   )}
                 </Link>
               );
             })}
           </div>
-          <div className="border-t border-sidebar-border py-1">
+
+          <div className="border-t border-zinc-700 py-1">
             <Link
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-sidebar-foreground/70 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               href="/onboarding?new=1"
               onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-300 transition-colors duration-150 hover:bg-zinc-800 hover:text-white"
             >
               <span className="flex size-5 shrink-0 items-center justify-center">
                 <Plus className="size-4" />

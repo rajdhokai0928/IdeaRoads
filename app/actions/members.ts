@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -44,7 +45,7 @@ import {
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 type ActionResult<T = undefined> =
-  | { success: true; data: T }
+  | { success: true; data: T; redirectTo?: string }
   | { success: false; error: string; field?: string; code?: string };
 
 // ─── Invite Members ──────────────────────────────────────────────────────────
@@ -525,55 +526,102 @@ export async function changeRoleAction(input: {
   workspaceId: string;
   role: "member" | "admin";
 }): Promise<ActionResult<undefined>> {
-  const session = await requireSession();
+  try {
+    const session = await requireSession();
 
-  const actorMember = await getWorkspaceMember(
-    input.workspaceId,
-    session.user.id
-  );
-  if (!actorMember || actorMember.role !== WORKSPACE_OWNER) {
+    const actorMember = await getWorkspaceMember(
+      input.workspaceId,
+      session.user.id
+    );
+    if (!actorMember || actorMember.role === WORKSPACE_MEMBER) {
+      return {
+        success: false,
+        error: "You don't have permission to change member roles.",
+      };
+    }
+
+    const target = await getMember(input.memberId, input.workspaceId);
+    if (!target) {
+      return { success: false, error: "Member not found." };
+    }
+    if (target.role === WORKSPACE_OWNER) {
+      return {
+        success: false,
+        error: "Use transfer ownership to change the owner's role.",
+      };
+    }
+    if (target.userId === session.user.id) {
+      return { success: false, error: "You cannot change your own role." };
+    }
+    if (
+      actorMember.role === WORKSPACE_ADMIN &&
+      target.role === WORKSPACE_ADMIN
+    ) {
+      return {
+        success: false,
+        error:
+          "You can only change team member roles. Contact the workspace owner to change another admin's role.",
+      };
+    }
+    if (actorMember.role === WORKSPACE_ADMIN && input.role === "admin") {
+      return {
+        success: false,
+        error:
+          "You can only promote team members to admin. Contact the workspace owner to change another admin's role.",
+      };
+    }
+    if (target.role === input.role) {
+      return { success: true, data: undefined };
+    }
+
+    await changeRole({ memberId: input.memberId, role: input.role });
+
+    const [workspace] = await db
+      .select({ slug: workspaces.slug })
+      .from(workspaces)
+      .where(eq(workspaces.id, input.workspaceId))
+      .limit(1);
+
+    if (workspace?.slug) {
+      revalidatePath(`/${workspace.slug}`);
+      revalidatePath(`/${workspace.slug}/settings`);
+      revalidatePath(`/${workspace.slug}/settings/members`);
+    }
+
+    const auditAction =
+      target.role === WORKSPACE_MEMBER && input.role === "admin"
+        ? "member.promoted"
+        : "member.demoted";
+
+    audit({
+      action: auditAction,
+      actorId: session.user.id,
+      actorEmail: session.user.email,
+      entityType: "workspace",
+      entityId: input.workspaceId,
+      description: `${session.user.email} changed role: ${target.role} → ${input.role}`,
+      metadata: {
+        targetMemberId: input.memberId,
+        fromRole: target.role,
+        toRole: input.role,
+      },
+    });
+
+    return {
+      success: true,
+      data: undefined,
+      redirectTo:
+        target.userId === session.user.id && workspace?.slug
+          ? `/${workspace.slug}`
+          : undefined,
+    };
+  } catch (err) {
+    console.error("[changeRoleAction] error:", err);
     return {
       success: false,
-      error: "Only the workspace owner can change member roles.",
+      error: "Failed to change member role. Please try again.",
     };
   }
-
-  const target = await getMember(input.memberId, input.workspaceId);
-  if (!target) {
-    return { success: false, error: "Member not found." };
-  }
-  if (target.role === WORKSPACE_OWNER) {
-    return {
-      success: false,
-      error: "Use transfer ownership to change the owner's role.",
-    };
-  }
-  if (target.role === input.role) {
-    return { success: true, data: undefined };
-  }
-
-  await changeRole({ memberId: input.memberId, role: input.role });
-
-  const auditAction =
-    target.role === WORKSPACE_MEMBER && input.role === "admin"
-      ? "member.promoted"
-      : "member.demoted";
-
-  audit({
-    action: auditAction,
-    actorId: session.user.id,
-    actorEmail: session.user.email,
-    entityType: "workspace",
-    entityId: input.workspaceId,
-    description: `${session.user.email} changed role: ${target.role} → ${input.role}`,
-    metadata: {
-      targetMemberId: input.memberId,
-      fromRole: target.role,
-      toRole: input.role,
-    },
-  });
-
-  return { success: true, data: undefined };
 }
 
 // ─── Transfer Ownership ───────────────────────────────────────────────────────
@@ -582,54 +630,62 @@ export async function transferOwnershipAction(input: {
   targetMemberId: string;
   workspaceId: string;
 }): Promise<ActionResult<undefined>> {
-  const session = await requireSession();
+  try {
+    const session = await requireSession();
 
-  const actorMember = await getWorkspaceMember(
-    input.workspaceId,
-    session.user.id
-  );
-  if (!actorMember || actorMember.role !== WORKSPACE_OWNER) {
+    const actorMember = await getWorkspaceMember(
+      input.workspaceId,
+      session.user.id
+    );
+    if (!actorMember || actorMember.role !== WORKSPACE_OWNER) {
+      return {
+        success: false,
+        error: "Only the workspace owner can transfer ownership.",
+      };
+    }
+
+    const target = await getMember(input.targetMemberId, input.workspaceId);
+    if (!target) {
+      return {
+        success: false,
+        error: "Target is not a member of this workspace.",
+      };
+    }
+    if (target.role === WORKSPACE_OWNER) {
+      return { success: false, error: "Target is already the owner." };
+    }
+    if (target.userId === session.user.id) {
+      return { success: false, error: "You are already the owner." };
+    }
+
+    await transferOwnership({
+      workspaceId: input.workspaceId,
+      actorMemberId: actorMember.id,
+      targetMemberId: input.targetMemberId,
+      targetUserId: target.userId,
+    });
+
+    audit({
+      action: "ownership.transferred",
+      actorId: session.user.id,
+      actorEmail: session.user.email,
+      entityType: "workspace",
+      entityId: input.workspaceId,
+      description: `Ownership transferred to member ${input.targetMemberId}`,
+      metadata: {
+        previousOwnerId: session.user.id,
+        newOwnerMemberId: input.targetMemberId,
+      },
+    });
+
+    return { success: true, data: undefined };
+  } catch (err) {
+    console.error("[transferOwnershipAction] error:", err);
     return {
       success: false,
-      error: "Only the workspace owner can transfer ownership.",
+      error: "Failed to transfer ownership. Please try again.",
     };
   }
-
-  const target = await getMember(input.targetMemberId, input.workspaceId);
-  if (!target) {
-    return {
-      success: false,
-      error: "Target is not a member of this workspace.",
-    };
-  }
-  if (target.role === WORKSPACE_OWNER) {
-    return { success: false, error: "Target is already the owner." };
-  }
-  if (target.userId === session.user.id) {
-    return { success: false, error: "You are already the owner." };
-  }
-
-  await transferOwnership({
-    workspaceId: input.workspaceId,
-    actorMemberId: actorMember.id,
-    targetMemberId: input.targetMemberId,
-    targetUserId: target.userId,
-  });
-
-  audit({
-    action: "ownership.transferred",
-    actorId: session.user.id,
-    actorEmail: session.user.email,
-    entityType: "workspace",
-    entityId: input.workspaceId,
-    description: `Ownership transferred to member ${input.targetMemberId}`,
-    metadata: {
-      previousOwnerId: session.user.id,
-      newOwnerMemberId: input.targetMemberId,
-    },
-  });
-
-  return { success: true, data: undefined };
 }
 
 // ─── Leave Workspace ──────────────────────────────────────────────────────────

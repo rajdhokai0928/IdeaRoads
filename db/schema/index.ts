@@ -19,4 +19,5 @@ export * from "@/db/schema/roadmap-followers";
 export * from "@/db/schema/blocked-users";
 export * from "@/db/schema/webhooks";
 export * from "@/db/schema/api-keys";
+export * from "@/db/schema/embed";
 export * from "@/db/schema/orbit";

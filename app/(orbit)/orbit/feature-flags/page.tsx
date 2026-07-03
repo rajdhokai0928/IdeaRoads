@@ -24,10 +24,10 @@ export default async function FeatureFlagsPage() {
           <div className="divide-y divide-border">
             {flags.map((flag) => (
               <div
-                className="flex items-center justify-between gap-4 px-6 py-4"
+                className="flex flex-col gap-2 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 key={flag.key}
               >
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="font-mono text-sm font-semibold">{flag.key}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {flag.description}

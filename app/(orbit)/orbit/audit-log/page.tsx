@@ -306,13 +306,13 @@ export default async function OrbitAuditLogPage({ searchParams }: Props) {
 
         {/* Pagination */}
         {(prevUrl || nextUrl || totalCount > 0) && (
-          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3">
             <span className="text-xs text-muted-foreground">
               {totalCount === 0
                 ? "No events"
                 : `${from.toLocaleString()}–${to.toLocaleString()} of ${totalCount.toLocaleString()} events`}
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {prevUrl ? (
                 <Link
                   className="h-7 border border-border bg-card px-3 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent inline-flex items-center"

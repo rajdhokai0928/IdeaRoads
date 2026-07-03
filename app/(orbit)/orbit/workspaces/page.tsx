@@ -67,7 +67,11 @@ export default async function OrbitWorkspacesPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <form action="/orbit/workspaces" className="flex gap-2" method="GET">
+        <form
+          action="/orbit/workspaces"
+          className="flex flex-wrap gap-2"
+          method="GET"
+        >
           {status && <input name="status" type="hidden" value={status} />}
           <input
             className="h-9 w-64 border border-border bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -110,77 +114,79 @@ export default async function OrbitWorkspacesPage({ searchParams }: Props) {
       </div>
 
       <div className="border border-border bg-card">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[20%]">Name</TableHead>
-              <TableHead className="w-[14%]">Slug</TableHead>
-              <TableHead className="w-[22%]">Owner</TableHead>
-              <TableHead className="w-[7%] text-right">Posts</TableHead>
-              <TableHead className="w-[8%] text-right">Members</TableHead>
-              <TableHead className="w-[18%]">Created</TableHead>
-              <TableHead className="w-[11%]">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {workspaces.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table className="sm:table-fixed">
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  className="py-10 text-center text-muted-foreground"
-                  colSpan={7}
-                >
-                  No workspaces found.
-                </TableCell>
+                <TableHead className="sm:w-[20%]">Name</TableHead>
+                <TableHead className="sm:w-[14%]">Slug</TableHead>
+                <TableHead className="sm:w-[22%]">Owner</TableHead>
+                <TableHead className="text-right sm:w-[7%]">Posts</TableHead>
+                <TableHead className="text-right sm:w-[8%]">Members</TableHead>
+                <TableHead className="sm:w-[18%]">Created</TableHead>
+                <TableHead className="sm:w-[11%]">Status</TableHead>
               </TableRow>
-            ) : (
-              workspaces.map((ws) => (
-                <TableRow key={ws.id}>
-                  <TableCell className="max-w-0">
-                    <Link
-                      className="block truncate font-semibold hover:underline"
-                      href={`/orbit/workspaces/${ws.id}`}
-                    >
-                      {ws.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="max-w-0 font-mono text-muted-foreground text-xs">
-                    <span className="block truncate">/{ws.slug}</span>
-                  </TableCell>
-                  <TableCell className="max-w-0 text-muted-foreground text-xs">
-                    <span className="block truncate">
-                      {ws.ownerEmail ?? "—"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm">
-                    {ws.postCount}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm">
-                    {ws.memberCount}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDateTime(ws.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={ws.isSuspended ? undefined : "text-success"}
-                      variant={ws.isSuspended ? "destructive" : "default"}
-                    >
-                      {ws.isSuspended ? "Suspended" : "Active"}
-                    </Badge>
+            </TableHeader>
+            <TableBody>
+              {workspaces.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    className="py-10 text-center text-muted-foreground"
+                    colSpan={7}
+                  >
+                    No workspaces found.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                workspaces.map((ws) => (
+                  <TableRow key={ws.id}>
+                    <TableCell className="sm:max-w-0">
+                      <Link
+                        className="block truncate font-semibold hover:underline"
+                        href={`/orbit/workspaces/${ws.id}`}
+                      >
+                        {ws.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="font-mono text-muted-foreground text-xs sm:max-w-0">
+                      <span className="block truncate">/{ws.slug}</span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs sm:max-w-0">
+                      <span className="block truncate">
+                        {ws.ownerEmail ?? "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {ws.postCount}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {ws.memberCount}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDateTime(ws.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={ws.isSuspended ? undefined : "text-success"}
+                        variant={ws.isSuspended ? "destructive" : "default"}
+                      >
+                        {ws.isSuspended ? "Suspended" : "Active"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3">
             <span className="text-xs text-muted-foreground">
               Page {page} of {totalPages} · {total} workspaces
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {page > 1 && (
                 <Link
                   className="border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui hover:bg-accent"

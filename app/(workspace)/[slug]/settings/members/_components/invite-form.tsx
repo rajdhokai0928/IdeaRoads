@@ -67,7 +67,7 @@ export function InviteForm({ workspaceId, canInviteAdmin }: InviteFormProps) {
             Invitation sent.
           </p>
         )}
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex-1 space-y-1">
             <Input
               autoComplete="off"

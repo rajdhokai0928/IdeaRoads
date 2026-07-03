@@ -91,7 +91,7 @@ export function ChangelogAdminCard({
       className={`border border-border bg-card p-5 ${entry.isPublished ? "" : "opacity-80"}`}
     >
       {/* Header row */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-2.5 flex-wrap">
           <ChangelogLabelBadge label={entry.label} />
           {entry.isPublished ? (
@@ -187,7 +187,7 @@ export function ChangelogAdminCard({
       )}
 
       {/* Footer */}
-      <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
         {entry.publishedAt && (
           <span>{format(entry.publishedAt, "MMM d, yyyy")}</span>
         )}

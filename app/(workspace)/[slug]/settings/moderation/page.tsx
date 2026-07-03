@@ -41,7 +41,7 @@ export default async function ModerationPage({ params }: Props) {
   ]);
 
   return (
-    <div className="px-8 py-6 max-w-2xl space-y-10">
+    <div className="px-4 py-6 max-w-2xl space-y-10 sm:px-8">
       <ModerationSettingsForm
         commentModeration={workspace.commentModeration}
         moderationMode={workspace.moderationMode}

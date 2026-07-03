@@ -126,8 +126,8 @@ export function NotificationPreferencesForm({
           Notification type
         </span>
         <div className="flex items-center gap-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <span className="w-9 text-center">Email</span>
-          <span className="w-9 text-center">In-app</span>
+          <span className="w-9 whitespace-nowrap text-center">Email</span>
+          <span className="w-9 whitespace-nowrap text-center">In-app</span>
         </div>
       </div>
 

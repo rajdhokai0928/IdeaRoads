@@ -71,7 +71,7 @@ export default async function WorkspaceDashboardPage({ params }: Props) {
   return (
     <div className="flex flex-col">
       {/* Page header */}
-      <div className="border-b border-border px-8 py-6">
+      <div className="border-b border-border px-4 py-6 sm:px-8">
         <h1 className="text-xl font-semibold text-foreground">
           {workspace.name}
         </h1>
@@ -82,7 +82,7 @@ export default async function WorkspaceDashboardPage({ params }: Props) {
         )}
       </div>
 
-      <div className="px-8 py-8 space-y-8">
+      <div className="px-4 py-8 space-y-8 sm:px-8">
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-3 lg:grid-cols-6">
           <div className="bg-background px-5 py-5">

@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { getBoardBySlug } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import {
+  buildEmbedQuery,
+  embedWrapperProps,
+  parseEmbedParams,
+} from "@/lib/embed/style";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -12,6 +18,11 @@ import NewPostForm from "./_components/new-post-form";
 
 interface Props {
   params: Promise<{ slug: string; boardSlug: string }>;
+  searchParams: Promise<{
+    embed?: string;
+    theme?: string;
+    accentColor?: string;
+  }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -24,14 +35,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `New post — ${board?.name ?? "Board"}` };
 }
 
-export default async function NewPostPage({ params }: Props) {
+export default async function NewPostPage({ params, searchParams }: Props) {
   const { slug, boardSlug } = await params;
+  const { embed, theme, accentColor } = await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { isEmbed } = embedParams;
+  const embedQuery = buildEmbedQuery(embedParams);
+  const embedWrapper = embedWrapperProps(embedParams);
 
   // Submitting feedback requires a signed-in User — send visitors to sign in.
   const session = await getCurrentSession();
   if (!session) {
     redirect(
-      `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new`)}`
+      `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`
     );
   }
 
@@ -56,8 +72,12 @@ export default async function NewPostPage({ params }: Props) {
   const categories = await getActiveCategoriesForWorkspace(workspace.id);
 
   return (
-    <div className="min-h-screen bg-background">
-      {!member && (
+    <div
+      className={`min-h-screen bg-background ${embedWrapper.className}`}
+      style={embedWrapper.style}
+    >
+      {isEmbed && <EmbedResizeReporter />}
+      {!member && !isEmbed && (
         <PortalHeader
           changelogPublic={workspace.changelogPublic}
           isSignedIn={true}
@@ -72,6 +92,8 @@ export default async function NewPostPage({ params }: Props) {
           boardName={board.name}
           boardSlug={boardSlug}
           categories={categories}
+          embedQuery={embedQuery}
+          isEmbed={isEmbed}
           workspaceId={workspace.id}
           workspaceSlug={slug}
         />

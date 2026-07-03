@@ -1,0 +1,99 @@
+import { describe, expect, it } from "vitest";
+import {
+  buildEmbedQuery,
+  embedWrapperProps,
+  parseEmbedParams,
+} from "@/lib/embed/style";
+
+describe("parseEmbedParams", () => {
+  it("resolves isEmbed only when embed=1", () => {
+    expect(parseEmbedParams({}).isEmbed).toBe(false);
+    expect(parseEmbedParams({ embed: "0" }).isEmbed).toBe(false);
+    expect(parseEmbedParams({ embed: "1" }).isEmbed).toBe(true);
+  });
+
+  it("accepts light and dark theme values", () => {
+    expect(parseEmbedParams({ theme: "light" }).theme).toBe("light");
+    expect(parseEmbedParams({ theme: "dark" }).theme).toBe("dark");
+  });
+
+  it("resolves 'auto' and unrecognized theme values to undefined", () => {
+    expect(parseEmbedParams({ theme: "auto" }).theme).toBeUndefined();
+    expect(parseEmbedParams({ theme: "not-a-theme" }).theme).toBeUndefined();
+    expect(parseEmbedParams({}).theme).toBeUndefined();
+  });
+
+  it("accepts a well-formed 6-digit hex accent color", () => {
+    expect(parseEmbedParams({ accentColor: "#2563eb" }).accentColor).toBe(
+      "#2563eb"
+    );
+  });
+
+  it("rejects malformed accent color values", () => {
+    expect(
+      parseEmbedParams({ accentColor: "not-a-color" }).accentColor
+    ).toBeUndefined();
+    expect(
+      parseEmbedParams({ accentColor: "#fff" }).accentColor
+    ).toBeUndefined();
+    expect(
+      parseEmbedParams({ accentColor: "red" }).accentColor
+    ).toBeUndefined();
+  });
+});
+
+describe("buildEmbedQuery", () => {
+  it("returns an empty string when not embedded", () => {
+    expect(buildEmbedQuery({ isEmbed: false })).toBe("");
+    expect(
+      buildEmbedQuery({ isEmbed: false, theme: "dark", accentColor: "#111111" })
+    ).toBe("");
+  });
+
+  it("includes only embed=1 when no theme/accent is set", () => {
+    expect(buildEmbedQuery({ isEmbed: true })).toBe("?embed=1");
+  });
+
+  it("carries theme and accentColor forward for internal navigation", () => {
+    const query = buildEmbedQuery({
+      isEmbed: true,
+      theme: "dark",
+      accentColor: "#2563eb",
+    });
+    const params = new URLSearchParams(query.slice(1));
+    expect(params.get("embed")).toBe("1");
+    expect(params.get("theme")).toBe("dark");
+    expect(params.get("accentColor")).toBe("#2563eb");
+  });
+});
+
+describe("embedWrapperProps", () => {
+  it("applies no class or style overrides by default", () => {
+    const { className, style } = embedWrapperProps({ isEmbed: true });
+    expect(className).toBe("");
+    expect(style).toEqual({});
+  });
+
+  it("applies the dark class only when theme is dark", () => {
+    expect(embedWrapperProps({ isEmbed: true, theme: "dark" }).className).toBe(
+      "dark"
+    );
+    expect(embedWrapperProps({ isEmbed: true, theme: "light" }).className).toBe(
+      ""
+    );
+  });
+
+  it("overrides --primary with the accent color and picks a legible foreground", () => {
+    // A light accent color should get a dark foreground for contrast...
+    const light = embedWrapperProps({ isEmbed: true, accentColor: "#f5f5f5" })
+      .style as Record<string, string>;
+    expect(light["--primary"]).toBe("#f5f5f5");
+    expect(light["--primary-foreground"]).toBe("#111111");
+
+    // ...and a dark accent color should get a light foreground.
+    const dark = embedWrapperProps({ isEmbed: true, accentColor: "#111111" })
+      .style as Record<string, string>;
+    expect(dark["--primary"]).toBe("#111111");
+    expect(dark["--primary-foreground"]).toBe("#ffffff");
+  });
+});

@@ -16,6 +16,9 @@ dist/
 # pnpm
 .pnpm-store/
 
+# Ephemeral test database (spun up by the vitest global setup)
+.idearoads-postgres-test/
+
 # Drizzle
 drizzle/meta/
 

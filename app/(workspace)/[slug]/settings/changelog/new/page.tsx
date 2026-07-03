@@ -32,7 +32,7 @@ export default async function NewChangelogEntryPage({ params }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-8 py-4 flex items-center gap-3">
+      <div className="border-b border-border px-4 py-4 sm:px-8 flex items-center gap-3">
         <Link
           className="flex cursor-pointer items-center justify-center text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           href={`/${slug}/settings/changelog`}

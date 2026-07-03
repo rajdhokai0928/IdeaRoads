@@ -38,6 +38,7 @@
 | `outbound_webhook_endpoints` | Customer-registered HTTPS endpoints for workspace events |
 | `outbound_webhook_deliveries` | Per-attempt delivery log with status + response (30-day retention) |
 | `api_keys` | Workspace-scoped REST API keys (SHA-256 hashed, never stored raw) |
+| `workspace_embed_config` | Per-workspace embed widget appearance (one row per workspace) |
 | `feature_flags` | Platform-wide boolean feature toggles |
 | `platform_settings` | Singleton operator config (signup, limits, maintenance mode) |
 
@@ -165,6 +166,12 @@ outbound_webhook_deliveries  id, endpoint_id, event, payload (jsonb),
 api_keys            id, workspace_id, user_id, name,
                     token_hash,   -- SHA-256 of the raw key, never stored in plaintext
                     last_used_at, is_enabled, created_at
+
+-- Embed Widget
+workspace_embed_config  workspace_id (PK), mode (inline|button),
+                        position (bottom-right|bottom-left|top-right|top-left),
+                        theme (light|dark|auto), width, height,
+                        accent_color, updated_at
 
 -- Orbit Admin
 -- There is no `superadmins` table. The Orbit Admin product role is backed by

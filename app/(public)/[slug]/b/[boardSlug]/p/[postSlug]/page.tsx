@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import CommentSection from "@/components/comments/comment-section";
+import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { WORKSPACE_MEMBER } from "@/config/platform";
@@ -14,6 +15,11 @@ import {
   listBoardsForWorkspace,
 } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import {
+  buildEmbedQuery,
+  embedWrapperProps,
+  parseEmbedParams,
+} from "@/lib/embed/style";
 import { getPost, getPostBySlug, listStatusHistory } from "@/lib/posts/queries";
 import { hasUserVoted } from "@/lib/voting";
 import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
@@ -32,6 +38,11 @@ import VoterListButton from "./_components/voter-list-button";
 
 interface Props {
   params: Promise<{ slug: string; boardSlug: string; postSlug: string }>;
+  searchParams: Promise<{
+    embed?: string;
+    theme?: string;
+    accentColor?: string;
+  }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -48,8 +59,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: post?.title ?? "Post" };
 }
 
-export default async function PostDetailPage({ params }: Props) {
+export default async function PostDetailPage({ params, searchParams }: Props) {
   const { slug, boardSlug, postSlug } = await params;
+  const { embed, theme, accentColor } = await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { isEmbed } = embedParams;
+  const embedQuery = buildEmbedQuery(embedParams);
+  const embedWrapper = embedWrapperProps(embedParams);
 
   const session = await getCurrentSession();
 
@@ -111,7 +127,7 @@ export default async function PostDetailPage({ params }: Props) {
     if (target && targetBoard) {
       mergedTarget = {
         title: target.title,
-        href: `/${slug}/b/${targetBoard.slug}/p/${target.slug}`,
+        href: `/${slug}/b/${targetBoard.slug}/p/${target.slug}${embedQuery}`,
       };
     }
   }
@@ -120,8 +136,12 @@ export default async function PostDetailPage({ params }: Props) {
   const boardHref = `/${slug}/b/${boardSlug}`;
 
   return (
-    <div className="min-h-screen bg-background">
-      {!isMember && (
+    <div
+      className={`min-h-screen bg-background ${embedWrapper.className}`}
+      style={embedWrapper.style}
+    >
+      {isEmbed && <EmbedResizeReporter />}
+      {!isMember && !isEmbed && (
         <PortalHeader
           changelogPublic={workspace.changelogPublic}
           isSignedIn={isSignedIn}
@@ -132,20 +152,22 @@ export default async function PostDetailPage({ params }: Props) {
       )}
 
       <div className="max-w-5xl mx-auto flex flex-col">
-        {/* Back nav */}
-        <div className="border-b border-border px-8 py-4">
-          <Link
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            href={boardHref}
-          >
-            <ArrowLeft className="size-4" />
-            {board.name}
-          </Link>
-        </div>
+        {/* Back nav — hidden in embed mode (no navigation chrome) */}
+        {!isEmbed && (
+          <div className="border-b border-border px-4 py-4 sm:px-8">
+            <Link
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              href={boardHref}
+            >
+              <ArrowLeft className="size-4" />
+              {board.name}
+            </Link>
+          </div>
+        )}
 
-        <div className="px-8 py-8 max-w-3xl">
+        <div className="px-4 py-8 max-w-3xl sm:px-8">
           {/* Post header */}
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-semibold text-foreground leading-snug">
                 {post.title}

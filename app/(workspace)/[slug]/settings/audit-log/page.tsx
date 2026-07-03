@@ -51,7 +51,7 @@ export default async function AuditLogPage({ params, searchParams }: Props) {
   });
 
   return (
-    <div className="px-8 py-6">
+    <div className="px-4 py-6 sm:px-8">
       <AuditLogTable
         filterAction={action}
         filterActor={actor}

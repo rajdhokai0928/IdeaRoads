@@ -144,7 +144,10 @@ export function AuditLogTable({
       ) : (
         <div className="border border-border divide-y divide-border">
           {logs.map((log) => (
-            <div className="grid grid-cols-[1fr_auto] gap-4 p-4" key={log.id}>
+            <div
+              className="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[1fr_auto] sm:gap-4"
+              key={log.id}
+            >
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono text-xs text-foreground bg-muted px-1.5 py-0.5 rounded-sm">
@@ -168,7 +171,7 @@ export function AuditLogTable({
                   )}
                 </p>
               </div>
-              <div className="shrink-0 text-right">
+              <div className="shrink-0 sm:text-right">
                 <p className="text-xs text-muted-foreground whitespace-nowrap">
                   {fmt.format(new Date(log.createdAt))}
                 </p>
@@ -180,7 +183,7 @@ export function AuditLogTable({
 
       {/* Pagination */}
       {(prevUrl || nextUrl) && (
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs text-muted-foreground">
             Page {page} · {Math.min(page * limit, total)} of {total}
           </span>

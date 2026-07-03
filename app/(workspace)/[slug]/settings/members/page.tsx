@@ -36,7 +36,7 @@ export default async function MembersPage({ params }: Props) {
   const members = await listMembers(workspace.id);
 
   return (
-    <div className="px-8 py-6">
+    <div className="px-4 py-6 sm:px-8">
       <p className="mb-4 text-xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
         {members.length} {members.length === 1 ? "member" : "members"}
       </p>

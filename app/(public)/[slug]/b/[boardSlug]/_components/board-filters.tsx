@@ -87,7 +87,7 @@ export default function BoardFilters({
   return (
     <div className="flex flex-col gap-0">
       {/* Sort + Status + Category + My Votes row */}
-      <div className="flex items-center justify-between border-b border-border px-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4">
         {/* Sort tabs */}
         <div className="flex">
           {SORT_TABS.map((tab) => (
@@ -99,6 +99,7 @@ export default function BoardFilters({
               }`}
               key={tab.value}
               onClick={() => updateParam({ sort: tab.value })}
+              type="button"
             >
               {tab.label}
             </button>
@@ -106,7 +107,7 @@ export default function BoardFilters({
         </div>
 
         {/* Right controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {showMyVotes && (
             <button
               className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium border transition-colors cursor-pointer duration-150 focus-visible:outline-none ${
@@ -115,6 +116,7 @@ export default function BoardFilters({
                   : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
               }`}
               onClick={toggleMyVotes}
+              type="button"
             >
               My Votes
               {myVotesActive && <X className="size-2.5" />}
@@ -169,6 +171,7 @@ export default function BoardFilters({
           <button
             className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             onClick={() => updateParam({ q: null })}
+            type="button"
           >
             <X className="size-3.5" />
           </button>

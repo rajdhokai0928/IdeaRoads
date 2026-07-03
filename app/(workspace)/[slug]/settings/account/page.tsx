@@ -21,14 +21,18 @@ export default async function WorkspaceAccountPage({ params }: Props) {
   const session = await requireSession();
 
   const workspace = await getWorkspaceBySlug(slug);
-  if (!workspace) notFound();
+  if (!workspace) {
+    notFound();
+  }
 
   const member = await getWorkspaceMember(workspace.id, session.user.id);
-  if (!member) notFound();
+  if (!member) {
+    notFound();
+  }
 
   return (
     <div>
-      <div className="border-b border-border px-8 py-6">
+      <div className="border-b border-border px-4 py-6 sm:px-8">
         <h1 className="text-xl font-semibold text-foreground">
           Account Settings
         </h1>
@@ -36,7 +40,7 @@ export default async function WorkspaceAccountPage({ params }: Props) {
           Manage your personal profile, active sessions, and account data.
         </p>
       </div>
-      <div className="px-8 py-6">
+      <div className="px-4 py-6 sm:px-8">
         <AccountSettingsContent
           currentSessionToken={session.session.token}
           userId={session.user.id}

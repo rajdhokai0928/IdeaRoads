@@ -137,7 +137,7 @@ export async function getInviteById(inviteId: string, workspaceId: string) {
 }
 
 export type AcceptInviteResult =
-  | { ok: true; workspaceSlug: string }
+  | { ok: true; workspaceId: string; workspaceSlug: string }
   | {
       ok: false;
       code:
@@ -221,7 +221,11 @@ export async function acceptInvite(input: {
       .set({ acceptedAt: new Date() })
       .where(eq(workspaceInvites.id, invite.id));
 
-    return { ok: true, workspaceSlug: workspace.slug };
+    return {
+      ok: true,
+      workspaceId: workspace.id,
+      workspaceSlug: workspace.slug,
+    };
   });
 }
 

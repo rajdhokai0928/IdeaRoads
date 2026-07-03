@@ -72,7 +72,7 @@ export default async function RoadmapPage({ params }: Props) {
       )}
 
       <div className="max-w-5xl mx-auto flex flex-col">
-        <div className="border-b border-border px-8 py-6">
+        <div className="border-b border-border px-4 py-6 sm:px-8">
           <h1 className="text-xl font-semibold text-foreground">Roadmap</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {totalPosts === 0

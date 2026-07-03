@@ -135,7 +135,7 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
 
         {/* Entry header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-4">
             <ChangelogLabelBadge label={entry.label} size="md" />
             {entry.publishedAt && (
               <time
@@ -167,11 +167,11 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
             <div className="space-y-2">
               {entry.linkedPosts.map((post) => (
                 <Link
-                  className="flex items-center justify-between gap-4 px-4 py-3 border border-border hover:bg-muted/40 transition-colors group"
+                  className="flex flex-col gap-2 px-4 py-3 border border-border hover:bg-muted/40 transition-colors group sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   href={`/${slug}/b/${post.boardSlug}/p/${post.slug}`}
                   key={post.id}
                 >
-                  <span className="text-sm font-medium text-foreground group-hover:text-foreground/80 transition-colors">
+                  <span className="flex-1 min-w-0 text-sm font-medium text-foreground group-hover:text-foreground/80 transition-colors">
                     {post.title}
                   </span>
                   <div className="flex items-center gap-3 shrink-0">

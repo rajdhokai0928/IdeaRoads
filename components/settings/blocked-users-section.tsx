@@ -139,7 +139,10 @@ export function BlockedUsersSection({ workspaceId, blockedUsers }: Props) {
       ) : (
         <div className="border border-border divide-y divide-border">
           {blockedUsers.map((bu) => (
-            <div className="flex items-center gap-4 p-4" key={bu.id}>
+            <div
+              className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4"
+              key={bu.id}
+            >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
                   {bu.userName ?? bu.userEmail ?? "Unknown"}

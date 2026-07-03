@@ -17,6 +17,8 @@ interface Props {
   boardName: string;
   boardSlug: string;
   categories: Category[];
+  embedQuery?: string;
+  isEmbed?: boolean;
   workspaceId: string;
   workspaceSlug: string;
 }
@@ -28,6 +30,8 @@ export default function NewPostForm({
   boardSlug,
   boardName,
   categories,
+  isEmbed = false,
+  embedQuery = "",
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -37,7 +41,7 @@ export default function NewPostForm({
   const [titleError, setTitleError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
-  const boardHref = `/${workspaceSlug}/b/${boardSlug}`;
+  const boardHref = `/${workspaceSlug}/b/${boardSlug}${embedQuery}`;
   const bodyRemaining = 10_000 - body.length;
 
   function handleSubmit(e: React.FormEvent) {
@@ -68,22 +72,26 @@ export default function NewPostForm({
         return;
       }
 
-      router.push(`/${workspaceSlug}/b/${boardSlug}/p/${result.data.postSlug}`);
+      router.push(
+        `/${workspaceSlug}/b/${boardSlug}/p/${result.data.postSlug}${embedQuery}`
+      );
     });
   }
 
   return (
     <div className="flex flex-col">
-      {/* Back nav */}
-      <div className="border-b border-border px-8 py-4">
-        <Link
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          href={boardHref}
-        >
-          <ArrowLeft className="size-4" />
-          {boardName}
-        </Link>
-      </div>
+      {/* Back nav — hidden in embed mode (no navigation chrome) */}
+      {!isEmbed && (
+        <div className="border-b border-border px-8 py-4">
+          <Link
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            href={boardHref}
+          >
+            <ArrowLeft className="size-4" />
+            {boardName}
+          </Link>
+        </div>
+      )}
 
       <div className="px-8 py-8 max-w-2xl">
         <h1 className="text-xl font-semibold text-foreground mb-6">

@@ -12,13 +12,13 @@ export default async function AdminLayout({
   const workspace = await getFirstUserWorkspace(session.user.id);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-page">
+    <div className="flex h-screen flex-col overflow-hidden bg-page md:flex-row">
       <AdminSidebar
         email={session.user.email}
         image={session.user.image ?? null}
         workspaceSlug={workspace?.slug}
       />
-      <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      <main className="flex-1 overflow-y-auto p-4 sm:p-8">{children}</main>
     </div>
   );
 }

@@ -31,6 +31,8 @@ import {
   updatePostCategory,
   updatePostStatus,
 } from "@/lib/posts/queries";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
+import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 import { enqueueJob } from "@/lib/worker/enqueue";
 import { JOB_NAMES } from "@/lib/worker/job-types";
 import { getWorkspaceStatusBySlug } from "@/lib/workspace-statuses/queries";
@@ -214,6 +216,13 @@ export async function createPostAction(input: {
     }).catch((err) =>
       console.error("[posts] failed to enqueue new-post alerts", err)
     );
+
+    dispatchWebhookEvent(parsed.data.workspaceId, WEBHOOK_EVENTS.POST_CREATED, {
+      id: post.id,
+      title: parsed.data.title,
+      slug: post.slug,
+      boardId: parsed.data.boardId,
+    });
   }
 
   return {
@@ -313,6 +322,17 @@ export async function updatePostStatusAction(input: {
     console.error("[posts] failed to enqueue status-change emails", err)
   );
 
+  dispatchWebhookEvent(
+    parsed.data.workspaceId,
+    WEBHOOK_EVENTS.POST_STATUS_CHANGED,
+    {
+      id: parsed.data.postId,
+      title: post.title,
+      fromStatus: post.status,
+      toStatus: parsed.data.status,
+    }
+  );
+
   return { success: true, data: undefined };
 }
 
@@ -402,6 +422,11 @@ export async function deletePostAction(input: {
       title: post.title,
       wasAuthor: isAuthor,
     },
+  });
+
+  dispatchWebhookEvent(input.workspaceId, WEBHOOK_EVENTS.POST_DELETED, {
+    id: input.postId,
+    title: post.title,
   });
 
   return { success: true, data: undefined };
@@ -682,6 +707,11 @@ export async function mergePostAction(input: {
     entityId: input.sourceId,
     description: `Merged "${source.title}" into "${target.title}"`,
     metadata: { workspaceId: input.workspaceId, targetId: input.targetId },
+  });
+
+  dispatchWebhookEvent(input.workspaceId, WEBHOOK_EVENTS.POST_MERGED, {
+    sourceId: input.sourceId,
+    targetId: input.targetId,
   });
 
   return { success: true, data: undefined };

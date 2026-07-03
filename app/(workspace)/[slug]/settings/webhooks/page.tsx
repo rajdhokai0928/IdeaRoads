@@ -1,9 +1,48 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { WebhookEndpointsSection } from "@/components/settings/webhook-endpoints-section";
+import { WORKSPACE_MEMBER } from "@/config/platform";
+import { requireSession } from "@/lib/authz";
+import { isEncryptionAvailable } from "@/lib/encrypt";
+import { listWebhookEndpoints } from "@/lib/webhooks/queries";
+import {
+  getWorkspaceBySlug,
+  getWorkspaceMember,
+} from "@/lib/workspaces/queries";
 
-// Outbound webhook delivery is not yet implemented (dispatchWebhookEvent has no
-// callers), so this settings page is hidden to avoid exposing a non-functional
-// feature. Deferred — see Phase E. The endpoint UI (WebhookEndpointsSection) and
-// queries (lib/webhooks) are intentionally retained for when delivery is wired up.
-export default function WebhooksPage() {
-  notFound();
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  return { title: `Webhooks — ${slug}` };
+}
+
+export default async function WebhooksPage({ params }: Props) {
+  const { slug } = await params;
+  const session = await requireSession();
+
+  const workspace = await getWorkspaceBySlug(slug);
+  if (!workspace) {
+    notFound();
+  }
+
+  // Workspace settings are Brand Admin only (PLATFORM.md §7).
+  const member = await getWorkspaceMember(workspace.id, session.user.id);
+  if (!member || member.role === WORKSPACE_MEMBER) {
+    notFound();
+  }
+
+  const endpoints = await listWebhookEndpoints(workspace.id);
+
+  return (
+    <div className="px-4 py-6 max-w-2xl sm:px-8">
+      <WebhookEndpointsSection
+        encryptionAvailable={isEncryptionAvailable()}
+        endpoints={endpoints}
+        workspaceId={workspace.id}
+      />
+    </div>
+  );
 }

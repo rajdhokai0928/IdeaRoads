@@ -24,7 +24,7 @@ export function ChangelogEntryCard({
 
   return (
     <article className="py-8 border-b border-border last:border-0">
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3">
         <ChangelogLabelBadge label={entry.label} />
         {entry.publishedAt && (
           <time
@@ -51,7 +51,7 @@ export function ChangelogEntryCard({
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-4">
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <Link
           className="text-xs font-medium text-foreground hover:text-foreground/70 transition-colors"
           href={href}

@@ -50,7 +50,7 @@ export default async function InvitesPage({ params }: Props) {
   ).replace(/\/$/, "");
 
   return (
-    <div className="px-8 py-6 space-y-10">
+    <div className="px-4 py-6 space-y-10 sm:px-8">
       {canManage && (
         <div className="space-y-6 border-b border-border pb-10">
           <InviteForm

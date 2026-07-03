@@ -128,6 +128,23 @@ created_at    timestamp   NOT NULL  DEFAULT now()
 
 ---
 
+### `workspace_embed_config`
+
+```ts
+workspace_id  text        PK        → workspaces.id (CASCADE DELETE)  -- one row per workspace
+mode          text        NOT NULL  DEFAULT 'inline'        -- 'inline' | 'button'
+position      text        NOT NULL  DEFAULT 'bottom-right'  -- 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+theme         text        NOT NULL  DEFAULT 'light'          -- 'light' | 'dark' | 'auto'
+width         integer     NOT NULL  DEFAULT 380
+height        integer     NOT NULL  DEFAULT 560
+accent_color  text        NOT NULL  DEFAULT '#111111'
+updated_at    timestamp   NOT NULL  DEFAULT now()
+```
+
+No separate `id` column — same one-row-per-entity shape as `notification_preferences` (Feature 11), upserted via `onConflictDoUpdate` on `workspace_id`.
+
+---
+
 ### `workspaces` columns used (already exist from Feature 02)
 
 ```ts
@@ -193,6 +210,9 @@ app/
             │   └── page.tsx                    NEW — outbound webhook endpoints
             ├── api-keys/
             │   └── page.tsx                    NEW — API key management
+            ├── embed/
+            │   ├── page.tsx                    NEW — embed widget configuration
+            │   └── layout.tsx                  NEW — section header
             └── audit-log/
                 └── page.tsx                    NEW — audit log viewer
 └── api/
@@ -228,6 +248,7 @@ components/
     ├── webhook-endpoint-form.tsx               Create/edit endpoint (URL + event checkboxes)
     ├── webhook-delivery-log.tsx                Last 100 deliveries per endpoint
     ├── api-keys-table.tsx                      Key list with name, last used, revoke button
+    ├── embed-section.tsx                       Embed settings form + live snippet generator
     └── audit-log-table.tsx                     Read-only audit log list
 
 lib/
@@ -244,6 +265,11 @@ lib/
 │   ├── create.ts                               generateApiKey() — returns raw key once
 │   ├── validate.ts                             validateApiKey() — hash lookup + last_used_at update
 │   └── queries.ts
+├── embed/
+│   ├── queries.ts                              getEmbedConfig / upsertEmbedConfig
+│   └── style.ts                                parseEmbedParams / buildEmbedQuery / embedWrapperProps
+│                                                — shared by the 3 embed-aware public pages to apply
+│                                                theme + accent color from the iframe's query string
 └── audit/
     ├── log.ts                                  createAuditLog() helper
     ├── queries.ts                              listAuditLogs()
@@ -351,6 +377,32 @@ validateApiKey(rawKey)
   → returns { workspaceId, userId } | null
   → Used in API route middleware: Authorization: Bearer <rawKey>
 ```
+
+### `lib/embed/queries.ts` and `lib/embed/style.ts`
+
+```ts
+getEmbedConfig(workspaceId) → row | null                 -- SELECT by workspace_id
+upsertEmbedConfig(workspaceId, config) → row              -- onConflictDoUpdate on workspace_id
+
+// Pure helpers shared by the 3 public embed-aware pages (board list, post
+// detail, new-post) — no DB access, no Next.js dependency:
+parseEmbedParams({ embed, theme, accentColor })
+  → { isEmbed, theme?: 'light'|'dark', accentColor? }     -- validates hex + enum, "auto"/garbage → undefined
+buildEmbedQuery(parsed) → "" | "?embed=1&theme=...&accentColor=..."
+  → used to build every internal link so embed mode survives navigation
+embedWrapperProps(parsed) → { className, style }
+  → className: "dark" when theme is forced dark (the app has no OS-preference
+    media query — "auto" intentionally falls back to the default light render)
+  → style: --primary / --primary-foreground overrides computed from accentColor
+    via a simple sRGB luminance check, so primary actions (vote button, "New
+    post") pick up the workspace's accent color
+```
+
+`public/widget.js` mirrors the same validation (position/theme/accent-color
+allow-lists, hex regex) client-side before writing `data-*` attributes into
+the iframe's query string — it has no shared module with `lib/embed/style.ts`
+since it ships as a standalone script with no build step, so the two are kept
+in sync by hand.
 
 ---
 

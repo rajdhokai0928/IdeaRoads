@@ -86,7 +86,10 @@ export function PendingPostsSection({ workspaceId, posts }: Props) {
       ) : (
         <div className="border border-border divide-y divide-border">
           {posts.map((post) => (
-            <div className="flex items-start gap-4 p-4" key={post.id}>
+            <div
+              className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4"
+              key={post.id}
+            >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
                   {post.title}
@@ -104,7 +107,7 @@ export function PendingPostsSection({ workspaceId, posts }: Props) {
                   }).format(new Date(post.createdAt))}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <button
                   className="px-2.5 py-1 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                   disabled={isPending}

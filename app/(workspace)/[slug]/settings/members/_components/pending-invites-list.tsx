@@ -85,7 +85,7 @@ export function PendingInvitesList({
                 canManage && (actorRole === "owner" || invite.role !== "admin");
               return (
                 <div
-                  className="flex items-center gap-4 bg-background px-6 py-4"
+                  className="flex flex-col gap-2 bg-background px-6 py-4 sm:flex-row sm:items-center sm:gap-4"
                   key={invite.id}
                 >
                   <div className="flex-1 min-w-0">

@@ -7,6 +7,7 @@ import {
   Envelope,
   Flag,
   Gauge,
+  List,
   Scroll,
   SignOut,
   UserCircle,
@@ -15,8 +16,18 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { SquareAvatar } from "@/components/ui/square-avatar";
 import { PRODUCT_NAME } from "@/config/platform";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { signOut } from "@/lib/auth-client";
 
 const navItems = [
@@ -59,9 +70,16 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is a watch-only trigger, not read in the body
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  const sidebarContent = (
+    <>
       {/* Brand */}
       <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
         <span className="grid size-9 shrink-0 place-items-center bg-sidebar-primary font-black text-sidebar-primary-foreground text-xs">
@@ -138,6 +156,45 @@ export function AdminSidebar({
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet onOpenChange={setMobileOpen} open={mobileOpen}>
+        <div className="flex h-14 shrink-0 items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground">
+          <SheetTrigger asChild>
+            <button
+              aria-label="Open navigation"
+              className="flex cursor-pointer items-center justify-center text-sidebar-foreground/70 transition-colors duration-150 hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              type="button"
+            >
+              <List size={20} />
+            </button>
+          </SheetTrigger>
+          <span className="flex-1 truncate text-sm font-semibold">
+            {PRODUCT_NAME} — Orbit Admin
+          </span>
+        </div>
+
+        <SheetContent
+          className="flex w-72 flex-col border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
+          showCloseButton={false}
+          side="left"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation</SheetTitle>
+            <SheetDescription>Orbit admin navigation menu</SheetDescription>
+          </SheetHeader>
+          {sidebarContent}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      {sidebarContent}
     </aside>
   );
 }

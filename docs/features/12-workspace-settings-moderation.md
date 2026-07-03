@@ -32,6 +32,7 @@ The split between configuring moderation and handling individual feedback is fix
 | **Moderation** — approval mode, comment moderation, spam filtering, blocked users, pending queue | `/{ws-slug}/settings/moderation` | Brand Admin |
 | **Webhooks** — register endpoints to receive workspace events | `/{ws-slug}/settings/webhooks` | Brand Admin |
 | **API Keys** — named keys for programmatic access to the workspace | `/{ws-slug}/settings/api-keys` | Brand Admin |
+| **Embed** — configure and generate the embeddable feedback widget | `/{ws-slug}/settings/embed` | Brand Admin |
 | **Audit Log** — read-only history of workspace actions | `/{ws-slug}/settings/audit-log` | Brand Admin |
 
 The settings sidebar lists these areas in order and highlights the one currently open.
@@ -139,6 +140,22 @@ API Keys give a Brand Admin programmatic access to the workspace's data.
 
 ---
 
+## Embed
+
+Embed lets a Brand Admin put the workspace's feedback board on their own site as a widget, without building anything custom.
+
+- **Launcher** — choose whether the widget renders **inline** (embedded directly in the page) or as a **floating launcher** button that opens a panel.
+- **Position** — for the floating launcher, which corner it anchors to (bottom right, bottom left, top right, top left).
+- **Theme** — light, dark, or match the visitor's system.
+- **Width** and **Height** — the widget's size. For inline embeds this is the initial size before it auto-resizes to fit content; for the floating launcher it's the panel's fixed size.
+- **Accent color** — a brand color applied to the launcher button and to primary actions (like voting and "New post") inside the embedded content.
+
+The page generates a ready-to-paste `<script>` snippet that reflects the current settings, with a one-click copy button. Pasting the snippet on any external site loads the widget — no sign-up or API key required on the visitor's end.
+
+Changing a setting and saving doesn't update widgets already pasted onto external sites — the Brand Admin needs to copy the updated snippet and replace it where it's embedded.
+
+---
+
 ## Audit Log
 
 The Audit Log is a read-only history of administrative actions taken inside the workspace. It exists so a Brand Admin can see who did what, and when.
@@ -209,6 +226,16 @@ Audit Log                                  [Filter: All ▾]  [Actor: All ▾]
 3. They are removed from the table and can participate again
 ```
 
+### Brand Admin embeds the feedback widget on their site
+
+```
+1. Open /{ws-slug}/settings/embed
+2. Choose Launcher (Inline or Floating), Position, Theme, Width, Height, Accent color
+3. Copy the generated <script> snippet
+4. Paste it into their own site's HTML
+5. The widget appears, matching the configured appearance
+```
+
 ### Brand Admin reviews the audit log
 
 ```
@@ -230,6 +257,7 @@ Audit Log                                  [Filter: All ▾]  [Actor: All ▾]
 - API keys are shown once, are workspace-scoped, and can be revoked at any time.
 - The audit log is read-only and cannot be cleared.
 - A webhook endpoint that keeps failing is disabled automatically, and the Brand Admin is notified.
+- The embed snippet reflects settings at copy time; saving new settings does not retroactively update snippets already pasted onto external sites.
 
 ---
 
@@ -246,6 +274,8 @@ Audit Log                                  [Filter: All ▾]  [Actor: All ▾]
 | A spam keyword flags a legitimate post | The Brand Admin can approve it from the pending queue — it is held, not rejected. |
 | Moderation mode switched from Manual to Off while posts are pending | Pending posts stay pending; the Brand Admin must approve or delete them. |
 | Audit log grows very large | Shown in pages, newest first; performance is unaffected. |
+| Embed settings changed after the snippet was already pasted elsewhere | The live site keeps the old appearance until the Brand Admin re-copies and re-pastes the updated snippet. |
+| Position set on an inline (non-floating) embed | Ignored — position only affects the floating launcher. |
 
 ---
 
@@ -284,6 +314,13 @@ Audit Log                                  [Filter: All ▾]  [Actor: All ▾]
 - [ ] A Brand Admin can generate a named key, shown once.
 - [ ] The table shows each key's name and last-used time.
 - [ ] A key can be revoked.
+
+**Embed**
+- [ ] A Brand Admin can choose Launcher (Inline / Floating), Position, Theme, Width, Height, and Accent color.
+- [ ] The generated `<script>` snippet updates live as settings change, before saving.
+- [ ] The snippet can be copied with one click.
+- [ ] Position is disabled/ignored when Launcher is Inline.
+- [ ] Pasting the snippet on an external site renders the widget with the configured appearance.
 
 **Audit Log**
 - [ ] The audit log shows administrative actions newest first.

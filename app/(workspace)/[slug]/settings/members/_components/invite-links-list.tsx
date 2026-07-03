@@ -70,7 +70,7 @@ export function InviteLinksList({
           <div className="space-y-px bg-border">
             {links.map((link) => (
               <div
-                className="flex items-center gap-4 bg-background px-6 py-4"
+                className="flex flex-col gap-2 bg-background px-6 py-4 sm:flex-row sm:items-center sm:gap-4"
                 key={link.id}
               >
                 <div className="flex-1 min-w-0">

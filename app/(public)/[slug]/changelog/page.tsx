@@ -135,7 +135,7 @@ export default async function PublicChangelogIndexPage({ params }: Props) {
           <div className="mt-8 divide-y divide-border border-t border-border">
             {entries.map((entry) => (
               <article className="py-8" key={entry.id}>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                   <ChangelogLabelBadge label={entry.label} />
                   {entry.publishedAt && (
                     <time

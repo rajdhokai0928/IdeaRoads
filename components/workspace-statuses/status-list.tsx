@@ -188,7 +188,7 @@ export function StatusList({
   const archived = statuses.filter((s) => s.isArchived);
 
   return (
-    <div className="px-8 py-6 max-w-2xl space-y-6">
+    <div className="px-4 py-6 max-w-2xl space-y-6 sm:px-8">
       {/* Add button */}
       {canManage && !form && (
         <button
@@ -319,7 +319,7 @@ export function StatusList({
                 </span>
 
                 {s.isDefault && (
-                  <span className="text-[10px] font-medium text-muted-foreground border border-border px-1.5 py-0.5 flex items-center gap-1">
+                  <span className="text-2xs font-medium text-muted-foreground border border-border px-1.5 py-0.5 flex items-center gap-1">
                     <Star className="size-2.5" />
                     Default
                   </span>

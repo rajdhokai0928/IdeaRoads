@@ -114,7 +114,7 @@ function FormField({
   error?: string;
 }) {
   return (
-    <div className="grid grid-cols-[160px_1fr] gap-4 py-3 border-b border-border last:border-0">
+    <div className="grid grid-cols-1 gap-1.5 py-3 border-b border-border last:border-0 sm:grid-cols-[160px_1fr] sm:items-center sm:gap-4">
       <div>
         <label
           className="block text-sm font-medium text-foreground mt-0.5"
@@ -263,7 +263,7 @@ export function GeneralSettingsForm({
     "cursor-pointer px-3.5 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
-    <div className="px-8 py-6 max-w-2xl space-y-10">
+    <div className="px-4 py-6 max-w-2xl space-y-10 sm:px-8">
       {/* Workspace Info */}
       <section>
         <SectionHeader

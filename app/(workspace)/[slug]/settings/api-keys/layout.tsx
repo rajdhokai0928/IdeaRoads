@@ -5,7 +5,7 @@ interface Props {
 export default function ApiKeysSettingsLayout({ children }: Props) {
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-8 py-6">
+      <div className="border-b border-border px-4 py-6 sm:px-8">
         <h1 className="text-xl font-semibold text-foreground">API Keys</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Create workspace-scoped API keys for programmatic access.

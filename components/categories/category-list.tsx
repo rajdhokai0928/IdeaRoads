@@ -179,7 +179,7 @@ export function CategoryList({
   const archived = categories.filter((c) => c.isArchived);
 
   return (
-    <div className="px-8 py-6 max-w-2xl space-y-6">
+    <div className="px-4 py-6 max-w-2xl space-y-6 sm:px-8">
       {/* Add button */}
       {canManage && !form && (
         <button

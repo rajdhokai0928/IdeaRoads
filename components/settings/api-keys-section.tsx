@@ -128,6 +128,7 @@ export function ApiKeysSection({ workspaceId, keys }: Props) {
           <div className="flex gap-2">
             <div className="flex-1">
               <input
+                aria-label="Key name"
                 className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                 disabled={isPending}
                 maxLength={64}
@@ -171,7 +172,10 @@ export function ApiKeysSection({ workspaceId, keys }: Props) {
         ) : (
           <div className="border border-border divide-y divide-border">
             {keys.map((key) => (
-              <div className="flex items-center gap-4 p-4" key={key.id}>
+              <div
+                className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4"
+                key={key.id}
+              >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">
                     {key.name}

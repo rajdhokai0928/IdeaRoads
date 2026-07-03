@@ -118,14 +118,14 @@ function AvatarUploadRow({
 
   return (
     <div className="px-5 py-4">
-      <div className="flex items-start gap-6">
-        <div className="w-40 shrink-0 pt-0.5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
+        <div className="w-full pt-0.5 sm:w-40 sm:shrink-0">
           <p className="text-sm font-medium text-foreground">Profile picture</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             PNG, JPEG, WEBP, or GIF. Max 4MB.
           </p>
         </div>
-        <form action={avatarAction} className="flex-1 min-w-0" ref={formRef}>
+        <form action={avatarAction} className="min-w-0 flex-1" ref={formRef}>
           <div className="flex items-center gap-4">
             <div className="relative">
               <Avatar size="lg">
@@ -140,7 +140,7 @@ function AvatarUploadRow({
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 disabled={pending}
                 onClick={() => fileInputRef.current?.click()}
@@ -202,14 +202,14 @@ export function AccountIdentityForms({
 
       {/* Display name */}
       <div className="px-5 py-4">
-        <div className="flex items-start gap-6">
-          <div className="w-40 shrink-0 pt-0.5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
+          <div className="w-full pt-0.5 sm:w-40 sm:shrink-0">
             <p className="text-sm font-medium text-foreground">Display name</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Shown in audit logs and admin views.
             </p>
           </div>
-          <form action={nameAction} className="flex-1 min-w-0 space-y-3">
+          <form action={nameAction} className="min-w-0 flex-1 space-y-3">
             <Input
               defaultValue={name}
               id="name"
@@ -227,21 +227,21 @@ export function AccountIdentityForms({
 
       {/* Email address */}
       <div className="px-5 py-4">
-        <div className="flex items-start gap-6">
-          <div className="w-40 shrink-0 pt-0.5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
+          <div className="w-full pt-0.5 sm:w-40 sm:shrink-0">
             <p className="text-sm font-medium text-foreground">Email address</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Used for magic-link sign-in.
             </p>
           </div>
-          <form action={emailAction} className="flex-1 min-w-0 space-y-3">
+          <form action={emailAction} className="min-w-0 flex-1 space-y-3">
             <Input
               defaultValue={email}
               id="email"
               name="email"
+              placeholder="Enter your email address..."
               required
               type="email"
-              placeholder="Enter your email address..."
             />
             <ActionMessage state={emailState} />
             <Button disabled={emailPending} size="sm" type="submit">

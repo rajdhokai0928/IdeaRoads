@@ -17,6 +17,8 @@ import { db } from "@/lib/db";
 import { enqueueEmail } from "@/lib/email";
 import { MemberRemovedEmail } from "@/lib/email/components/member-removed";
 import { renderEmailTemplate } from "@/lib/email/renderer";
+import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
+import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 import {
   createInviteLink,
   getInviteLinkById,
@@ -206,6 +208,12 @@ export async function acceptInviteAction(
     metadata: { workspaceSlug: result.workspaceSlug },
   });
 
+  dispatchWebhookEvent(result.workspaceId, WEBHOOK_EVENTS.MEMBER_JOINED, {
+    userId: session.user.id,
+    userEmail: session.user.email,
+    via: "invite",
+  });
+
   return { success: true, data: { slug: result.workspaceSlug } };
 }
 
@@ -244,6 +252,12 @@ export async function joinViaLinkAction(
     entityId: result.workspaceSlug,
     description: `${session.user.email} joined via invite link`,
     metadata: { workspaceSlug: result.workspaceSlug },
+  });
+
+  dispatchWebhookEvent(result.workspaceId, WEBHOOK_EVENTS.MEMBER_JOINED, {
+    userId: session.user.id,
+    userEmail: session.user.email,
+    via: "invite_link",
   });
 
   return { success: true, data: { slug: result.workspaceSlug } };
@@ -498,6 +512,12 @@ export async function removeMemberAction(input: {
     entityId: input.workspaceId,
     description: `${session.user.email} removed a member`,
     metadata: { removedMemberId: input.memberId, removedRole: target.role },
+  });
+
+  dispatchWebhookEvent(input.workspaceId, WEBHOOK_EVENTS.MEMBER_REMOVED, {
+    userId: target.userId,
+    removedMemberId: input.memberId,
+    removedRole: target.role,
   });
 
   // Notify the removed person (Feature 03).

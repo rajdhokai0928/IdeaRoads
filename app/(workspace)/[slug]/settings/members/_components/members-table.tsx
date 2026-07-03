@@ -144,149 +144,153 @@ export function MembersTable({
 
           return (
             <div
-              className="flex items-center gap-4 bg-background px-6 py-4"
+              className="flex flex-col gap-2 bg-background px-6 py-4 sm:flex-row sm:items-center sm:gap-4"
               key={member.id}
             >
-              <SquareAvatar
-                alt={member.user.name ?? member.user.email}
-                className="size-9 bg-muted text-sm font-semibold text-muted-foreground uppercase"
-                fallback={(member.user.name || member.user.email).charAt(0)}
-                imageUrl={member.user.image}
-              />
-              <div className="flex-1 min-w-0">
-                {member.user.name && (
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {member.user.name}
-                    {isSelf && (
+              <div className="flex flex-1 items-center gap-4 min-w-0">
+                <SquareAvatar
+                  alt={member.user.name ?? member.user.email}
+                  className="size-9 bg-muted text-sm font-semibold text-muted-foreground uppercase"
+                  fallback={(member.user.name || member.user.email).charAt(0)}
+                  imageUrl={member.user.image}
+                />
+                <div className="flex-1 min-w-0">
+                  {member.user.name && (
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {member.user.name}
+                      {isSelf && (
+                        <span className="ml-1.5 text-xs text-muted-foreground font-normal">
+                          (you)
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  <p
+                    className={`truncate text-sm ${member.user.name ? "text-muted-foreground" : "font-medium text-foreground"}`}
+                  >
+                    {member.user.email}
+                    {!member.user.name && isSelf && (
                       <span className="ml-1.5 text-xs text-muted-foreground font-normal">
                         (you)
                       </span>
                     )}
                   </p>
-                )}
-                <p
-                  className={`truncate text-sm ${member.user.name ? "text-muted-foreground" : "font-medium text-foreground"}`}
-                >
-                  {member.user.email}
-                  {!member.user.name && isSelf && (
-                    <span className="ml-1.5 text-xs text-muted-foreground font-normal">
-                      (you)
-                    </span>
+                  {errors[member.id] && (
+                    <p className="mt-0.5 text-xs text-destructive">
+                      {errors[member.id]}
+                    </p>
                   )}
-                </p>
-                {errors[member.id] && (
-                  <p className="mt-0.5 text-xs text-destructive">
-                    {errors[member.id]}
-                  </p>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span
+                  className={`shrink-0 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${ROLE_BADGE[member.role]}`}
+                >
+                  {workspaceRoleLabel(member.role)}
+                </span>
+                {showMenu && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        className="size-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                        disabled={loadingId === member.id}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        {loadingId === member.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <MoreHorizontal className="size-4" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {canChangeRole && (
+                        <>
+                          {member.role === WORKSPACE_MEMBER && (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleAction(member.id, () =>
+                                  changeRoleAction({
+                                    memberId: member.id,
+                                    workspaceId,
+                                    role: "admin",
+                                  })
+                                )
+                              }
+                            >
+                              Promote to Brand Admin
+                            </DropdownMenuItem>
+                          )}
+                          {member.role === WORKSPACE_ADMIN && (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleAction(member.id, () =>
+                                  changeRoleAction({
+                                    memberId: member.id,
+                                    workspaceId,
+                                    role: "member",
+                                  })
+                                )
+                              }
+                            >
+                              Change to Team Member
+                            </DropdownMenuItem>
+                          )}
+                        </>
+                      )}
+                      {canTransfer && (
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() =>
+                            setPendingConfirm({
+                              title: "Transfer Ownership",
+                              description: `Transfer workspace ownership to ${member.user.name ?? member.user.email}? You will remain a Brand Admin but lose ownership of this workspace.`,
+                              memberId: member.id,
+                              confirmLabel: "Transfer",
+                              action: () =>
+                                transferOwnershipAction({
+                                  targetMemberId: member.id,
+                                  workspaceId,
+                                }),
+                              successMessage:
+                                "Ownership transferred successfully",
+                            })
+                          }
+                        >
+                          Transfer ownership
+                        </DropdownMenuItem>
+                      )}
+                      {(canChangeRole || canTransfer) && canRemove && (
+                        <DropdownMenuSeparator />
+                      )}
+                      {canRemove && (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive cursor-pointer"
+                          onClick={() =>
+                            setPendingConfirm({
+                              title: "Remove Member",
+                              description: `Remove ${member.user.name ?? member.user.email} from this workspace? They will lose all access immediately.`,
+                              memberId: member.id,
+                              confirmLabel: "Remove",
+                              action: () =>
+                                removeMemberAction({
+                                  memberId: member.id,
+                                  workspaceId,
+                                }),
+                              successMessage: "Member removed successfully",
+                            })
+                          }
+                        >
+                          Remove member
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
-              <span
-                className={`shrink-0 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${ROLE_BADGE[member.role]}`}
-              >
-                {workspaceRoleLabel(member.role)}
-              </span>
-              {showMenu && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      className="size-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                      disabled={loadingId === member.id}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      {loadingId === member.id ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <MoreHorizontal className="size-4" />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {canChangeRole && (
-                      <>
-                        {member.role === WORKSPACE_MEMBER && (
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() =>
-                              handleAction(member.id, () =>
-                                changeRoleAction({
-                                  memberId: member.id,
-                                  workspaceId,
-                                  role: "admin",
-                                })
-                              )
-                            }
-                          >
-                            Promote to Brand Admin
-                          </DropdownMenuItem>
-                        )}
-                        {member.role === WORKSPACE_ADMIN && (
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() =>
-                              handleAction(member.id, () =>
-                                changeRoleAction({
-                                  memberId: member.id,
-                                  workspaceId,
-                                  role: "member",
-                                })
-                              )
-                            }
-                          >
-                            Change to Team Member
-                          </DropdownMenuItem>
-                        )}
-                      </>
-                    )}
-                    {canTransfer && (
-                      <DropdownMenuItem
-                        className="cursor-pointer"
-                        onClick={() =>
-                          setPendingConfirm({
-                            title: "Transfer Ownership",
-                            description: `Transfer workspace ownership to ${member.user.name ?? member.user.email}? You will remain a Brand Admin but lose ownership of this workspace.`,
-                            memberId: member.id,
-                            confirmLabel: "Transfer",
-                            action: () =>
-                              transferOwnershipAction({
-                                targetMemberId: member.id,
-                                workspaceId,
-                              }),
-                            successMessage:
-                              "Ownership transferred successfully",
-                          })
-                        }
-                      >
-                        Transfer ownership
-                      </DropdownMenuItem>
-                    )}
-                    {(canChangeRole || canTransfer) && canRemove && (
-                      <DropdownMenuSeparator />
-                    )}
-                    {canRemove && (
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive cursor-pointer"
-                        onClick={() =>
-                          setPendingConfirm({
-                            title: "Remove Member",
-                            description: `Remove ${member.user.name ?? member.user.email} from this workspace? They will lose all access immediately.`,
-                            memberId: member.id,
-                            confirmLabel: "Remove",
-                            action: () =>
-                              removeMemberAction({
-                                memberId: member.id,
-                                workspaceId,
-                              }),
-                            successMessage: "Member removed successfully",
-                          })
-                        }
-                      >
-                        Remove member
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </div>
           );
         })}

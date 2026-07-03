@@ -4,11 +4,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CategoryChip } from "@/components/categories/category-chip";
+import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { getBoardBySlug } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import {
+  buildEmbedQuery,
+  embedWrapperProps,
+  parseEmbedParams,
+} from "@/lib/embed/style";
 import { listBoardPosts } from "@/lib/posts/queries";
 import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
 import {
@@ -26,6 +32,9 @@ interface Props {
     category?: string;
     q?: string;
     myVotes?: string;
+    embed?: string;
+    theme?: string;
+    accentColor?: string;
   }>;
 }
 
@@ -41,7 +50,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BoardPage({ params, searchParams }: Props) {
   const { slug, boardSlug } = await params;
-  const { sort, status, category, q, myVotes } = await searchParams;
+  const { sort, status, category, q, myVotes, embed, theme, accentColor } =
+    await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { isEmbed } = embedParams;
+  const embedQuery = buildEmbedQuery(embedParams);
+  const embedWrapper = embedWrapperProps(embedParams);
 
   const session = await getCurrentSession();
 
@@ -95,12 +109,16 @@ export default async function BoardPage({ params, searchParams }: Props) {
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
   const newPostHref = isSignedIn
-    ? `/${slug}/b/${boardSlug}/new`
-    : `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new`)}`;
+    ? `/${slug}/b/${boardSlug}/new${embedQuery}`
+    : `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`;
 
   return (
-    <div className="min-h-screen bg-background">
-      {!isMember && (
+    <div
+      className={`min-h-screen bg-background ${embedWrapper.className}`}
+      style={embedWrapper.style}
+    >
+      {isEmbed && <EmbedResizeReporter />}
+      {!isMember && !isEmbed && (
         <PortalHeader
           changelogPublic={workspace.changelogPublic}
           isSignedIn={isSignedIn}
@@ -112,7 +130,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
 
       <div className="max-w-5xl mx-auto flex flex-col">
         {/* Page header */}
-        <div className="border-b border-border px-8 py-6">
+        <div className="border-b border-border px-4 py-6 sm:px-8">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h1 className="text-xl font-semibold text-foreground">
@@ -157,7 +175,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
         {/* Post list */}
         <div className="flex-1">
           {boardPosts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center px-8">
+            <div className="flex flex-col items-center justify-center px-4 py-24 text-center sm:px-8">
               {searchQuery ||
               validStatus ||
               validCategoryId ||
@@ -190,7 +208,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
 
                 return (
                   <div
-                    className="group flex items-start gap-4 px-8 py-5 hover:bg-muted/40 transition-colors duration-150"
+                    className="group flex items-start gap-4 px-4 py-5 hover:bg-muted/40 transition-colors duration-150 sm:px-8"
                     key={post.id}
                   >
                     {/* Vote button */}
@@ -208,7 +226,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
                     {/* Post content */}
                     <Link
                       className="flex-1 min-w-0 pt-1"
-                      href={`/${slug}/b/${boardSlug}/p/${post.slug}`}
+                      href={`/${slug}/b/${boardSlug}/p/${post.slug}${embedQuery}`}
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         {post.isPinned && (
@@ -236,7 +254,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
                           {post.body}
                         </p>
                       )}
-                      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                         <span>
                           {post.authorName ?? post.authorEmail} ·{" "}
                           {formatDistanceToNow(post.createdAt, {

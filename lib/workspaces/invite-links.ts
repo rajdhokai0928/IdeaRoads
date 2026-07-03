@@ -77,7 +77,7 @@ export async function getInviteLinkById(linkId: string, workspaceId: string) {
 }
 
 export type JoinViaLinkResult =
-  | { ok: true; workspaceSlug: string }
+  | { ok: true; workspaceId: string; workspaceSlug: string }
   | {
       ok: false;
       code:
@@ -162,7 +162,11 @@ export async function joinViaLink(input: {
       })
       .where(eq(workspaceInviteLinks.id, link.id));
 
-    return { ok: true, workspaceSlug: workspace.slug };
+    return {
+      ok: true,
+      workspaceId: workspace.id,
+      workspaceSlug: workspace.slug,
+    };
   });
 }
 

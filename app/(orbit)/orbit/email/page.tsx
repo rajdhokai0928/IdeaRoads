@@ -55,46 +55,50 @@ export default async function OrbitEmailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <Table className="table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[38%]">Recipient</TableHead>
-                  <TableHead className="w-[38%]">Subject</TableHead>
-                  <TableHead className="w-[14%]">Status</TableHead>
-                  <TableHead className="w-[10%] text-right">Attempts</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {outbox.map((email) => (
-                  <TableRow key={email.id}>
-                    <TableCell className="max-w-0">
-                      <span className="block truncate text-sm">
-                        {email.payload.to}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-0">
-                      <span className="block truncate text-sm text-muted-foreground">
-                        {email.payload.subject}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          email.status === "sent"
-                            ? "text-success"
-                            : "text-warning"
-                        }
-                      >
-                        {email.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {email.attemptCount}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="sm:table-fixed">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="sm:w-[38%]">Recipient</TableHead>
+                    <TableHead className="sm:w-[38%]">Subject</TableHead>
+                    <TableHead className="sm:w-[14%]">Status</TableHead>
+                    <TableHead className="sm:w-[10%] text-right">
+                      Attempts
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {outbox.map((email) => (
+                    <TableRow key={email.id}>
+                      <TableCell className="sm:max-w-0">
+                        <span className="block truncate text-sm">
+                          {email.payload.to}
+                        </span>
+                      </TableCell>
+                      <TableCell className="sm:max-w-0">
+                        <span className="block truncate text-sm text-muted-foreground">
+                          {email.payload.subject}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            email.status === "sent"
+                              ? "text-success"
+                              : "text-warning"
+                          }
+                        >
+                          {email.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {email.attemptCount}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
@@ -106,34 +110,36 @@ export default async function OrbitEmailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <Table className="table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[22%]">Type</TableHead>
-                  <TableHead className="w-[45%]">Recipient</TableHead>
-                  <TableHead className="w-[33%]">Received</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell>
-                      <span className="block truncate text-sm">
-                        {event.eventType}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-0">
-                      <span className="block truncate text-sm text-muted-foreground">
-                        {event.recipient ?? "-"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDateTime(event.receivedAt)}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="sm:table-fixed">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="sm:w-[22%]">Type</TableHead>
+                    <TableHead className="sm:w-[45%]">Recipient</TableHead>
+                    <TableHead className="sm:w-[33%]">Received</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {events.map((event) => (
+                    <TableRow key={event.id}>
+                      <TableCell>
+                        <span className="block truncate text-sm">
+                          {event.eventType}
+                        </span>
+                      </TableCell>
+                      <TableCell className="sm:max-w-0">
+                        <span className="block truncate text-sm text-muted-foreground">
+                          {event.recipient ?? "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDateTime(event.receivedAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

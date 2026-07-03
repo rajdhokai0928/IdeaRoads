@@ -256,7 +256,7 @@ export function ChangelogEditor({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-8 py-6 max-w-3xl">
+    <div className="flex flex-col gap-6 px-4 py-6 sm:px-8 max-w-3xl">
       {/* Title */}
       <div className="space-y-1.5">
         <label
@@ -401,7 +401,7 @@ export function ChangelogEditor({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between border-t border-border pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
         <div className="flex items-center gap-1.5">
           {saveStatus === "saving" && (
             <span className="text-xs text-muted-foreground animate-pulse">
@@ -413,7 +413,7 @@ export function ChangelogEditor({
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {!isPublished && (
             <button
               className="px-4 py-2 text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"

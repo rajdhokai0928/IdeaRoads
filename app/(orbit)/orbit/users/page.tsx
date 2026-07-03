@@ -60,7 +60,11 @@ export default async function OrbitUsersPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <form action="/orbit/users" className="flex gap-2" method="GET">
+        <form
+          action="/orbit/users"
+          className="flex flex-wrap gap-2"
+          method="GET"
+        >
           {adminsOnly && <input name="filter" type="hidden" value="admins" />}
           <input
             className="h-9 w-64 border border-border bg-background px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -108,80 +112,84 @@ export default async function OrbitUsersPage({ searchParams }: Props) {
       </div>
 
       <div className="border border-border bg-card">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[32%]">User</TableHead>
-              <TableHead className="w-[10%]">Role</TableHead>
-              <TableHead className="w-[10%]">Status</TableHead>
-              <TableHead className="w-[12%] text-right">Workspaces</TableHead>
-              <TableHead className="w-[24%]">Joined</TableHead>
-              <TableHead className="w-[12%]" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table className="sm:table-fixed">
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  className="py-10 text-center text-muted-foreground"
-                  colSpan={6}
-                >
-                  No users found.
-                </TableCell>
+                <TableHead className="sm:w-[32%]">User</TableHead>
+                <TableHead className="sm:w-[10%]">Role</TableHead>
+                <TableHead className="sm:w-[10%]">Status</TableHead>
+                <TableHead className="text-right sm:w-[12%]">
+                  Workspaces
+                </TableHead>
+                <TableHead className="sm:w-[24%]">Joined</TableHead>
+                <TableHead className="sm:w-[12%]" />
               </TableRow>
-            ) : (
-              users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="max-w-0">
-                    <div className="truncate font-semibold">{u.email}</div>
-                    {u.name && (
-                      <div className="truncate text-xs text-muted-foreground">
-                        {u.name}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={u.isAdmin ? "text-success" : undefined}
-                      variant={u.isAdmin ? "default" : "secondary"}
-                    >
-                      {u.isAdmin ? "Admin" : "User"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={u.banned ? undefined : "text-success"}
-                      variant={u.banned ? "destructive" : "default"}
-                    >
-                      {u.banned ? "Banned" : "Active"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm">
-                    {u.workspaceCount}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDateTime(u.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      className="text-xs font-semibold uppercase tracking-ui text-muted-foreground hover:text-foreground transition-colors"
-                      href={`/orbit/users/${u.id}`}
-                    >
-                      View →
-                    </Link>
+            </TableHeader>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    className="py-10 text-center text-muted-foreground"
+                    colSpan={6}
+                  >
+                    No users found.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                users.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell className="sm:max-w-0">
+                      <div className="truncate font-semibold">{u.email}</div>
+                      {u.name && (
+                        <div className="truncate text-xs text-muted-foreground">
+                          {u.name}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={u.isAdmin ? "text-success" : undefined}
+                        variant={u.isAdmin ? "default" : "secondary"}
+                      >
+                        {u.isAdmin ? "Admin" : "User"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={u.banned ? undefined : "text-success"}
+                        variant={u.banned ? "destructive" : "default"}
+                      >
+                        {u.banned ? "Banned" : "Active"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {u.workspaceCount}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDateTime(u.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        className="text-xs font-semibold uppercase tracking-ui text-muted-foreground hover:text-foreground transition-colors"
+                        href={`/orbit/users/${u.id}`}
+                      >
+                        View →
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3">
             <span className="text-xs text-muted-foreground">
               Page {page} of {totalPages} · {total} users
             </span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {page > 1 && (
                 <Link
                   className="border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui hover:bg-accent"

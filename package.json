@@ -20,7 +20,9 @@
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
     "db:reset": "tsx db/reset.ts && pnpm db:migrate",
-    "make:admin": "tsx scripts/make-admin.ts"
+    "make:admin": "tsx scripts/make-admin.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -74,6 +76,7 @@
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
-    "ultracite": "7.8.3"
+    "ultracite": "7.8.3",
+    "vitest": "^4.1.9"
   }
 }

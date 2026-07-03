@@ -59,7 +59,7 @@ export default async function WorkspaceLayout({
   const unreadCount = await getUnreadCount(session.user.id);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden md:flex-row">
       <WorkspaceSidebar
         boards={workspaceBoards}
         email={email}

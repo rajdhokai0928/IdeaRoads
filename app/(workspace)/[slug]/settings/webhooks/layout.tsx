@@ -5,7 +5,7 @@ interface Props {
 export default function WebhooksSettingsLayout({ children }: Props) {
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-8 py-6">
+      <div className="border-b border-border px-4 py-6 sm:px-8">
         <h1 className="text-xl font-semibold text-foreground">Webhooks</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Send real-time events to your own systems via HTTPS webhooks.

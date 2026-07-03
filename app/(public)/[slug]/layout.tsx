@@ -58,7 +58,7 @@ export default async function PublicSlugLayout({ children, params }: Props) {
   ]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden md:flex-row">
       <WorkspaceSidebar
         boards={workspaceBoards}
         email={session.user.email}

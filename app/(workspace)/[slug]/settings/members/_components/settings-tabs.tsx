@@ -14,7 +14,7 @@ export function SettingsTabs({ slug }: { slug: string }) {
   ];
 
   return (
-    <div className="flex gap-0 border-b border-border px-8">
+    <div className="flex gap-0 border-b border-border px-4 sm:px-8">
       {tabs.map((tab) => {
         const isActive =
           tab.href === invitesHref

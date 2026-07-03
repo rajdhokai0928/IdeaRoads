@@ -101,7 +101,7 @@ export default async function OrbitUserDetailPage({ params }: Props) {
             <div className="divide-y divide-border">
               {u.workspaceMemberships.map((m) => (
                 <div
-                  className="flex items-center gap-4 px-4 py-3"
+                  className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
                   key={m.workspaceId}
                 >
                   <div className="min-w-0 flex-1">
@@ -115,10 +115,12 @@ export default async function OrbitUserDetailPage({ params }: Props) {
                       /{m.workspaceSlug}
                     </p>
                   </div>
-                  <Badge variant="secondary">{m.role}</Badge>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {formatDateTime(m.joinedAt)}
-                  </span>
+                  <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <Badge variant="secondary">{m.role}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDateTime(m.joinedAt)}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

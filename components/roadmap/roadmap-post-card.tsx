@@ -7,6 +7,7 @@ import type { RoadmapPost } from "@/lib/roadmap/queries";
 interface RoadmapPostCardProps {
   isSignedIn: boolean;
   post: RoadmapPost;
+  useWorkspaceLinks?: boolean;
   workspaceSlug: string;
 }
 
@@ -14,9 +15,16 @@ export function RoadmapPostCard({
   post,
   workspaceSlug,
   isSignedIn,
+  useWorkspaceLinks,
 }: RoadmapPostCardProps) {
-  const postHref = `/${workspaceSlug}/b/${post.boardSlug}/p/${post.slug}`;
-  const boardHref = `/${workspaceSlug}/b/${post.boardSlug}`;
+  // Fixed by which route rendered this card, never by who's viewing — the
+  // public roadmap never redirects into the workspace app on its own.
+  const postHref = useWorkspaceLinks
+    ? `/${workspaceSlug}/feedback/${post.id}`
+    : `/${workspaceSlug}/b/${post.boardSlug}/p/${post.slug}`;
+  const boardHref = useWorkspaceLinks
+    ? `/${workspaceSlug}/feedback?board=${post.boardId}`
+    : `/${workspaceSlug}/b/${post.boardSlug}`;
 
   return (
     <div className="group bg-background border border-border p-4 hover:border-border/80 hover:shadow-sm transition-all duration-150">

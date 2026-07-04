@@ -31,6 +31,7 @@ export default function PinButton({
       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
       disabled={isPending}
       onClick={handleToggle}
+      type="button"
     >
       {isPinned ? (
         <>

@@ -64,7 +64,9 @@ export async function createPostAction(input: {
   title: string;
   body?: string;
   categoryId?: string;
-}): Promise<ActionResult<{ postSlug: string; isPending: boolean }>> {
+}): Promise<
+  ActionResult<{ isPending: boolean; postId: string; postSlug: string }>
+> {
   const session = await requireSession();
 
   const parsed = createPostSchema.safeParse(input);
@@ -227,7 +229,11 @@ export async function createPostAction(input: {
 
   return {
     success: true,
-    data: { postSlug: post.slug, isPending: !post.isApproved },
+    data: {
+      postId: post.id,
+      postSlug: post.slug,
+      isPending: !post.isApproved,
+    },
   };
 }
 

@@ -4,35 +4,31 @@ import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef, useTransition } from "react";
 
-interface WorkspaceStatus {
+interface Category {
   color: string;
+  id: string;
+  isArchived: boolean;
   name: string;
-  slug: string;
 }
 
-interface BoardFiltersProps {
+interface RoadmapFiltersProps {
+  activeCategoryId: string;
   activeSearch: string;
-  activeSort: "newest" | "top" | "trending";
-  activeStatus: string;
-  myVotesActive: boolean;
-  showMyVotes: boolean;
-  workspaceStatuses: WorkspaceStatus[];
+  activeSort: "votes" | "latest_status_change";
+  categories: Category[];
 }
 
 const SORT_OPTIONS = [
-  { label: "Newest", value: "newest" },
-  { label: "Trending", value: "trending" },
-  { label: "Most Voted", value: "top" },
+  { label: "Most votes", value: "votes" },
+  { label: "Latest status change", value: "latest_status_change" },
 ] as const;
 
-export default function BoardFilters({
-  activeSort,
-  activeStatus,
+export function RoadmapFilters({
+  activeCategoryId,
   activeSearch,
-  myVotesActive,
-  showMyVotes,
-  workspaceStatuses,
-}: BoardFiltersProps) {
+  activeSort,
+  categories,
+}: RoadmapFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -43,7 +39,7 @@ export default function BoardFilters({
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "" || value === "newest") {
+        if (value === null || value === "" || value === "votes") {
           params.delete(key);
         } else {
           params.set(key, value);
@@ -67,15 +63,12 @@ export default function BoardFilters({
     }, 300);
   }
 
-  function toggleMyVotes() {
-    updateParam({ myVotes: myVotesActive ? null : "true" });
-  }
-
+  const activeCategories = categories.filter((c) => !c.isArchived);
   const pillSelect =
     "h-9 cursor-pointer border border-border bg-background pl-3 pr-7 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-4">
+    <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-4 sm:px-8">
       {/* Search */}
       <div className="relative min-w-50 flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -97,35 +90,21 @@ export default function BoardFilters({
         )}
       </div>
 
-      {/* Right controls */}
       <div className="flex flex-wrap items-center gap-2.5">
-        {showMyVotes && (
-          <button
-            className={`flex h-9 items-center gap-1.5 border px-3 text-sm font-medium transition-colors cursor-pointer duration-150 focus-visible:outline-none ${
-              myVotesActive
-                ? "border-primary/40 bg-primary/5 text-primary"
-                : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
-            }`}
-            onClick={toggleMyVotes}
-            type="button"
+        {activeCategories.length > 0 && (
+          <select
+            className={pillSelect}
+            onChange={(e) => updateParam({ category: e.target.value || null })}
+            value={activeCategoryId}
           >
-            My Votes
-            {myVotesActive && <X className="size-3" />}
-          </button>
+            <option value="">All items</option>
+            {activeCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         )}
-
-        <select
-          className={pillSelect}
-          onChange={(e) => updateParam({ status: e.target.value || null })}
-          value={activeStatus}
-        >
-          <option value="">Status</option>
-          {workspaceStatuses.map((s) => (
-            <option key={s.slug} value={s.slug}>
-              {s.name}
-            </option>
-          ))}
-        </select>
 
         <select
           className={pillSelect}

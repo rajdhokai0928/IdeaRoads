@@ -1,11 +1,8 @@
-import { format } from "date-fns";
-import { ArrowLeft, GitMerge } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import CommentSection from "@/components/comments/comment-section";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
-import VoteButton from "@/components/voting/vote-button";
+import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import { PostDetailContent } from "@/components/posts/post-detail-content";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
@@ -27,14 +24,6 @@ import {
   getWorkspaceBySlug,
   getWorkspaceMember,
 } from "@/lib/workspaces/queries";
-import CategorySelect from "./_components/category-select";
-import DeletePostButton from "./_components/delete-post-button";
-import EditPostButton from "./_components/edit-post-button";
-import MergePostButton from "./_components/merge-post-button";
-import MovePostButton from "./_components/move-post-button";
-import PinButton from "./_components/pin-button";
-import StatusSelect from "./_components/status-select";
-import VoterListButton from "./_components/voter-list-button";
 
 interface Props {
   params: Promise<{ slug: string; boardSlug: string; postSlug: string }>;
@@ -102,7 +91,6 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   }
 
   const isAdminOrOwner = !!member && member.role !== WORKSPACE_MEMBER;
-  const isAuthor = !!session && post.authorId === session.user.id;
 
   const [votedByUser, workspaceStatuses, categories, statusHistory] =
     await Promise.all([
@@ -112,12 +100,15 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
       listStatusHistory(post.id),
     ]);
 
+  const allBoards = await listBoardsForWorkspace(workspace.id);
+
   // Active boards a member can move this post to (excludes archived).
   const moveTargets = isMember
-    ? (await listBoardsForWorkspace(workspace.id))
+    ? allBoards
         .filter((b) => !b.isArchived)
         .map((b) => ({ id: b.id, name: b.name, slug: b.slug }))
     : [];
+  const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
 
   // If this post was merged into another, resolve the target's URL for the notice.
   let mergedTarget: { href: string; title: string } | null = null;
@@ -132,7 +123,6 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
     }
   }
 
-  const statusMap = new Map(workspaceStatuses.map((s) => [s.slug, s.name]));
   const boardHref = `/${slug}/b/${boardSlug}`;
 
   return (
@@ -141,195 +131,43 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
-      {!isMember && !isEmbed && (
+      {!isEmbed && (
         <PortalHeader
+          activeBoardSlug={boardSlug}
+          boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
+          isMember={isMember}
           isSignedIn={isSignedIn}
+          logoUrl={workspace.logoUrl}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}
+          userImage={session?.user.image}
+          userName={session?.user.name}
           workspaceName={workspace.name}
         />
       )}
+      {!isEmbed && <PoweredByBadge />}
 
-      <div className="max-w-5xl mx-auto flex flex-col">
-        {/* Back nav — hidden in embed mode (no navigation chrome) */}
-        {!isEmbed && (
-          <div className="border-b border-border px-4 py-4 sm:px-8">
-            <Link
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              href={boardHref}
-            >
-              <ArrowLeft className="size-4" />
-              {board.name}
-            </Link>
-          </div>
-        )}
-
-        <div className="px-4 py-8 max-w-3xl sm:px-8">
-          {/* Post header */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-semibold text-foreground leading-snug">
-                {post.title}
-              </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <StatusSelect
-                  canEdit={isMember}
-                  currentStatus={post.status}
-                  postId={post.id}
-                  workspaceId={workspace.id}
-                  workspaceStatuses={workspaceStatuses}
-                />
-                <CategorySelect
-                  canEdit={isMember}
-                  categories={categories}
-                  currentCategoryId={post.categoryId}
-                  postId={post.id}
-                  workspaceId={workspace.id}
-                />
-                <span className="text-xs text-muted-foreground">
-                  by {post.authorName ?? post.authorEmail}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {format(post.createdAt, "MMM d, yyyy")}
-                </span>
-                {post.updatedAt > post.createdAt && (
-                  <span className="text-xs text-muted-foreground/60">
-                    edited {format(post.updatedAt, "MMM d, yyyy")}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Vote button + voter list */}
-            <div className="shrink-0 flex flex-col items-center gap-2">
-              <VoteButton
-                initialCount={post.upvotes}
-                initialHasVoted={votedByUser}
-                isArchived={board.isArchived}
-                isLocked={post.isLocked}
-                isSignedIn={isSignedIn}
-                postId={post.id}
-              />
-              {isMember && (
-                <VoterListButton postId={post.id} voteCount={post.upvotes} />
-              )}
-            </div>
-          </div>
-
-          {/* Merged notice */}
-          {mergedTarget && (
-            <div className="mt-4 flex items-center gap-2 border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-              <GitMerge className="size-4 shrink-0" />
-              <span>
-                Merged into{" "}
-                <Link
-                  className="font-medium text-foreground hover:underline"
-                  href={mergedTarget.href}
-                >
-                  {mergedTarget.title}
-                </Link>
-              </span>
-            </div>
-          )}
-
-          {/* Post body */}
-          {post.body && (
-            <div className="mt-6 border-t border-border pt-6">
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                {post.body}
-              </p>
-            </div>
-          )}
-
-          {/* Triage / clean-up actions (workspace members) and author delete */}
-          {(isMember || isAuthor) && (
-            <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border pt-4">
-              {isMember && (
-                <PinButton
-                  isPinned={post.isPinned}
-                  postId={post.id}
-                  workspaceId={workspace.id}
-                />
-              )}
-              {isMember && !post.mergedIntoId && (
-                <>
-                  <MovePostButton
-                    boards={moveTargets}
-                    currentBoardId={post.boardId}
-                    postId={post.id}
-                    workspaceId={workspace.id}
-                    workspaceSlug={slug}
-                  />
-                  <MergePostButton
-                    postId={post.id}
-                    postTitle={post.title}
-                    workspaceId={workspace.id}
-                  />
-                </>
-              )}
-              {(isAuthor || isAdminOrOwner) && (
-                <EditPostButton
-                  initialBody={post.body}
-                  initialTitle={post.title}
-                  postId={post.id}
-                  workspaceId={workspace.id}
-                />
-              )}
-              <DeletePostButton
-                boardHref={boardHref}
-                postId={post.id}
-                workspaceId={workspace.id}
-              />
-            </div>
-          )}
-
-          {/* Status history */}
-          {statusHistory.length > 0 && (
-            <div className="mt-6 border-t border-border pt-6">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                Status history
-              </h2>
-              <ul className="space-y-2">
-                {statusHistory.map((entry) => (
-                  <li
-                    className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground"
-                    key={entry.id}
-                  >
-                    <span className="text-foreground">
-                      {entry.fromStatus
-                        ? `${statusMap.get(entry.fromStatus) ?? entry.fromStatus} → `
-                        : ""}
-                      {statusMap.get(entry.toStatus) ?? entry.toStatus}
-                    </span>
-                    <span>·</span>
-                    <time dateTime={entry.createdAt.toISOString()}>
-                      {format(entry.createdAt, "MMM d, yyyy")}
-                    </time>
-                    {isMember && entry.changedByName && (
-                      <>
-                        <span>·</span>
-                        <span>by {entry.changedByName}</span>
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Comments */}
-          <div className="mt-6 border-t border-border pt-6">
-            <CommentSection
-              canModerate={isAdminOrOwner}
-              currentUserId={session?.user.id ?? null}
-              isLocked={post.isLocked}
-              isSignedIn={isSignedIn}
-              postId={post.id}
-            />
-          </div>
-        </div>
-      </div>
+      <PostDetailContent
+        backLabel={board.name}
+        boardHref={boardHref}
+        boardIsArchived={board.isArchived}
+        categories={categories}
+        currentUserId={session?.user.id ?? null}
+        embedQuery={embedQuery}
+        isAdminOrOwner={isAdminOrOwner}
+        isEmbed={isEmbed}
+        isMember={isMember}
+        isSignedIn={isSignedIn}
+        mergedTarget={mergedTarget}
+        moveTargets={moveTargets}
+        post={post}
+        statusHistory={statusHistory}
+        votedByUser={votedByUser}
+        workspaceId={workspace.id}
+        workspaceSlug={slug}
+        workspaceStatuses={workspaceStatuses}
+      />
     </div>
   );
 }

@@ -5,6 +5,11 @@ interface RoadmapBoardProps {
   data: RoadmapData;
   isAdmin?: boolean;
   isSignedIn: boolean;
+  // Fixed per-route, never per-viewer: true only on the admin-shelled
+  // /settings/roadmap page. The public /roadmap page never sets this, even
+  // for signed-in members — the public portal must never redirect into the
+  // workspace app on its own.
+  useWorkspaceLinks?: boolean;
   workspaceSlug: string;
 }
 
@@ -13,6 +18,7 @@ export function RoadmapBoard({
   workspaceSlug,
   isSignedIn,
   isAdmin,
+  useWorkspaceLinks,
 }: RoadmapBoardProps) {
   return (
     <div className="px-6 pb-12">
@@ -29,18 +35,21 @@ export function RoadmapBoard({
           isSignedIn={isSignedIn}
           posts={data.planned}
           status="planned"
+          useWorkspaceLinks={useWorkspaceLinks}
           workspaceSlug={workspaceSlug}
         />
         <RoadmapColumn
           isSignedIn={isSignedIn}
           posts={data.in_progress}
           status="in_progress"
+          useWorkspaceLinks={useWorkspaceLinks}
           workspaceSlug={workspaceSlug}
         />
         <RoadmapColumn
           isSignedIn={isSignedIn}
           posts={data.completed}
           status="completed"
+          useWorkspaceLinks={useWorkspaceLinks}
           workspaceSlug={workspaceSlug}
         />
       </div>

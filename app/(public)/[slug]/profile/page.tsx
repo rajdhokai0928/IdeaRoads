@@ -1,0 +1,145 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import { ProfileActions } from "@/components/portal/profile-actions";
+import { PostsTable } from "@/components/posts/posts-table";
+import { SquareAvatar } from "@/components/ui/square-avatar";
+import { PortalHeader } from "@/components/workspace/portal-header";
+import { requireSession } from "@/lib/authz";
+import { listBoardsForWorkspace } from "@/lib/boards/queries";
+import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import { getNotificationPreferences } from "@/lib/notifications/queries";
+import {
+  countWorkspacePostsFiltered,
+  listWorkspacePosts,
+} from "@/lib/posts/queries";
+import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
+import {
+  getWorkspaceBySlug,
+  getWorkspaceMember,
+} from "@/lib/workspaces/queries";
+
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  return { title: `My Profile — ${slug}` };
+}
+
+export default async function PublicProfilePage({ params }: Props) {
+  const { slug } = await params;
+  const session = await requireSession();
+
+  const workspace = await getWorkspaceBySlug(slug);
+  if (!workspace) {
+    notFound();
+  }
+
+  const [
+    myPosts,
+    postCount,
+    categories,
+    workspaceStatuses,
+    allBoards,
+    prefs,
+    member,
+  ] = await Promise.all([
+    listWorkspacePosts(workspace.id, {
+      authorId: session.user.id,
+      userId: session.user.id,
+      includeUnapproved: true,
+      sort: "newest",
+    }),
+    countWorkspacePostsFiltered(workspace.id, {
+      authorId: session.user.id,
+      includeUnapproved: true,
+    }),
+    getActiveCategoriesForWorkspace(workspace.id),
+    getActiveWorkspaceStatuses(workspace.id),
+    listBoardsForWorkspace(workspace.id),
+    getNotificationPreferences(session.user.id),
+    getWorkspaceMember(workspace.id, session.user.id),
+  ]);
+
+  const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
+
+  const notificationPrefs = {
+    emailStatusChange: prefs?.emailStatusChange ?? true,
+    emailNewComment: prefs?.emailNewComment ?? true,
+    emailChangelog: prefs?.emailChangelog ?? true,
+    inAppStatusChange: prefs?.inAppStatusChange ?? true,
+    inAppNewComment: prefs?.inAppNewComment ?? true,
+    inAppChangelog: prefs?.inAppChangelog ?? true,
+  };
+
+  const displayName = session.user.name ?? session.user.email;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <PortalHeader
+        boards={publicBoards}
+        changelogPublic={workspace.changelogPublic}
+        isMember={!!member}
+        isSignedIn={true}
+        logoUrl={workspace.logoUrl}
+        roadmapPublic={workspace.roadmapPublic}
+        slug={slug}
+        userImage={session.user.image}
+        userName={session.user.name}
+        workspaceName={workspace.name}
+      />
+      <PoweredByBadge />
+
+      <div className="max-w-5xl mx-auto flex flex-col px-4 py-8 sm:px-8">
+        <h1 className="mb-4 text-xl font-semibold text-foreground">
+          My Profile
+        </h1>
+
+        <div className="flex flex-col gap-4 border border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <SquareAvatar
+              alt={displayName}
+              className="size-14 text-lg"
+              fallback={displayName.charAt(0).toUpperCase()}
+              imageUrl={session.user.image}
+            />
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold text-foreground">
+                {displayName}
+              </p>
+              <p className="truncate text-sm text-muted-foreground">
+                {session.user.email}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {postCount} post{postCount === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+          <ProfileActions
+            email={session.user.email}
+            image={session.user.image ?? null}
+            name={session.user.name ?? ""}
+            notificationPrefs={notificationPrefs}
+          />
+        </div>
+
+        <div className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold text-foreground">
+            My Posts
+          </h2>
+          <div className="border border-border">
+            <PostsTable
+              categories={categories}
+              isSignedIn={true}
+              postHref={(post) => `/${slug}/b/${post.boardSlug}/p/${post.slug}`}
+              posts={myPosts}
+              workspaceStatuses={workspaceStatuses}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

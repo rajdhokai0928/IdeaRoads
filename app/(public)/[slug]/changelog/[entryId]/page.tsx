@@ -1,10 +1,13 @@
 import { format } from "date-fns";
-import { ArrowLeft, Rss } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
+import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
+import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { renderMarkdown } from "@/lib/changelog/markdown";
 import { getChangelogEntryById } from "@/lib/changelog/queries";
 import { env } from "@/lib/env";
@@ -25,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const entry = await getChangelogEntryById(entryId, workspace.id);
-  if (!entry || !entry.isPublished) {
+  if (!entry?.isPublished) {
     return { title: "Changelog", robots: "noindex" };
   }
 
@@ -60,67 +63,35 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
     notFound();
   }
 
-  const entry = await getChangelogEntryById(entryId, workspace.id);
-  if (!entry || !entry.isPublished) {
+  const entry = await getChangelogEntryById(entryId, workspace.id, {
+    publicOnly: !member,
+  });
+  if (!entry?.isPublished) {
     notFound();
   }
 
   const isSignedIn = !!session;
   const renderedBody = renderMarkdown(entry.body);
+  const allBoards = await listBoardsForWorkspace(workspace.id);
+  const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Public nav — visitors only; members get the workspace sidebar */}
-      {!member && (
-        <header className="border-b border-border bg-background sticky top-0 z-10">
-          <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-6">
-              <Link
-                className="text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
-                href={`/${slug}`}
-              >
-                {workspace.name}
-              </Link>
-              <nav className="hidden sm:flex items-center gap-1">
-                {workspace.roadmapPublic && (
-                  <Link
-                    className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    href={`/${slug}/roadmap`}
-                  >
-                    Roadmap
-                  </Link>
-                )}
-                {/* Changelog index link hidden until a public changelog index
-                  exists (deferred — see Phase E). */}
-              </nav>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link
-                aria-label="RSS feed"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-                href={`/${slug}/changelog/feed.xml`}
-              >
-                <Rss className="size-4" />
-              </Link>
-              {isSignedIn ? (
-                <Link
-                  className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  href={`/${slug}`}
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <Link
-                  className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  href="/signin"
-                >
-                  Sign in
-                </Link>
-              )}
-            </div>
-          </div>
-        </header>
-      )}
+      <PortalHeader
+        active="changelog"
+        boards={publicBoards}
+        changelogPublic={workspace.changelogPublic}
+        isMember={!!member}
+        isSignedIn={isSignedIn}
+        logoUrl={workspace.logoUrl}
+        roadmapPublic={workspace.roadmapPublic}
+        rssHref={`/${slug}/changelog/feed.xml`}
+        slug={slug}
+        userImage={session?.user.image}
+        userName={session?.user.name}
+        workspaceName={workspace.name}
+      />
+      <PoweredByBadge />
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 pt-10 pb-20">

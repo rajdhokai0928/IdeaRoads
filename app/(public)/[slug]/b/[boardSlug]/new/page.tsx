@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
+import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
-import { getBoardBySlug } from "@/lib/boards/queries";
+import { getBoardBySlug, listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
 import {
   buildEmbedQuery,
@@ -69,7 +70,11 @@ export default async function NewPostPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const categories = await getActiveCategoriesForWorkspace(workspace.id);
+  const [categories, allBoards] = await Promise.all([
+    getActiveCategoriesForWorkspace(workspace.id),
+    listBoardsForWorkspace(workspace.id),
+  ]);
+  const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
 
   return (
     <div
@@ -77,15 +82,22 @@ export default async function NewPostPage({ params, searchParams }: Props) {
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
-      {!member && !isEmbed && (
+      {!isEmbed && (
         <PortalHeader
+          activeBoardSlug={boardSlug}
+          boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
+          isMember={!!member}
           isSignedIn={true}
+          logoUrl={workspace.logoUrl}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}
+          userImage={session.user.image}
+          userName={session.user.name}
           workspaceName={workspace.name}
         />
       )}
+      {!isEmbed && <PoweredByBadge />}
       <div className="max-w-5xl mx-auto">
         <NewPostForm
           boardId={board.id}

@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
+import { NotificationPreferencesForm } from "@/components/profile/notification-preferences-form";
 import { requireSession } from "@/lib/authz";
 import { getNotificationPreferences } from "@/lib/notifications/queries";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
 } from "@/lib/workspaces/queries";
-import { NotificationPreferencesForm } from "./_components/notification-preferences-form";
 
 interface Props {
   params: Promise<{ slug: string }>;

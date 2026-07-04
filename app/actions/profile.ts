@@ -4,6 +4,7 @@ import { del, put } from "@vercel/blob";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { PRODUCT_NAME } from "@/config/platform";
 import {
   account,
   comments,
@@ -16,11 +17,23 @@ import {
 import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
 import { db } from "@/lib/db";
+import { enqueueEmail } from "@/lib/email";
+import { confirmEmailChangeTemplate } from "@/lib/email/templates/confirm-email-change";
+import { env } from "@/lib/env";
+import {
+  createPendingEmailChange,
+  deletePendingEmailChange,
+  getPendingEmailChangeByToken,
+} from "@/lib/profile/email-change";
 
 export interface ActionState {
   error?: string;
   success?: string;
 }
+
+type ActionResult<T = undefined> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set([
@@ -165,6 +178,10 @@ export async function changeEmailAction(
     return { error: "Enter a valid email address." };
   }
 
+  if (newEmail === current.user.email.toLowerCase()) {
+    return { error: "That is already your current email address." };
+  }
+
   const [existing] = await db
     .select({ id: user.id })
     .from(user)
@@ -175,27 +192,94 @@ export async function changeEmailAction(
     return { error: "That email is already in use." };
   }
 
+  // The email only changes once this link is clicked — that's what actually
+  // proves ownership of the new address. Without this, workspace invites
+  // (which match on email) could be hijacked by anyone who self-reports
+  // someone else's email address, since that never required verification.
+  const { token } = await createPendingEmailChange(current.user.id, newEmail);
+  const confirmUrl = `${env.NEXT_PUBLIC_APP_URL}/account/confirm-email/${token}`;
+
+  const { html, text } = await confirmEmailChangeTemplate({
+    newEmail,
+    confirmUrl,
+  });
+  await enqueueEmail({
+    to: newEmail,
+    subject: `Confirm your new email address — ${PRODUCT_NAME}`,
+    html,
+    text,
+  });
+
+  await audit({
+    action: "profile.email_change_requested",
+    actorEmail: current.user.email,
+    actorId: current.user.id,
+    description: `Requested email change to ${newEmail} (pending confirmation)`,
+    entityId: current.user.id,
+    entityType: "user",
+    metadata: { newEmail },
+  });
+
+  return {
+    success: `We sent a confirmation link to ${newEmail}. Click it to finish changing your email — your current email stays active until then.`,
+  };
+}
+
+export async function confirmEmailChangeAction(
+  token: string
+): Promise<ActionResult<{ newEmail: string }>> {
+  const current = await requireSession();
+
+  const pending = await getPendingEmailChangeByToken(token);
+  if (!pending) {
+    return { success: false, error: "This confirmation link is invalid." };
+  }
+  if (pending.userId !== current.user.id) {
+    return {
+      success: false,
+      error: "This confirmation link belongs to a different account.",
+    };
+  }
+  if (pending.expiresAt <= new Date()) {
+    return {
+      success: false,
+      error: "This confirmation link has expired. Request a new email change.",
+    };
+  }
+
+  const [existing] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, pending.newEmail))
+    .limit(1);
+  if (existing && existing.id !== current.user.id) {
+    await deletePendingEmailChange(current.user.id);
+    return { success: false, error: "That email is already in use." };
+  }
+
   await db
     .update(user)
     .set({
-      email: newEmail,
-      emailVerified: false,
+      email: pending.newEmail,
+      emailVerified: true,
       updatedAt: new Date(),
     })
     .where(eq(user.id, current.user.id));
 
+  await deletePendingEmailChange(current.user.id);
+
   await audit({
     action: "profile.email_updated",
-    actorEmail: current.user.email,
+    actorEmail: pending.newEmail,
     actorId: current.user.id,
-    description: "Updated account email",
+    description: `Confirmed email change to ${pending.newEmail}`,
     entityId: current.user.id,
     entityType: "user",
-    metadata: { newEmail, oldEmail: current.user.email },
+    metadata: { newEmail: pending.newEmail, oldEmail: current.user.email },
   });
 
   revalidatePath("/", "layout");
-  return { success: "Email updated. Use the new email for future sign-ins." };
+  return { success: true, data: { newEmail: pending.newEmail } };
 }
 
 export async function revokeSessionAction(formData: FormData): Promise<void> {

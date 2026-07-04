@@ -6,6 +6,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 interface VoteButtonProps {
+  // Smaller, borderless, label-less rendering for dense card/table layouts —
+  // same voting behavior, just less chrome.
+  compact?: boolean;
   initialCount: number;
   initialHasVoted: boolean;
   isArchived?: boolean;
@@ -21,6 +24,7 @@ export default function VoteButton({
   isSignedIn,
   isLocked = false,
   isArchived = false,
+  compact = false,
 }: VoteButtonProps) {
   const router = useRouter();
   const [count, setCount] = useState(initialCount);
@@ -79,6 +83,29 @@ export default function VoteButton({
     } finally {
       setIsPending(false);
     }
+  }
+
+  if (compact) {
+    return (
+      <button
+        aria-label={hasVoted ? "Remove vote" : "Vote for this post"}
+        aria-pressed={hasVoted}
+        className={`flex flex-col items-center gap-0.5 px-2 py-1.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          disabled && !isPending
+            ? "cursor-not-allowed opacity-50 text-muted-foreground"
+            : hasVoted
+              ? "text-primary hover:bg-primary/10 cursor-pointer"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+        } ${isPending ? "opacity-70" : ""}`}
+        disabled={disabled}
+        onClick={handleClick}
+        title={tooltip}
+        type="button"
+      >
+        <ChevronUp className="size-4" />
+        <span className="text-xs font-semibold tabular-nums">{count}</span>
+      </button>
+    );
   }
 
   return (

@@ -1,20 +1,26 @@
 import { format } from "date-fns";
-import { Rss } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
+import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
+import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { truncateMarkdownToText } from "@/lib/changelog/markdown";
 import { listChangelogEntries } from "@/lib/changelog/queries";
 import { env } from "@/lib/env";
+import { getNotificationPreferences } from "@/lib/notifications/queries";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
 } from "@/lib/workspaces/queries";
+import { ChangelogFilters } from "./_components/changelog-filters";
+import { SubscribeToggle } from "./_components/subscribe-toggle";
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ label?: string; q?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -35,8 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PublicChangelogIndexPage({ params }: Props) {
+export default async function PublicChangelogIndexPage({
+  params,
+  searchParams,
+}: Props) {
   const { slug } = await params;
+  const { label, q } = await searchParams;
 
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) {
@@ -53,70 +63,40 @@ export default async function PublicChangelogIndexPage({ params }: Props) {
     notFound();
   }
 
-  const { entries } = await listChangelogEntries(workspace.id, {
-    includeDrafts: false,
-    limit: 50,
-  });
+  const activeLabel = label ?? "";
+  const searchQuery = q ?? "";
+
+  const [{ entries }, allBoards, notificationPrefs] = await Promise.all([
+    listChangelogEntries(workspace.id, {
+      includeDrafts: false,
+      limit: 50,
+      label: activeLabel || undefined,
+      search: searchQuery || undefined,
+    }),
+    listBoardsForWorkspace(workspace.id),
+    session ? getNotificationPreferences(session.user.id) : null,
+  ]);
+  const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
 
   const isSignedIn = !!session;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Public nav — visitors only; members get the workspace sidebar */}
-      {!member && (
-        <header className="border-b border-border bg-background sticky top-0 z-10">
-          <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-6">
-              <Link
-                className="text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
-                href={`/${slug}`}
-              >
-                {workspace.name}
-              </Link>
-              <nav className="hidden sm:flex items-center gap-1">
-                {workspace.roadmapPublic && (
-                  <Link
-                    className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    href={`/${slug}/roadmap`}
-                  >
-                    Roadmap
-                  </Link>
-                )}
-                <Link
-                  className="px-3 py-1.5 text-sm font-medium text-foreground border-b-2 border-foreground"
-                  href={`/${slug}/changelog`}
-                >
-                  Changelog
-                </Link>
-              </nav>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link
-                aria-label="RSS feed"
-                className="text-muted-foreground hover:text-foreground transition-colors"
-                href={`/${slug}/changelog/feed.xml`}
-              >
-                <Rss className="size-4" />
-              </Link>
-              {isSignedIn ? (
-                <Link
-                  className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  href={`/${slug}`}
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <Link
-                  className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  href="/signin"
-                >
-                  Sign in
-                </Link>
-              )}
-            </div>
-          </div>
-        </header>
-      )}
+      <PortalHeader
+        active="changelog"
+        boards={publicBoards}
+        changelogPublic={workspace.changelogPublic}
+        isMember={!!member}
+        isSignedIn={isSignedIn}
+        logoUrl={workspace.logoUrl}
+        roadmapPublic={workspace.roadmapPublic}
+        rssHref={`/${slug}/changelog/feed.xml`}
+        slug={slug}
+        userImage={session?.user.image}
+        userName={session?.user.name}
+        workspaceName={workspace.name}
+      />
+      <PoweredByBadge />
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 pt-10 pb-20">
@@ -125,10 +105,24 @@ export default async function PublicChangelogIndexPage({ params }: Props) {
           The latest updates and improvements to {workspace.name}.
         </p>
 
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <ChangelogFilters
+            activeLabel={activeLabel}
+            activeSearch={searchQuery}
+          />
+          {isSignedIn && (
+            <SubscribeToggle
+              initialSubscribed={notificationPrefs?.emailChangelog ?? true}
+            />
+          )}
+        </div>
+
         {entries.length === 0 ? (
           <div className="mt-12 border border-border p-10 text-center">
             <p className="text-sm text-muted-foreground">
-              No updates published yet. Check back soon.
+              {activeLabel || searchQuery
+                ? "No changelog items match your filters."
+                : "No updates published yet. Check back soon."}
             </p>
           </div>
         ) : (

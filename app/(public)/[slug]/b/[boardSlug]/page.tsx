@@ -1,14 +1,17 @@
 import { formatDistanceToNow } from "date-fns";
-import { MessageSquare, Pin, Plus } from "lucide-react";
+import { MessageSquare, Pin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CategoryChip } from "@/components/categories/category-chip";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
+import { CategorySidebar } from "@/components/portal/category-sidebar";
+import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import { PostStatusBadge } from "@/components/posts/post-status-badge";
 import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
-import { getBoardBySlug } from "@/lib/boards/queries";
+import { getBoardBySlug, listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
 import {
   buildEmbedQuery,
@@ -22,7 +25,6 @@ import {
   getWorkspaceMember,
 } from "@/lib/workspaces/queries";
 import BoardFilters from "./_components/board-filters";
-import { PostStatusBadge } from "./_components/post-status-badge";
 
 interface Props {
   params: Promise<{ slug: string; boardSlug: string }>;
@@ -32,6 +34,7 @@ interface Props {
     category?: string;
     q?: string;
     myVotes?: string;
+    mine?: string;
     embed?: string;
     theme?: string;
     accentColor?: string;
@@ -50,8 +53,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BoardPage({ params, searchParams }: Props) {
   const { slug, boardSlug } = await params;
-  const { sort, status, category, q, myVotes, embed, theme, accentColor } =
-    await searchParams;
+  const {
+    sort,
+    status,
+    category,
+    q,
+    myVotes,
+    mine,
+    embed,
+    theme,
+    accentColor,
+  } = await searchParams;
   const embedParams = parseEmbedParams({ embed, theme, accentColor });
   const { isEmbed } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
@@ -88,29 +100,36 @@ export default async function BoardPage({ params, searchParams }: Props) {
   const validCategoryId = category ?? "";
   const searchQuery = q ?? "";
   const myVotesActive = isSignedIn && myVotes === "true";
+  const mineActive = isSignedIn && mine === "1";
 
-  const [boardPosts, workspaceStatuses, categories] = await Promise.all([
-    listBoardPosts(board.id, {
-      sort: validSort,
-      status: validStatus || undefined,
-      categoryId: validCategoryId || undefined,
-      search: searchQuery || undefined,
-      userId: session?.user.id,
-      myVotes: myVotesActive,
-      // Team (Brand Admin + Team Member) sees moderation-held posts; the public
-      // sees approved feedback only.
-      includeUnapproved: isMember,
-    }),
-    getActiveWorkspaceStatuses(workspace.id),
-    getActiveCategoriesForWorkspace(workspace.id),
-  ]);
+  const [boardPosts, workspaceStatuses, categories, allBoards] =
+    await Promise.all([
+      listBoardPosts(board.id, {
+        sort: validSort,
+        status: validStatus || undefined,
+        categoryId: validCategoryId || undefined,
+        search: searchQuery || undefined,
+        userId: session?.user.id,
+        myVotes: myVotesActive,
+        onlyMine: mineActive,
+        // Team (Brand Admin + Team Member) sees moderation-held posts; the public
+        // sees approved feedback only.
+        includeUnapproved: isMember,
+      }),
+      getActiveWorkspaceStatuses(workspace.id),
+      getActiveCategoriesForWorkspace(workspace.id),
+      listBoardsForWorkspace(workspace.id),
+    ]);
 
   // Build a category map for quick lookup
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
+  const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
 
-  const newPostHref = isSignedIn
-    ? `/${slug}/b/${boardSlug}/new${embedQuery}`
-    : `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`;
+  const newPostHref = board.isArchived
+    ? undefined
+    : isSignedIn
+      ? `/${slug}/b/${boardSlug}/new${embedQuery}`
+      : `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`;
 
   return (
     <div
@@ -118,40 +137,34 @@ export default async function BoardPage({ params, searchParams }: Props) {
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
-      {!isMember && !isEmbed && (
+      {!isEmbed && (
         <PortalHeader
+          activeBoardSlug={boardSlug}
+          boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
+          isMember={isMember}
           isSignedIn={isSignedIn}
+          logoUrl={workspace.logoUrl}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}
+          userImage={session?.user.image}
+          userName={session?.user.name}
           workspaceName={workspace.name}
         />
       )}
+      {!isEmbed && <PoweredByBadge />}
 
       <div className="max-w-5xl mx-auto flex flex-col">
         {/* Page header */}
         <div className="border-b border-border px-4 py-6 sm:px-8">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold text-foreground">
-                {board.name}
-              </h1>
-              {board.description && (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {board.description}
-                </p>
-              )}
-            </div>
-            {!board.isArchived && (
-              <Link
-                className="flex shrink-0 items-center gap-1.5 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                href={newPostHref}
-              >
-                <Plus className="size-4" />
-                New post
-              </Link>
-            )}
-          </div>
+          <h1 className="text-xl font-semibold text-foreground">
+            {board.name}
+          </h1>
+          {board.description && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {board.description}
+            </p>
+          )}
           {board.isArchived && (
             <p className="mt-3 text-xs text-muted-foreground border-l-2 border-border pl-3">
               This board is archived and no longer accepting new feedback. Its
@@ -160,120 +173,134 @@ export default async function BoardPage({ params, searchParams }: Props) {
           )}
         </div>
 
-        {/* Filters */}
-        <BoardFilters
-          activeCategoryId={validCategoryId}
-          activeSearch={searchQuery}
-          activeSort={validSort}
-          activeStatus={validStatus}
-          categories={categories}
-          myVotesActive={myVotesActive}
-          showMyVotes={isSignedIn}
-          workspaceStatuses={workspaceStatuses}
-        />
+        <div className="flex flex-col gap-6 px-4 py-6 sm:px-8 lg:flex-row lg:items-start lg:gap-8">
+          {/* Main content */}
+          <div className="min-w-0 flex-1 border border-border">
+            <BoardFilters
+              activeSearch={searchQuery}
+              activeSort={validSort}
+              activeStatus={validStatus}
+              myVotesActive={myVotesActive}
+              showMyVotes={isSignedIn}
+              workspaceStatuses={workspaceStatuses}
+            />
 
-        {/* Post list */}
-        <div className="flex-1">
-          {boardPosts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center px-4 py-24 text-center sm:px-8">
-              {searchQuery ||
-              validStatus ||
-              validCategoryId ||
-              myVotesActive ? (
-                <>
-                  <p className="text-sm font-medium text-foreground">
-                    No posts match your filters
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Try a different search term, status, or category.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm font-medium text-foreground">
-                    No feedback yet
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Be the first to submit an idea or request.
-                  </p>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {boardPosts.map((post) => {
-                const postCategory = post.categoryId
-                  ? categoryMap.get(post.categoryId)
-                  : undefined;
+            {/* Post list */}
+            {boardPosts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center px-4 py-24 text-center sm:px-8">
+                {searchQuery ||
+                validStatus ||
+                validCategoryId ||
+                myVotesActive ||
+                mineActive ? (
+                  <>
+                    <p className="text-sm font-medium text-foreground">
+                      No posts match your filters
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Try a different search term, status, or category.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-foreground">
+                      No feedback yet
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Be the first to submit an idea or request.
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {boardPosts.map((post) => {
+                  const postCategory = post.categoryId
+                    ? categoryMap.get(post.categoryId)
+                    : undefined;
 
-                return (
-                  <div
-                    className="group flex items-start gap-4 px-4 py-5 hover:bg-muted/40 transition-colors duration-150 sm:px-8"
-                    key={post.id}
-                  >
-                    {/* Vote button */}
-                    <div className="shrink-0">
-                      <VoteButton
-                        initialCount={post.upvotes}
-                        initialHasVoted={post.hasVoted}
-                        isArchived={board.isArchived}
-                        isLocked={false}
-                        isSignedIn={isSignedIn}
-                        postId={post.id}
-                      />
-                    </div>
-
-                    {/* Post content */}
-                    <Link
-                      className="flex-1 min-w-0 pt-1"
-                      href={`/${slug}/b/${boardSlug}/p/${post.slug}${embedQuery}`}
+                  return (
+                    <div
+                      className="group flex items-start gap-3 px-4 py-5 hover:bg-muted/40 transition-colors duration-150 sm:px-6"
+                      key={post.id}
                     >
-                      <div className="flex flex-wrap items-center gap-2">
-                        {post.isPinned && (
-                          <Pin className="size-3 text-muted-foreground shrink-0" />
+                      {/* Post content */}
+                      <Link
+                        className="min-w-0 flex-1"
+                        href={`/${slug}/b/${boardSlug}/p/${post.slug}${embedQuery}`}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          {post.isPinned && (
+                            <Pin className="size-3 shrink-0 text-muted-foreground" />
+                          )}
+                          <p className="text-sm font-medium text-foreground transition-colors group-hover:text-foreground/80">
+                            {post.title}
+                          </p>
+                        </div>
+                        {post.body && (
+                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                            {post.body}
+                          </p>
                         )}
-                        <p className="text-sm font-medium text-foreground group-hover:text-foreground/80 transition-colors">
-                          {post.title}
-                        </p>
-                        {post.status !== "open" && (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          {postCategory && (
+                            <CategoryChip
+                              color={postCategory.color}
+                              name={postCategory.name}
+                              size="xs"
+                            />
+                          )}
                           <PostStatusBadge
                             status={post.status}
                             workspaceStatuses={workspaceStatuses}
                           />
-                        )}
-                        {postCategory && (
-                          <CategoryChip
-                            color={postCategory.color}
-                            name={postCategory.name}
-                            size="xs"
-                          />
-                        )}
-                      </div>
-                      {post.body && (
-                        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                          {post.body}
-                        </p>
-                      )}
-                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-                        <span>
-                          {post.authorName ?? post.authorEmail} ·{" "}
-                          {formatDistanceToNow(post.createdAt, {
-                            addSuffix: true,
-                          })}
-                        </span>
-                        {post.commentCount > 0 && (
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="size-3" />
-                            {post.commentCount}
+                          <span className="text-xs text-muted-foreground">
+                            {post.authorName ?? post.authorEmail} ·{" "}
+                            {formatDistanceToNow(post.createdAt, {
+                              addSuffix: true,
+                            })}
                           </span>
-                        )}
+                          {post.commentCount > 0 && (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MessageSquare className="size-3" />
+                              {post.commentCount}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+
+                      {/* Vote control */}
+                      <div className="shrink-0">
+                        <VoteButton
+                          compact
+                          initialCount={post.upvotes}
+                          initialHasVoted={post.hasVoted}
+                          isArchived={board.isArchived}
+                          isLocked={false}
+                          isSignedIn={isSignedIn}
+                          postId={post.id}
+                        />
                       </div>
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <CategorySidebar
+            activeCategoryId={validCategoryId}
+            activeSearch={searchQuery}
+            activeSort={validSort}
+            activeStatus={validStatus}
+            boardSlug={boardSlug}
+            categories={categories}
+            isMine={mineActive}
+            isSignedIn={isSignedIn}
+            newPostHref={newPostHref}
+            slug={slug}
+          />
         </div>
       </div>
     </div>

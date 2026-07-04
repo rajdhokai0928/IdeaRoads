@@ -3,7 +3,9 @@
 import {
   CircleDot,
   Code2,
+  Inbox,
   Key,
+  LayoutDashboard,
   LayoutGrid,
   Map as MapIcon,
   Megaphone,
@@ -13,7 +15,7 @@ import {
   Webhook,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
@@ -66,6 +68,7 @@ export function WorkspaceSidebar({
   workspaces,
 }: WorkspaceSidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -76,8 +79,21 @@ export function WorkspaceSidebar({
     setMobileOpen(false);
   }, [pathname]);
 
-  const link = (href: string) => {
-    const isActive = pathname.startsWith(href);
+  const link = (href: string, exact = false) => {
+    const isActive = exact ? pathname === href : pathname.startsWith(href);
+    return `flex cursor-pointer items-center gap-2 border-l-2 px-2 py-1.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      isActive
+        ? "border-sidebar-foreground bg-sidebar-accent font-medium text-sidebar-foreground"
+        : "border-transparent text-sidebar-foreground/70 hover:border-sidebar-foreground/20 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+    }`;
+  };
+
+  // The per-board "Feedback" links carry a ?board= query param (usePathname()
+  // never includes the query string), so their active state needs its own check.
+  const boardLink = (boardId: string) => {
+    const isActive =
+      pathname === `/${workspaceSlug}/feedback` &&
+      searchParams.get("board") === boardId;
     return `flex cursor-pointer items-center gap-2 border-l-2 px-2 py-1.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
       isActive
         ? "border-sidebar-foreground bg-sidebar-accent font-medium text-sidebar-foreground"
@@ -97,8 +113,15 @@ export function WorkspaceSidebar({
 
       {/* Navigation */}
       <nav className="scrollbar-thin flex flex-1 flex-col overflow-y-auto p-2">
-        {/* Notifications inbox */}
+        {/* Dashboard + Notifications inbox */}
         <div className="space-y-0.5">
+          <Link
+            className={link(`/${workspaceSlug}`, true)}
+            href={`/${workspaceSlug}`}
+          >
+            <LayoutDashboard className="size-4 shrink-0" />
+            <span className="truncate">Dashboard</span>
+          </Link>
           <NotificationBell
             initialCount={initialUnreadCount}
             workspaceSlug={workspaceSlug}
@@ -110,10 +133,17 @@ export function WorkspaceSidebar({
           <p className="px-2 pb-1 pt-2 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
             Feedback
           </p>
+          <Link
+            className={link(`/${workspaceSlug}/feedback`)}
+            href={`/${workspaceSlug}/feedback`}
+          >
+            <Inbox className="size-4 shrink-0" />
+            <span className="truncate">All Feedback</span>
+          </Link>
           {boards.map((board) => (
             <Link
-              className={link(`/${workspaceSlug}/b/${board.slug}`)}
-              href={`/${workspaceSlug}/b/${board.slug}`}
+              className={boardLink(board.id)}
+              href={`/${workspaceSlug}/feedback?board=${board.id}`}
               key={board.id}
             >
               <LayoutGrid className="size-4 shrink-0" />
@@ -128,8 +158,8 @@ export function WorkspaceSidebar({
             Publish
           </p>
           <Link
-            className={link(`/${workspaceSlug}/roadmap`)}
-            href={`/${workspaceSlug}/roadmap`}
+            className={link(`/${workspaceSlug}/settings/roadmap`)}
+            href={`/${workspaceSlug}/settings/roadmap`}
           >
             <MapIcon className="size-4 shrink-0" />
             <span className="truncate">Roadmap</span>

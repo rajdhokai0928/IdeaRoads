@@ -35,6 +35,7 @@ interface RoadmapColumnProps {
   isSignedIn: boolean;
   posts: RoadmapPost[];
   status: RoadmapStatus;
+  useWorkspaceLinks?: boolean;
   workspaceSlug: string;
 }
 
@@ -43,6 +44,7 @@ export function RoadmapColumn({
   posts,
   workspaceSlug,
   isSignedIn,
+  useWorkspaceLinks,
 }: RoadmapColumnProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const config = COLUMN_CONFIG[status];
@@ -78,6 +80,7 @@ export function RoadmapColumn({
                 isSignedIn={isSignedIn}
                 key={post.id}
                 post={post}
+                useWorkspaceLinks={useWorkspaceLinks}
                 workspaceSlug={workspaceSlug}
               />
             ))}
@@ -85,6 +88,7 @@ export function RoadmapColumn({
               <button
                 className="w-full py-2 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border hover:border-border/80 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                type="button"
               >
                 Show {Math.min(PAGE_SIZE, posts.length - visibleCount)} more
               </button>

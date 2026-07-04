@@ -1,5 +1,5 @@
 import { and, count, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
-import { postStatusChanges, posts, votes } from "@/db/schema";
+import { boards, postStatusChanges, posts, votes } from "@/db/schema";
 import { db } from "@/lib/db";
 import { POST_STATUSES, type PostStatus } from "@/lib/posts/constants";
 
@@ -56,6 +56,7 @@ export async function listBoardPosts(
     search?: string;
     userId?: string;
     myVotes?: boolean;
+    onlyMine?: boolean;
     includeUnapproved?: boolean;
   } = {}
 ) {
@@ -66,6 +67,7 @@ export async function listBoardPosts(
     search,
     userId,
     myVotes,
+    onlyMine,
     includeUnapproved = false,
   } = opts;
 
@@ -98,6 +100,10 @@ export async function listBoardPosts(
       .where(eq(votes.userId, userId));
 
     conditions.push(inArray(posts.id, votedPostIds));
+  }
+
+  if (onlyMine && userId) {
+    conditions.push(eq(posts.authorId, userId));
   }
 
   // Trending = most votes in the last 7 days (a correlated count), tie-broken
@@ -198,6 +204,173 @@ export async function countWorkspacePosts(
     .select({ value: count() })
     .from(posts)
     .where(eq(posts.workspaceId, workspaceId));
+  return value;
+}
+
+/** Posts across every board in a workspace — the cross-board "All Feedback" view. */
+export async function listWorkspacePosts(
+  workspaceId: string,
+  opts: {
+    sort?: "newest" | "top" | "trending";
+    status?: string;
+    categoryId?: string;
+    boardId?: string;
+    search?: string;
+    userId?: string;
+    authorId?: string;
+    includeUnapproved?: boolean;
+    limit?: number;
+    offset?: number;
+  } = {}
+) {
+  const {
+    sort = "newest",
+    status,
+    categoryId,
+    boardId,
+    search,
+    userId,
+    authorId,
+    includeUnapproved = false,
+    limit = 50,
+    offset = 0,
+  } = opts;
+
+  const conditions = [
+    eq(posts.workspaceId, workspaceId),
+    isNull(posts.mergedIntoId),
+  ];
+
+  if (!includeUnapproved) {
+    conditions.push(eq(posts.isApproved, true));
+  }
+  if (status) {
+    conditions.push(eq(posts.status, status));
+  }
+  if (categoryId) {
+    conditions.push(eq(posts.categoryId, categoryId));
+  }
+  if (boardId) {
+    conditions.push(eq(posts.boardId, boardId));
+  }
+  if (authorId) {
+    conditions.push(eq(posts.authorId, authorId));
+  }
+  if (search?.trim()) {
+    conditions.push(ilike(posts.title, `%${search.trim()}%`));
+  }
+
+  const recentVotes = sql`(
+    select count(*) from ${votes}
+    where ${votes.postId} = ${posts.id}
+      and ${votes.createdAt} > now() - interval '7 days'
+  )`;
+  const orderByCols =
+    sort === "top"
+      ? [desc(posts.isPinned), desc(posts.upvotes)]
+      : sort === "trending"
+        ? [desc(posts.isPinned), desc(recentVotes), desc(posts.upvotes)]
+        : [desc(posts.isPinned), desc(posts.createdAt)];
+
+  const columns = {
+    id: posts.id,
+    slug: posts.slug,
+    title: posts.title,
+    body: posts.body,
+    status: posts.status,
+    categoryId: posts.categoryId,
+    upvotes: posts.upvotes,
+    commentCount: posts.commentCount,
+    isPinned: posts.isPinned,
+    isApproved: posts.isApproved,
+    authorName: posts.authorName,
+    authorEmail: posts.authorEmail,
+    createdAt: posts.createdAt,
+    boardId: posts.boardId,
+    boardSlug: boards.slug,
+    boardName: boards.name,
+    boardIsPublic: boards.isPublic,
+  };
+
+  if (userId) {
+    // LEFT JOIN to get hasVoted per post
+    const userVoteAlias = db
+      .select({ postId: votes.postId, id: votes.id })
+      .from(votes)
+      .where(eq(votes.userId, userId))
+      .as("user_vote");
+
+    return db
+      .select({
+        ...columns,
+        hasVoted: sql<boolean>`${userVoteAlias.id} IS NOT NULL`,
+      })
+      .from(posts)
+      .innerJoin(boards, eq(posts.boardId, boards.id))
+      .leftJoin(userVoteAlias, eq(posts.id, userVoteAlias.postId))
+      .where(and(...conditions))
+      .orderBy(...orderByCols)
+      .limit(limit)
+      .offset(offset);
+  }
+
+  return db
+    .select({ ...columns, hasVoted: sql<boolean>`false` })
+    .from(posts)
+    .innerJoin(boards, eq(posts.boardId, boards.id))
+    .where(and(...conditions))
+    .orderBy(...orderByCols)
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function countWorkspacePostsFiltered(
+  workspaceId: string,
+  opts: {
+    status?: string;
+    categoryId?: string;
+    boardId?: string;
+    authorId?: string;
+    search?: string;
+    includeUnapproved?: boolean;
+  } = {}
+): Promise<number> {
+  const {
+    status,
+    categoryId,
+    boardId,
+    authorId,
+    search,
+    includeUnapproved = false,
+  } = opts;
+
+  const conditions = [
+    eq(posts.workspaceId, workspaceId),
+    isNull(posts.mergedIntoId),
+  ];
+  if (!includeUnapproved) {
+    conditions.push(eq(posts.isApproved, true));
+  }
+  if (status) {
+    conditions.push(eq(posts.status, status));
+  }
+  if (categoryId) {
+    conditions.push(eq(posts.categoryId, categoryId));
+  }
+  if (boardId) {
+    conditions.push(eq(posts.boardId, boardId));
+  }
+  if (authorId) {
+    conditions.push(eq(posts.authorId, authorId));
+  }
+  if (search?.trim()) {
+    conditions.push(ilike(posts.title, `%${search.trim()}%`));
+  }
+
+  const [{ value }] = await db
+    .select({ value: count() })
+    .from(posts)
+    .where(and(...conditions));
   return value;
 }
 

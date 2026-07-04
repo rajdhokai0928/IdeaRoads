@@ -231,7 +231,8 @@ export function AccountIdentityForms({
           <div className="w-full pt-0.5 sm:w-40 sm:shrink-0">
             <p className="text-sm font-medium text-foreground">Email address</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Used for magic-link sign-in.
+              Used for magic-link sign-in. Changing it requires confirming a
+              link sent to the new address.
             </p>
           </div>
           <form action={emailAction} className="min-w-0 flex-1 space-y-3">
@@ -245,7 +246,7 @@ export function AccountIdentityForms({
             />
             <ActionMessage state={emailState} />
             <Button disabled={emailPending} size="sm" type="submit">
-              {emailPending ? "Saving…" : "Update email"}
+              {emailPending ? "Sending…" : "Send confirmation link"}
             </Button>
           </form>
         </div>

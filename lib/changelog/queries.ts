@@ -34,21 +34,27 @@ export type ChangelogEntryWithPosts = ChangelogEntryRow & {
 
 export async function listChangelogEntries(
   workspaceId: string,
-  opts: { includeDrafts?: boolean; page?: number; limit?: number } = {}
+  opts: {
+    includeDrafts?: boolean;
+    page?: number;
+    limit?: number;
+    search?: string;
+    label?: string;
+  } = {}
 ): Promise<{ entries: ChangelogEntryRow[]; total: number; hasMore: boolean }> {
-  const { includeDrafts = false, page = 1, limit = 20 } = opts;
+  const { includeDrafts = false, page = 1, limit = 20, search, label } = opts;
   const offset = (page - 1) * limit;
 
   const conditions = [eq(changelogEntries.workspaceId, workspaceId)];
   if (!includeDrafts) {
     conditions.push(eq(changelogEntries.isPublished, true));
   }
-
-  const linkedPostCountSq = db
-    .select({ count: count() })
-    .from(changelogPosts)
-    .where(eq(changelogPosts.changelogEntryId, changelogEntries.id))
-    .as("linked_count");
+  if (label) {
+    conditions.push(eq(changelogEntries.label, label));
+  }
+  if (search?.trim()) {
+    conditions.push(ilike(changelogEntries.title, `%${search.trim()}%`));
+  }
 
   const [rows, [{ value: total }]] = await Promise.all([
     db
@@ -96,7 +102,8 @@ export async function listChangelogEntries(
 export const getChangelogEntryById = cache(
   async (
     entryId: string,
-    workspaceId: string
+    workspaceId: string,
+    opts: { publicOnly?: boolean } = {}
   ): Promise<ChangelogEntryWithPosts | null> => {
     const [entry] = await db
       .select()
@@ -113,7 +120,7 @@ export const getChangelogEntryById = cache(
       return null;
     }
 
-    const linkedPosts = await getLinkedPosts(entryId);
+    const linkedPosts = await getLinkedPosts(entryId, opts);
 
     const linkedCount = linkedPosts.length;
 
@@ -125,8 +132,19 @@ export const getChangelogEntryById = cache(
   }
 );
 
-export async function getLinkedPosts(entryId: string): Promise<LinkedPost[]> {
+export async function getLinkedPosts(
+  entryId: string,
+  opts: { publicOnly?: boolean } = {}
+): Promise<LinkedPost[]> {
   const { boards } = await import("@/db/schema/boards");
+
+  const conditions = [eq(changelogPosts.changelogEntryId, entryId)];
+  // The public changelog entry page must never surface posts from private
+  // boards or posts still pending moderation — the admin editor
+  // (opts.publicOnly unset) still sees everything.
+  if (opts.publicOnly) {
+    conditions.push(eq(boards.isPublic, true), eq(posts.isApproved, true));
+  }
 
   return db
     .select({
@@ -141,7 +159,7 @@ export async function getLinkedPosts(entryId: string): Promise<LinkedPost[]> {
     .from(changelogPosts)
     .innerJoin(posts, eq(changelogPosts.postId, posts.id))
     .innerJoin(boards, eq(posts.boardId, boards.id))
-    .where(eq(changelogPosts.changelogEntryId, entryId));
+    .where(and(...conditions));
 }
 
 export async function searchWorkspacePosts(

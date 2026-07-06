@@ -13,13 +13,13 @@ import {
 } from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
-import { getBoardById } from "@/lib/boards/queries";
 import { db } from "@/lib/db";
 import { isBlocked } from "@/lib/moderation/queries";
+import { createNotification } from "@/lib/notifications/create";
 import { mergePost } from "@/lib/posts/merge";
-import { movePost } from "@/lib/posts/move";
 import {
   approvePost,
+  assignPost,
   createPost,
   deletePost,
   generatePostSlug,
@@ -27,10 +27,12 @@ import {
   recordStatusChange,
   searchPostsForMerge,
   setPinned,
+  unapprovePost,
   updatePost,
   updatePostCategory,
   updatePostStatus,
 } from "@/lib/posts/queries";
+import { uploadFile } from "@/lib/storage";
 import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 import { enqueueJob } from "@/lib/worker/enqueue";
@@ -56,6 +58,8 @@ const createPostSchema = z.object({
     .max(10_000, "Description must be 10,000 characters or fewer.")
     .optional(),
   categoryId: z.string().min(1).optional(),
+  imageUrl: z.url().optional(),
+  status: z.string().min(1).optional(),
 });
 
 export async function createPostAction(input: {
@@ -64,6 +68,8 @@ export async function createPostAction(input: {
   title: string;
   body?: string;
   categoryId?: string;
+  imageUrl?: string;
+  status?: string;
 }): Promise<
   ActionResult<{ isPending: boolean; postId: string; postSlug: string }>
 > {
@@ -171,6 +177,25 @@ export async function createPostAction(input: {
     categoryId = category.id;
   }
 
+  // Setting an initial status at creation is a triage action, same as
+  // changing status afterward — restricted to workspace members (PLATFORM.md
+  // §4). A public User's request can never set this, even if passed.
+  let status: string | undefined;
+  if (parsed.data.status && actorMember) {
+    const targetStatus = await getWorkspaceStatusBySlug(
+      parsed.data.workspaceId,
+      parsed.data.status
+    );
+    if (!targetStatus) {
+      return {
+        success: false,
+        error: "Invalid status.",
+        field: "status",
+      };
+    }
+    status = targetStatus.slug;
+  }
+
   const slug = await generatePostSlug(parsed.data.boardId, parsed.data.title);
 
   const post = await createPost({
@@ -183,6 +208,8 @@ export async function createPostAction(input: {
     authorId: session.user.id,
     authorName: session.user.name ?? null,
     authorEmail: session.user.email,
+    imageUrl: parsed.data.imageUrl,
+    status,
     isApproved,
   });
 
@@ -235,6 +262,43 @@ export async function createPostAction(input: {
       isPending: !post.isApproved,
     },
   };
+}
+
+// ─── Upload Post Image ────────────────────────────────────────────────────────
+
+const MAX_POST_IMAGE_BYTES = 4 * 1024 * 1024;
+const ALLOWED_POST_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
+export async function uploadPostImageAction(
+  formData: FormData
+): Promise<ActionResult<{ url: string }>> {
+  const session = await requireSession();
+  const file = formData.get("image");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "Choose an image to upload." };
+  }
+  if (!ALLOWED_POST_IMAGE_TYPES.has(file.type)) {
+    return { success: false, error: "Use a PNG, JPEG, WEBP, or GIF image." };
+  }
+  if (file.size > MAX_POST_IMAGE_BYTES) {
+    return { success: false, error: "Image must be 4MB or smaller." };
+  }
+
+  const extension = file.type.split("/")[1];
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const url = await uploadFile(
+    `posts/${session.user.id}-${Date.now()}.${extension}`,
+    buffer,
+    file.type
+  );
+
+  return { success: true, data: { url } };
 }
 
 // ─── Update Post Status ───────────────────────────────────────────────────────
@@ -543,6 +607,83 @@ export async function updatePostCategoryAction(input: {
   return { success: true, data: undefined };
 }
 
+// ─── Assign Post ──────────────────────────────────────────────────────────────
+
+export async function assignPostAction(input: {
+  postId: string;
+  workspaceId: string;
+  assigneeId: string | null;
+}): Promise<ActionResult<undefined>> {
+  const session = await requireSession();
+
+  // Assigning feedback to a Team Member is Brand-Admin-only (PLATFORM.md §4) —
+  // unlike category/status triage, this isn't opened up to every member.
+  const actorMember = await getWorkspaceMember(
+    input.workspaceId,
+    session.user.id
+  );
+  if (!actorMember || actorMember.role === WORKSPACE_MEMBER) {
+    return {
+      success: false,
+      error: "Only Brand Admins can assign feedback.",
+    };
+  }
+
+  const post = await getPost(input.postId);
+  if (!post || post.workspaceId !== input.workspaceId) {
+    return { success: false, error: "Post not found." };
+  }
+
+  if (input.assigneeId) {
+    const assigneeMember = await getWorkspaceMember(
+      input.workspaceId,
+      input.assigneeId
+    );
+    if (!assigneeMember) {
+      return {
+        success: false,
+        error: "The assignee must be a member of this workspace.",
+      };
+    }
+  }
+
+  await assignPost(input.postId, input.assigneeId);
+
+  audit({
+    action: input.assigneeId ? "post.assigned" : "post.unassigned",
+    actorId: session.user.id,
+    actorEmail: session.user.email,
+    entityType: "post",
+    entityId: input.postId,
+    description: input.assigneeId
+      ? `Assigned post: ${post.title}`
+      : `Unassigned post: ${post.title}`,
+    metadata: { workspaceId: input.workspaceId, assigneeId: input.assigneeId },
+  });
+
+  if (input.assigneeId && input.assigneeId !== session.user.id) {
+    const [workspaceRow] = await db
+      .select({ slug: workspaces.slug })
+      .from(workspaces)
+      .where(eq(workspaces.id, input.workspaceId))
+      .limit(1);
+
+    if (workspaceRow) {
+      createNotification({
+        userId: input.assigneeId,
+        workspaceId: input.workspaceId,
+        type: "assignment",
+        title: `You were assigned: ${post.title}`,
+        link: `/${workspaceRow.slug}/feedback/${post.id}`,
+      }).catch((err) =>
+        console.error("[posts] failed to create assignment notification", err)
+      );
+    }
+  }
+
+  return { success: true, data: undefined };
+}
+
 // ─── Approve Post (moderation queue) ─────────────────────────────────────────
 
 export async function approvePostAction(input: {
@@ -606,24 +747,22 @@ export async function approvePostAction(input: {
   return { success: true, data: undefined };
 }
 
-// ─── Move Post ────────────────────────────────────────────────────────────────
+// ─── Unapprove Post (hide from public view) ──────────────────────────────────
 
-export async function movePostAction(input: {
+export async function unapprovePostAction(input: {
   postId: string;
   workspaceId: string;
-  targetBoardId: string;
-}): Promise<ActionResult<{ slug: string; boardSlug: string }>> {
+}): Promise<ActionResult<undefined>> {
   const session = await requireSession();
 
-  // Moving is a triage action available to any workspace member (PLATFORM.md §4).
   const actorMember = await getWorkspaceMember(
     input.workspaceId,
     session.user.id
   );
-  if (!actorMember) {
+  if (!actorMember || actorMember.role === WORKSPACE_MEMBER) {
     return {
       success: false,
-      error: "Only workspace members can move feedback.",
+      error: "Only admins and owners can change a post's visibility.",
     };
   }
 
@@ -632,31 +771,26 @@ export async function movePostAction(input: {
     return { success: false, error: "Post not found." };
   }
 
-  const target = await getBoardById(input.targetBoardId);
-  if (!target || target.workspaceId !== input.workspaceId) {
-    return { success: false, error: "Destination board not found." };
-  }
-  if (target.id === post.boardId) {
-    return { success: false, error: "This post is already on that board." };
+  if (!post.isApproved) {
+    return { success: true, data: undefined };
   }
 
-  const { slug } = await movePost(input.postId, target.id);
+  await unapprovePost(input.postId);
 
   audit({
-    action: "post.moved",
+    workspaceId: input.workspaceId,
+    action: "post.unapproved",
     actorId: session.user.id,
     actorEmail: session.user.email,
+    actorName: session.user.name ?? null,
     entityType: "post",
     entityId: input.postId,
-    description: `Moved post: ${post.title}`,
-    metadata: {
-      workspaceId: input.workspaceId,
-      fromBoardId: post.boardId,
-      toBoardId: target.id,
-    },
+    entityName: post.title,
+    description: `Hid post from public view: ${post.title}`,
+    metadata: { workspaceId: input.workspaceId },
   });
 
-  return { success: true, data: { slug, boardSlug: target.slug } };
+  return { success: true, data: undefined };
 }
 
 // ─── Merge Post ───────────────────────────────────────────────────────────────

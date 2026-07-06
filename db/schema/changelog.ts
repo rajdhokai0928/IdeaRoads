@@ -22,6 +22,7 @@ export const changelogEntries = pgTable(
       .references(() => workspaces.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     body: text("body").notNull().default(""),
+    coverImageUrl: text("cover_image_url"),
     label: text("label").notNull().default("new_feature"),
     isPublished: boolean("is_published").notNull().default(false),
     publishedAt: timestamp("published_at", { withTimezone: true }),

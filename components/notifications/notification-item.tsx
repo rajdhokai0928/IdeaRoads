@@ -9,6 +9,7 @@ import {
   Megaphone,
   MessageCircle,
   UserCheck,
+  UserPlus,
   UserX,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,6 +24,7 @@ const TYPE_ICONS: Record<NotificationType, React.ElementType> = {
   invite_accepted: UserCheck,
   member_removed: UserX,
   changelog_published: Megaphone,
+  assignment: UserPlus,
 };
 
 interface NotificationItemProps {
@@ -56,7 +58,7 @@ export function NotificationItem({
   return (
     <Link
       className={`flex items-start gap-3 px-5 py-3.5 border-b border-border transition-colors hover:bg-muted/40 ${
-        notification.isRead ? "" : "bg-primary/[0.03]"
+        notification.isRead ? "" : "bg-primary/3"
       }`}
       href={notification.link}
       onClick={handleClick}

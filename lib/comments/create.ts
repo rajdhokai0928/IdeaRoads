@@ -7,10 +7,10 @@ import { CommentReplyEmail } from "@/lib/email/components/comment-reply";
 import { NewCommentEmail } from "@/lib/email/components/new-comment";
 import { renderEmailTemplate } from "@/lib/email/renderer";
 import { buildUnsubscribeUrl } from "@/lib/email/unsubscribe";
-import { env } from "@/lib/env";
 import { isBlocked } from "@/lib/moderation/queries";
 import { createNotification } from "@/lib/notifications/create";
 import { isEmailNotificationEnabled } from "@/lib/notifications/queries";
+import { portalBaseUrl } from "@/lib/urls";
 import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 import { commentPreviewText } from "./preview";
@@ -197,7 +197,8 @@ export async function sendCommentNotifications(
   },
   _moderationEnabled: boolean
 ) {
-  const appUrl = env.NEXT_PUBLIC_APP_URL;
+  // Public post links in comment/reply emails point at the Public Portal host.
+  const appUrl = portalBaseUrl();
 
   // Get workspace + board info for URLs
   const workspace = await db
@@ -223,9 +224,10 @@ export async function sendCommentNotifications(
   const postUrl = board
     ? `${appUrl}/${workspace.slug}/b/${board.slug}/p/${post.slug ?? post.id}`
     : `${appUrl}/${workspace.slug}`;
-  const postLink = board
-    ? `/${workspace.slug}/b/${board.slug}/p/${post.slug ?? post.id}`
-    : `/${workspace.slug}`;
+  // In-app notifications are only ever viewed from the workspace admin
+  // sidebar (there's no customer-facing notification list), so this link
+  // goes to the admin feedback detail page, not the public portal.
+  const postLink = `/${workspace.slug}/feedback/${post.id}`;
 
   if (comment.parentId) {
     // Reply: notify parent comment author

@@ -20,6 +20,7 @@ import {
 import { getPost, getPostBySlug, listStatusHistory } from "@/lib/posts/queries";
 import { hasUserVoted } from "@/lib/voting";
 import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
+import { listMembers } from "@/lib/workspaces/members";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -92,23 +93,28 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
 
   const isAdminOrOwner = !!member && member.role !== WORKSPACE_MEMBER;
 
-  const [votedByUser, workspaceStatuses, categories, statusHistory] =
-    await Promise.all([
-      session ? hasUserVoted(post.id, { userId: session.user.id }) : false,
-      getActiveWorkspaceStatuses(workspace.id),
-      getActiveCategoriesForWorkspace(workspace.id),
-      listStatusHistory(post.id),
-    ]);
+  const [
+    votedByUser,
+    workspaceStatuses,
+    categories,
+    statusHistory,
+    allBoards,
+    members,
+  ] = await Promise.all([
+    session ? hasUserVoted(post.id, { userId: session.user.id }) : false,
+    getActiveWorkspaceStatuses(workspace.id),
+    getActiveCategoriesForWorkspace(workspace.id),
+    listStatusHistory(post.id),
+    listBoardsForWorkspace(workspace.id),
+    isMember ? listMembers(workspace.id) : Promise.resolve([]),
+  ]);
 
-  const allBoards = await listBoardsForWorkspace(workspace.id);
-
-  // Active boards a member can move this post to (excludes archived).
-  const moveTargets = isMember
-    ? allBoards
-        .filter((b) => !b.isArchived)
-        .map((b) => ({ id: b.id, name: b.name, slug: b.slug }))
-    : [];
   const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
+  const assignees = members.map((m) => ({
+    id: m.userId,
+    name: m.user.name,
+    email: m.user.email,
+  }));
 
   // If this post was merged into another, resolve the target's URL for the notice.
   let mergedTarget: { href: string; title: string } | null = null;
@@ -133,7 +139,6 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
       {isEmbed && <EmbedResizeReporter />}
       {!isEmbed && (
         <PortalHeader
-          activeBoardSlug={boardSlug}
           boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
           isMember={isMember}
@@ -141,6 +146,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
           logoUrl={workspace.logoUrl}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}
+          userEmail={session?.user.email}
           userImage={session?.user.image}
           userName={session?.user.name}
           workspaceName={workspace.name}
@@ -149,6 +155,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
       {!isEmbed && <PoweredByBadge />}
 
       <PostDetailContent
+        assignees={assignees}
         backLabel={board.name}
         boardHref={boardHref}
         boardIsArchived={board.isArchived}
@@ -160,12 +167,10 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
         isMember={isMember}
         isSignedIn={isSignedIn}
         mergedTarget={mergedTarget}
-        moveTargets={moveTargets}
         post={post}
         statusHistory={statusHistory}
         votedByUser={votedByUser}
         workspaceId={workspace.id}
-        workspaceSlug={slug}
         workspaceStatuses={workspaceStatuses}
       />
     </div>

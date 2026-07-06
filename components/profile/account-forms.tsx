@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, TriangleAlert, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   useActionState,
   useEffect,
@@ -14,6 +15,7 @@ import {
   type AvatarActionState,
   changeEmailAction,
   deleteAccountAction,
+  type NameActionState,
   removeAvatarAction,
   updateAvatarAction,
   updateNameAction,
@@ -24,6 +26,7 @@ import { Input } from "@/components/ui/input";
 
 const initialState: ActionState = {};
 const initialAvatarState: AvatarActionState = {};
+const initialNameState: NameActionState = {};
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set([
   "image/png",
@@ -186,19 +189,29 @@ export function AccountIdentityForms({
   image: string | null;
   name: string;
 }) {
+  const router = useRouter();
   const [nameState, nameAction, namePending] = useActionState(
     updateNameAction,
-    initialState
+    initialNameState
   );
+  const [nameValue, setNameValue] = useState(name);
+  const avatarName = nameValue.trim() || email;
   const [emailState, emailAction, emailPending] = useActionState(
     changeEmailAction,
     initialState
   );
 
+  useEffect(() => {
+    if (nameState.success && nameState.name !== undefined) {
+      setNameValue(nameState.name);
+      router.refresh();
+    }
+  }, [nameState.success, nameState.name, router]);
+
   return (
     <div className="border border-border divide-y divide-border">
       {/* Profile picture */}
-      <AvatarUploadRow image={image} name={name} />
+      <AvatarUploadRow image={image} name={avatarName} />
 
       {/* Display name */}
       <div className="px-5 py-4">
@@ -211,11 +224,12 @@ export function AccountIdentityForms({
           </div>
           <form action={nameAction} className="min-w-0 flex-1 space-y-3">
             <Input
-              defaultValue={name}
               id="name"
               maxLength={100}
               name="name"
+              onChange={(e) => setNameValue(e.target.value)}
               placeholder="Enter your profile name..."
+              value={nameValue}
             />
             <ActionMessage state={nameState} />
             <Button disabled={namePending} size="sm" type="submit">

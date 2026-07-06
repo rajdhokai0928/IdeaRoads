@@ -38,6 +38,7 @@ export default function BoardFilters({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const updateParam = useCallback(
     (updates: Record<string, string | null>) => {
@@ -67,6 +68,16 @@ export default function BoardFilters({
     }, 300);
   }
 
+  function clearSearch() {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+    updateParam({ q: null });
+  }
+
   function toggleMyVotes() {
     updateParam({ myVotes: myVotesActive ? null : "true" });
   }
@@ -84,12 +95,13 @@ export default function BoardFilters({
           defaultValue={activeSearch}
           onChange={handleSearch}
           placeholder="Search"
-          type="search"
+          ref={searchInputRef}
+          type="text"
         />
         {activeSearch && (
           <button
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => updateParam({ q: null })}
+            onClick={clearSearch}
             type="button"
           >
             <X className="size-3.5" />

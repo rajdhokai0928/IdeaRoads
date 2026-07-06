@@ -3,14 +3,18 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChangelogCommentSection } from "@/components/changelog/changelog-comment-section";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
+import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
+import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
-import { renderMarkdown } from "@/lib/changelog/markdown";
+import { sanitizeChangelogHtml } from "@/lib/changelog/html";
 import { getChangelogEntryById } from "@/lib/changelog/queries";
-import { env } from "@/lib/env";
+import { getReactionsForEntry } from "@/lib/changelog-comments/reactions";
+import { portalBaseUrl } from "@/lib/urls";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -32,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Changelog", robots: "noindex" };
   }
 
-  const appUrl = env.NEXT_PUBLIC_APP_URL;
+  const appUrl = portalBaseUrl();
   const title = `${entry.title} — ${workspace.name} Changelog`;
 
   return {
@@ -71,9 +75,14 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
   }
 
   const isSignedIn = !!session;
-  const renderedBody = renderMarkdown(entry.body);
+  const renderedBody = sanitizeChangelogHtml(entry.body);
   const allBoards = await listBoardsForWorkspace(workspace.id);
   const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
+  const reactions = await getReactionsForEntry(
+    entry.id,
+    session?.user.id ?? null
+  );
+  const entryUrl = `${portalBaseUrl()}/${slug}/changelog/${entryId}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,12 +90,14 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
         active="changelog"
         boards={publicBoards}
         changelogPublic={workspace.changelogPublic}
+        currentPath={`/${slug}/changelog/${entryId}`}
         isMember={!!member}
         isSignedIn={isSignedIn}
         logoUrl={workspace.logoUrl}
         roadmapPublic={workspace.roadmapPublic}
         rssHref={`/${slug}/changelog/feed.xml`}
         slug={slug}
+        userEmail={session?.user.email}
         userImage={session?.user.image}
         userName={session?.user.name}
         workspaceName={workspace.name}
@@ -122,12 +133,33 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
           </h1>
         </div>
 
+        {/* Cover image */}
+        {entry.coverImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          // biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image
+          <img
+            alt=""
+            className="mb-8 max-h-96 w-full border border-border object-cover"
+            src={entry.coverImageUrl}
+          />
+        )}
+
         {/* Rendered body */}
         <div
           className="prose prose-sm max-w-none text-foreground prose-headings:font-semibold prose-a:text-primary prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-pre:bg-muted"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: server-side sanitized via DOMPurify
           dangerouslySetInnerHTML={{ __html: renderedBody }}
         />
+
+        {/* Reactions + share */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
+          <ChangelogReactions
+            changelogEntryId={entry.id}
+            initialReactions={reactions}
+            isSignedIn={isSignedIn}
+          />
+          <ChangelogShareButton title={entry.title} url={entryUrl} />
+        </div>
 
         {/* Linked posts */}
         {entry.linkedPosts.length > 0 && (
@@ -165,6 +197,16 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* Comments */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <ChangelogCommentSection
+            changelogEntryId={entry.id}
+            currentUserId={session?.user.id ?? null}
+            isMember={!!member}
+            isSignedIn={isSignedIn}
+          />
+        </div>
       </div>
     </div>
   );

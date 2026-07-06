@@ -17,7 +17,7 @@ export const STATUS_CLASSES: Record<PostStatus, string> = {
     "bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
   in_progress:
     "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-  completed: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
+  completed: "bg-success-subtle text-success-foreground",
   closed: "bg-muted text-muted-foreground/70",
 };
 

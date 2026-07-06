@@ -1,9 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
-import { Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
-import { CategoryChip } from "@/components/categories/category-chip";
-import { PostStatusBadge } from "@/components/posts/post-status-badge";
-import VoteButton from "@/components/voting/vote-button";
+import { PostRow } from "@/components/posts/post-row";
 
 export interface PostsTableRow {
   authorEmail: string;
@@ -31,12 +26,16 @@ interface Category {
 
 interface WorkspaceStatus {
   color: string;
+  id: string;
+  isArchived: boolean;
   name: string;
   slug: string;
 }
 
 interface PostsTableProps {
   categories: Category[];
+  isAdminOrOwner: boolean;
+  isMember: boolean;
   isSignedIn: boolean;
   // Builds the link target for a post row — differs between the admin
   // (workspace-shelled) and public post-detail routes, which are genuinely
@@ -44,6 +43,7 @@ interface PostsTableProps {
   postHref: (post: PostsTableRow) => string;
   posts: PostsTableRow[];
   showBoardColumn?: boolean;
+  workspaceId: string;
   workspaceStatuses: WorkspaceStatus[];
 }
 
@@ -53,10 +53,11 @@ export function PostsTable({
   workspaceStatuses,
   postHref,
   isSignedIn,
+  isAdminOrOwner,
+  isMember,
+  workspaceId,
   showBoardColumn = true,
 }: PostsTableProps) {
-  const categoryMap = new Map(categories.map((c) => [c.id, c]));
-
   if (posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
@@ -97,91 +98,28 @@ export function PostsTable({
             <th className="px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
               Visibility
             </th>
+            {isMember && (
+              <th className="w-12 px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+                <span className="sr-only">Actions</span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {posts.map((post) => {
-            const category = post.categoryId
-              ? categoryMap.get(post.categoryId)
-              : undefined;
-
-            return (
-              <tr
-                className="transition-colors duration-150 hover:bg-muted/40"
-                key={post.id}
-              >
-                <td className="px-4 py-3 align-top">
-                  <VoteButton
-                    initialCount={post.upvotes}
-                    initialHasVoted={post.hasVoted}
-                    isSignedIn={isSignedIn}
-                    postId={post.id}
-                  />
-                </td>
-                <td className="max-w-64 px-4 py-3 align-top">
-                  <Link
-                    className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
-                    href={postHref(post)}
-                  >
-                    {post.title}
-                  </Link>
-                  {showBoardColumn && (
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {post.boardName}
-                    </p>
-                  )}
-                  {!post.isApproved && (
-                    <span className="mt-1 inline-block bg-warning/10 px-1.5 py-0.5 text-2xs font-medium text-warning">
-                      Pending review
-                    </span>
-                  )}
-                </td>
-                <td className="hidden max-w-72 px-4 py-3 align-top lg:table-cell">
-                  <p className="line-clamp-2 text-xs text-muted-foreground">
-                    {post.body ?? "—"}
-                  </p>
-                </td>
-                <td className="hidden max-w-32 px-4 py-3 align-top sm:table-cell">
-                  <p className="truncate text-xs text-muted-foreground">
-                    {post.authorName ?? post.authorEmail}
-                  </p>
-                </td>
-                <td className="hidden whitespace-nowrap px-4 py-3 align-top text-xs text-muted-foreground sm:table-cell">
-                  {formatDistanceToNow(post.createdAt, { addSuffix: true })}
-                </td>
-                <td className="hidden px-4 py-3 align-top md:table-cell">
-                  {category ? (
-                    <CategoryChip color={category.color} name={category.name} />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <PostStatusBadge
-                    status={post.status}
-                    workspaceStatuses={workspaceStatuses}
-                  />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  {post.boardIsPublic ? (
-                    <Eye
-                      aria-label="Public board"
-                      className="size-4 text-muted-foreground"
-                    >
-                      <title>Public board</title>
-                    </Eye>
-                  ) : (
-                    <EyeOff
-                      aria-label="Private board"
-                      className="size-4 text-muted-foreground/50"
-                    >
-                      <title>Private board</title>
-                    </EyeOff>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
+          {posts.map((post) => (
+            <PostRow
+              categories={categories}
+              href={postHref(post)}
+              isAdminOrOwner={isAdminOrOwner}
+              isMember={isMember}
+              isSignedIn={isSignedIn}
+              key={post.id}
+              post={post}
+              showBoardColumn={showBoardColumn}
+              workspaceId={workspaceId}
+              workspaceStatuses={workspaceStatuses}
+            />
+          ))}
         </tbody>
       </table>
     </div>

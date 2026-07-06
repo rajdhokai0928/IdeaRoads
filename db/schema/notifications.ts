@@ -17,6 +17,7 @@ export const NOTIFICATION_TYPES = [
   "changelog_published",
   "invite_accepted",
   "member_removed",
+  "assignment",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

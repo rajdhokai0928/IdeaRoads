@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { WORKSPACE_MEMBER, WORKSPACE_OWNER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
+import { portalBaseUrl } from "@/lib/urls";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -41,6 +42,7 @@ export default async function GeneralSettingsPage({ params }: Props) {
       canManage={canManage}
       changelogPublic={workspace.changelogPublic}
       isOwner={isOwner}
+      portalUrl={portalBaseUrl()}
       roadmapPublic={workspace.roadmapPublic}
       workspaceDescription={workspace.description ?? ""}
       workspaceId={workspace.id}

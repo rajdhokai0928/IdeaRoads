@@ -1,8 +1,8 @@
 import type { Job } from "pg-boss";
 import { enqueueEmail } from "@/lib/email/index";
 import { newPostAlertEmailTemplate } from "@/lib/email/templates/new-post-alert";
-import { env } from "@/lib/env";
 import { createNotification } from "@/lib/notifications/create";
+import { portalBaseUrl } from "@/lib/urls";
 import type { SendNewPostAlertPayload } from "@/lib/worker/job-types";
 
 export async function handleSendNewPostAlert(
@@ -15,6 +15,7 @@ export async function handleSendNewPostAlert(
 
 async function processSendNewPostAlert(job: Job<SendNewPostAlertPayload>) {
   const {
+    postId,
     postTitle,
     postBody,
     postSlug,
@@ -34,7 +35,7 @@ async function processSendNewPostAlert(job: Job<SendNewPostAlertPayload>) {
     return;
   }
 
-  const postUrl = `${env.NEXT_PUBLIC_APP_URL}/${workspaceSlug}/b/${boardSlug}/p/${postSlug}`;
+  const postUrl = `${portalBaseUrl()}/${workspaceSlug}/b/${boardSlug}/p/${postSlug}`;
 
   const { subject, html, text } = newPostAlertEmailTemplate({
     adminName: "there",
@@ -48,13 +49,15 @@ async function processSendNewPostAlert(job: Job<SendNewPostAlertPayload>) {
 
   await enqueueEmail({ to: adminEmail, subject, html, text });
 
-  // In-app notification for admin
+  // In-app notification for admin — links into the workspace admin's own
+  // feedback detail page, not the public portal (the recipient here is
+  // always a team member triaging the post, never a portal visitor).
   await createNotification({
     userId: adminUserId,
     workspaceId,
     type: "new_post",
     title: `New post: "${postTitle}"`,
     body: `Submitted by ${authorName || "a user"} on ${boardName}`,
-    link: `/${workspaceSlug}/b/${boardSlug}/p/${postSlug}`,
+    link: `/${workspaceSlug}/feedback/${postId}`,
   });
 }

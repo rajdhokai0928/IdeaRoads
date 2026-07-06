@@ -92,6 +92,20 @@
       "when": 1751100000000,
       "tag": "0012_orbit",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783162144125,
+      "tag": "0014_post_assignment_and_image",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1783162144126,
+      "tag": "0015_changelog_comments_and_cover",
+      "breakpoints": true
     }
   ]
 }

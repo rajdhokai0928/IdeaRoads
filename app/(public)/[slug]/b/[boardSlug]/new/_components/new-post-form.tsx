@@ -1,10 +1,18 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ImagePlus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { createPostAction } from "@/app/actions/posts";
+import { useRef, useState, useTransition } from "react";
+import { createPostAction, uploadPostImageAction } from "@/app/actions/posts";
+
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
 
 interface Category {
   color: string;
@@ -40,9 +48,40 @@ export default function NewPostForm({
   const [categoryId, setCategoryId] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const boardHref = `/${workspaceSlug}/b/${boardSlug}${embedQuery}`;
   const bodyRemaining = 10_000 - body.length;
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    setImageError(null);
+    if (!file) {
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      setImageError("Use a PNG, JPEG, WEBP, or GIF image.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setImageError("Image must be 4MB or smaller.");
+      return;
+    }
+    setImageFile(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
+  }
+
+  function removeImage() {
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    setImageError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,12 +94,26 @@ export default function NewPostForm({
     }
 
     startTransition(async () => {
+      let imageUrl: string | undefined;
+
+      if (imageFile) {
+        const imageFormData = new FormData();
+        imageFormData.set("image", imageFile);
+        const uploadResult = await uploadPostImageAction(imageFormData);
+        if (!uploadResult.success) {
+          setImageError(uploadResult.error);
+          return;
+        }
+        imageUrl = uploadResult.data.url;
+      }
+
       const result = await createPostAction({
         boardId,
         workspaceId,
         title: title.trim(),
         body: body.trim() || undefined,
         categoryId: categoryId || undefined,
+        imageUrl,
       });
 
       if (!result.success) {
@@ -191,6 +244,55 @@ export default function NewPostForm({
               </select>
             </div>
           )}
+
+          {/* Image (optional) */}
+          <div>
+            <span className="block text-sm font-medium text-foreground mb-1.5">
+              Image{" "}
+              <span className="text-muted-foreground font-normal text-xs">
+                (optional)
+              </span>
+            </span>
+            {imagePreviewUrl ? (
+              <div className="relative inline-block">
+                {/* biome-ignore lint/performance/noImgElement: local blob: preview URL, next/image can't optimize it anyway */}
+                <img
+                  alt=""
+                  className="max-h-48 w-auto border border-input object-contain"
+                  src={imagePreviewUrl}
+                />
+                <button
+                  aria-label="Remove image"
+                  className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  disabled={isPending}
+                  onClick={removeImage}
+                  type="button"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ) : (
+              <label
+                className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-4 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+                  isPending ? "pointer-events-none opacity-50" : ""
+                }`}
+              >
+                <ImagePlus className="size-4" />
+                Add an image
+                <input
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="sr-only"
+                  disabled={isPending}
+                  onChange={handleImageChange}
+                  ref={fileInputRef}
+                  type="file"
+                />
+              </label>
+            )}
+            {imageError && (
+              <p className="mt-1 text-xs text-destructive">{imageError}</p>
+            )}
+          </div>
 
           {generalError && (
             <p className="text-sm text-destructive">{generalError}</p>

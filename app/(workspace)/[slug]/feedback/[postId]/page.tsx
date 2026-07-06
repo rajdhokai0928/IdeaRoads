@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { PostDetailContent } from "@/components/posts/post-detail-content";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
-import { getBoardById, listBoardsForWorkspace } from "@/lib/boards/queries";
+import { getBoardById } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
 import { getPost, listStatusHistory } from "@/lib/posts/queries";
 import { hasUserVoted } from "@/lib/voting";
 import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
+import { listMembers } from "@/lib/workspaces/members";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -49,18 +50,19 @@ export default async function AdminPostDetailPage({ params }: Props) {
 
   const isAdminOrOwner = member.role !== WORKSPACE_MEMBER;
 
-  const [votedByUser, workspaceStatuses, categories, statusHistory, allBoards] =
+  const [votedByUser, workspaceStatuses, categories, statusHistory, members] =
     await Promise.all([
       hasUserVoted(post.id, { userId: session.user.id }),
       getActiveWorkspaceStatuses(workspace.id),
       getActiveCategoriesForWorkspace(workspace.id),
       listStatusHistory(post.id),
-      listBoardsForWorkspace(workspace.id),
+      listMembers(workspace.id),
     ]);
-
-  const moveTargets = allBoards
-    .filter((b) => !b.isArchived)
-    .map((b) => ({ id: b.id, name: b.name, slug: b.slug }));
+  const assignees = members.map((m) => ({
+    id: m.userId,
+    name: m.user.name,
+    email: m.user.email,
+  }));
 
   // If this post was merged into another, resolve the target's URL for the notice.
   let mergedTarget: { href: string; title: string } | null = null;
@@ -76,8 +78,9 @@ export default async function AdminPostDetailPage({ params }: Props) {
 
   return (
     <PostDetailContent
+      assignees={assignees}
       backLabel={board.name}
-      boardHref={`/${slug}/feedback?board=${board.id}`}
+      boardHref={`/${slug}/feedback`}
       boardIsArchived={board.isArchived}
       categories={categories}
       currentUserId={session.user.id}
@@ -85,12 +88,10 @@ export default async function AdminPostDetailPage({ params }: Props) {
       isMember={true}
       isSignedIn={true}
       mergedTarget={mergedTarget}
-      moveTargets={moveTargets}
       post={post}
       statusHistory={statusHistory}
       votedByUser={votedByUser}
       workspaceId={workspace.id}
-      workspaceSlug={slug}
       workspaceStatuses={workspaceStatuses}
     />
   );

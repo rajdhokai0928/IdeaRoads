@@ -38,6 +38,10 @@ export const posts = pgTable(
     }),
     authorName: text("author_name"),
     authorEmail: text("author_email").notNull(),
+    imageUrl: text("image_url"),
+    assignedToId: text("assigned_to_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
     upvotes: integer("upvotes").notNull().default(0),
     commentCount: integer("comment_count").notNull().default(0),
     isPinned: boolean("is_pinned").notNull().default(false),
@@ -62,6 +66,7 @@ export const posts = pgTable(
     index("posts_board_id_upvotes_idx").on(t.boardId, t.upvotes),
     index("posts_board_id_status_idx").on(t.boardId, t.status),
     index("posts_author_id_idx").on(t.authorId),
+    index("posts_assigned_to_id_idx").on(t.assignedToId),
     index("posts_workspace_id_created_at_idx").on(t.workspaceId, t.createdAt),
     index("posts_category_id_idx").on(t.categoryId),
   ]

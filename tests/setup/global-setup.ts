@@ -53,10 +53,17 @@ export default async function globalSetup() {
   // replaying it produces bogus duplicate-table errors even on a fresh
   // database. schema.ts is the actual source of truth for what the app code
   // expects, so pushing directly from it is what keeps these tests correct.
+  //
+  // CRITICAL: drizzle-kit auto-loads `.env` and lets it OVERRIDE the env it is
+  // spawned with, so passing DATABASE_URL here is silently ignored — drizzle-kit
+  // would push (with --force) against the DEV database from `.env` and wipe it.
+  // We use drizzle-test.config.ts, which reads the URL DIRECTLY from `.env.test`
+  // on disk (immune to drizzle-kit's env rewriting) and hard-refuses any
+  // database that isn't the ephemeral …/idearoads_test one.
   await execFileAsync(
     "npx",
-    ["drizzle-kit", "push", "--config=drizzle.config.ts", "--force"],
-    { cwd: process.cwd(), env: { ...process.env, DATABASE_URL: databaseUrl } }
+    ["drizzle-kit", "push", "--config=drizzle-test.config.ts", "--force"],
+    { cwd: process.cwd() }
   );
 
   return async () => {

@@ -5,8 +5,8 @@ import { db } from "@/lib/db";
 import { enqueueEmail } from "@/lib/email/index";
 import { statusChangeEmailTemplate } from "@/lib/email/templates/status-change";
 import { buildUnsubscribeUrl } from "@/lib/email/unsubscribe";
-import { env } from "@/lib/env";
 import { createNotification } from "@/lib/notifications/create";
+import { portalBaseUrl } from "@/lib/urls";
 import type { SendStatusChangeEmailPayload } from "@/lib/worker/job-types";
 
 export async function handleSendStatusChangeEmail(
@@ -41,7 +41,7 @@ async function processSendStatusChangeEmail(
     return;
   }
 
-  const postUrl = `${env.NEXT_PUBLIC_APP_URL}/${workspaceSlug}/b/${boardSlug}/p/${postSlug}`;
+  const postUrl = `${portalBaseUrl()}/${workspaceSlug}/b/${boardSlug}/p/${postSlug}`;
 
   // Check email preference (opt-out model: no row = enabled)
   if (voterEmail) {
@@ -85,12 +85,15 @@ async function processSendStatusChangeEmail(
 
     if (inAppEnabled) {
       const statusLabel = toStatus.replace(/_/g, " ");
+      // In-app notifications are only ever viewed from the workspace admin
+      // sidebar (there's no customer-facing notification list), so this
+      // link goes to the admin feedback detail page, not the public portal.
       await createNotification({
         userId: voterUserId,
         workspaceId,
         type: "status_change",
         title: `"${postTitle}" is now ${statusLabel}`,
-        link: `/${workspaceSlug}/b/${boardSlug}/p/${postSlug}`,
+        link: `/${workspaceSlug}/feedback/${postId}`,
       });
     }
   }

@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { and, eq, sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   INVITE_LINK_LABEL_MAX,
@@ -17,6 +17,7 @@ import { db } from "@/lib/db";
 import { enqueueEmail } from "@/lib/email";
 import { MemberRemovedEmail } from "@/lib/email/components/member-removed";
 import { renderEmailTemplate } from "@/lib/email/renderer";
+import { adminBaseUrl } from "@/lib/urls";
 import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
 import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 import {
@@ -137,7 +138,7 @@ export async function inviteMemberAction(input: {
     return { success: false, error: "Workspace not found." };
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = adminBaseUrl();
 
   const { inviteId } = await createInvite({
     workspaceId,

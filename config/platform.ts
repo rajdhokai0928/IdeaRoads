@@ -26,7 +26,6 @@ export function workspaceRoleLabel(role: string): string {
 
 // Workspace limits
 export const MAX_WORKSPACES_PER_USER = 10;
-export const MAX_BOARDS_PER_WORKSPACE = 10;
 export const MAX_MEMBERS_PER_WORKSPACE: number | null = null;
 
 // Invitation settings
@@ -38,9 +37,6 @@ export const DEFAULT_BOARD_NAME = "Feature Requests";
 export const DEFAULT_BOARD_SLUG = "feature-requests";
 export const DEFAULT_BOARD_DESCRIPTION =
   "Share and vote on the features you want to see built.";
-
-// Board slugs reserved to avoid collision with a board's sub-routes (e.g. /b/{slug}/new)
-export const RESERVED_BOARD_SLUGS: readonly string[] = ["new"];
 
 // Slugs that cannot be used as workspace slugs (conflict with app routes)
 export const RESERVED_SLUGS: readonly string[] = [

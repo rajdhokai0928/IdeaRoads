@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { ChangeIndicator } from "@/components/dashboard/change-indicator";
 import { ParamSelect } from "@/components/dashboard/param-select";
 import type {
   BreakdownMetrics,
@@ -15,43 +15,6 @@ const PERIOD_OPTIONS = [
   { label: "Last 30 days", value: "30d" },
   { label: "All time", value: "all" },
 ];
-
-function ChangeIndicator({
-  current,
-  previous,
-}: {
-  current: number;
-  previous: number | null;
-}) {
-  if (previous === null) {
-    return null;
-  }
-
-  if (previous === 0) {
-    return current === 0 ? (
-      <span className="text-xs text-muted-foreground">—</span>
-    ) : (
-      <span className="text-xs font-medium text-success">New</span>
-    );
-  }
-
-  const pct = Math.round(((current - previous) / previous) * 100);
-  if (pct === 0) {
-    return <span className="text-xs text-muted-foreground">0%</span>;
-  }
-
-  const isUp = pct > 0;
-  const Icon = isUp ? TrendingUp : TrendingDown;
-  return (
-    <span
-      className={`flex items-center gap-1 text-xs font-medium ${isUp ? "text-success" : "text-destructive"}`}
-    >
-      <Icon className="size-3" />
-      {isUp ? "+" : ""}
-      {pct}%
-    </span>
-  );
-}
 
 export function BreakdownCard({ metrics, period }: BreakdownCardProps) {
   const rows: { label: string; value: number; previous: number | null }[] = [

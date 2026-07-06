@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChangelogAdminCard } from "@/components/changelog/changelog-admin-card";
 import { ChangelogEntryCard } from "@/components/changelog/changelog-entry-card";
+import { Button } from "@/components/ui/button";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { listChangelogEntries } from "@/lib/changelog/queries";
@@ -63,13 +64,12 @@ export default async function WorkspaceChangelogPage({ params }: Props) {
             </p>
           </div>
           {isAdmin && (
-            <Link
-              className="flex shrink-0 items-center gap-1.5 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              href={`/${slug}/settings/changelog/new`}
-            >
-              <Plus className="size-4" />
-              New entry
-            </Link>
+            <Button asChild className="shrink-0">
+              <Link href={`/${slug}/settings/changelog/new`}>
+                <Plus data-icon="inline-start" />
+                New entry
+              </Link>
+            </Button>
           )}
         </div>
       </div>
@@ -105,12 +105,11 @@ export default async function WorkspaceChangelogPage({ params }: Props) {
               Check back soon for product updates and announcements.
             </p>
             {isAdmin && (
-              <Link
-                className="mt-4 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                href={`/${slug}/settings/changelog/new`}
-              >
-                Create your first entry
-              </Link>
+              <Button asChild className="mt-4">
+                <Link href={`/${slug}/settings/changelog/new`}>
+                  Create your first entry
+                </Link>
+              </Button>
             )}
           </div>
         ) : (

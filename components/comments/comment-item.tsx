@@ -46,12 +46,18 @@ export default function CommentItem({
   const [isDeleting, setIsDeleting] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
 
-  const displayName = comment.authorName ?? "User";
+  const displayName = comment.isDeleted
+    ? "Deleted"
+    : (comment.authorName ?? "User");
   const initials = getInitials(comment.authorName);
 
-  const canDelete = canModerate || (!!currentUserId && !!comment.authorName);
+  const canDelete =
+    !comment.isDeleted &&
+    (canModerate || (!!currentUserId && !!comment.authorName));
+  // Replying to a deleted comment stays allowed — the thread is preserved
+  // (Feature 07), so a deleted comment keeps its place as a valid reply target.
   const canReply = depth === 0 && !isLocked && onReply;
-  const isPending = !comment.isApproved;
+  const isPending = !comment.isApproved && !comment.isDeleted;
 
   async function handleConfirmDelete() {
     setIsDeleting(true);
@@ -81,7 +87,7 @@ export default function CommentItem({
       >
         {/* Avatar */}
         <div
-          className={`shrink-0 flex items-center justify-center bg-muted text-muted-foreground text-xs font-semibold ${depth === 1 ? "size-6" : "size-7"}`}
+          className={`shrink-0 flex items-center justify-center bg-muted text-muted-foreground text-xs font-semibold ${depth === 1 ? "size-6" : "size-7"} ${comment.isDeleted ? "opacity-50" : ""}`}
         >
           {comment.authorAvatar && !avatarFailed ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -100,11 +106,13 @@ export default function CommentItem({
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-xs font-medium text-foreground">
+            <span
+              className={`text-xs font-medium ${comment.isDeleted ? "italic text-muted-foreground" : "text-foreground"}`}
+            >
               {displayName}
             </span>
             {isPending && (
-              <span className="text-2xs uppercase tracking-wide text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 px-1">
+              <span className="text-2xs uppercase tracking-wide text-warning border border-warning/40 px-1">
                 Pending
               </span>
             )}
@@ -116,18 +124,26 @@ export default function CommentItem({
           </div>
 
           {/* Body — rendered as HTML from Quill */}
-          <div
-            className="comment-body mt-1 text-sm leading-relaxed text-foreground wrap-break-word"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: content from our own Quill editor
-            dangerouslySetInnerHTML={{ __html: comment.body }}
-          />
+          {comment.isDeleted ? (
+            <p className="mt-1 text-sm italic leading-relaxed text-muted-foreground">
+              This comment has been deleted.
+            </p>
+          ) : (
+            <div
+              className="comment-body mt-1 text-sm leading-relaxed text-foreground wrap-break-word"
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: content from our own Quill editor
+              dangerouslySetInnerHTML={{ __html: comment.body }}
+            />
+          )}
 
-          {/* Reactions */}
-          <CommentReactions
-            commentId={comment.id}
-            initialReactions={comment.reactions}
-            isSignedIn={isSignedIn}
-          />
+          {/* Reactions — can't react to a deleted comment */}
+          {!comment.isDeleted && (
+            <CommentReactions
+              commentId={comment.id}
+              initialReactions={comment.reactions}
+              isSignedIn={isSignedIn}
+            />
+          )}
 
           {/* Actions */}
           {(canReply || canDelete) && (
@@ -144,7 +160,7 @@ export default function CommentItem({
               {canDelete && (
                 <button
                   aria-label="Delete comment"
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground/40 hover:text-destructive transition-colors duration-150 focus-visible:outline-none"
+                  className="inline-flex items-center gap-1 text-xs text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none"
                   onClick={() => setShowDeleteDialog(true)}
                 >
                   <Trash2 className="size-3" />

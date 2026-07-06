@@ -35,12 +35,12 @@ export function WorkspaceSwitcher({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex h-14 w-full cursor-pointer items-center gap-2.5 border-b border-sidebar-border px-4 text-left transition-colors duration-150 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-14 w-full min-w-0 cursor-pointer items-center gap-2.5 border-b border-sidebar-border px-4 text-left transition-colors duration-150 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           type="button"
         >
           <SquareAvatar
             alt={currentName}
-            className="bg-primary text-primary-foreground"
+            className="shrink-0 bg-primary text-primary-foreground"
             fallback={
               <span className="text-xs font-black">
                 {currentName.charAt(0).toUpperCase()}
@@ -49,7 +49,7 @@ export function WorkspaceSwitcher({
             imageUrl={currentLogoUrl}
           />
           <span
-            className="flex-1 truncate text-sm font-semibold text-sidebar-foreground"
+            className="min-w-0 flex-1 truncate text-sm font-semibold text-sidebar-foreground"
             title={currentName}
           >
             {currentName}

@@ -13,6 +13,7 @@ import {
 } from "@/lib/changelog/publish";
 import { searchWorkspacePosts } from "@/lib/changelog/queries";
 import { updateChangelogEntry } from "@/lib/changelog/update";
+import { uploadFile } from "@/lib/storage";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 type ActionResult<T = undefined> =
@@ -32,6 +33,7 @@ const createEntrySchema = z.object({
     .min(1, "Title is required.")
     .max(200, "Title must be 200 characters or fewer."),
   body: z.string().max(50_000).default(""),
+  coverImageUrl: z.url().optional(),
   label: z
     .enum(CHANGELOG_LABEL_VALUES as [string, ...string[]])
     .default("new_feature"),
@@ -42,6 +44,7 @@ export async function createChangelogEntryAction(input: {
   workspaceId: string;
   title: string;
   body?: string;
+  coverImageUrl?: string;
   label?: string;
   postIds?: string[];
 }): Promise<ActionResult<{ id: string }>> {
@@ -70,6 +73,7 @@ export async function createChangelogEntryAction(input: {
       createdBy: session.user.id,
       title: parsed.data.title,
       body: parsed.data.body,
+      coverImageUrl: parsed.data.coverImageUrl,
       label: parsed.data.label,
       postIds: parsed.data.postIds,
     });
@@ -100,6 +104,7 @@ const updateEntrySchema = z.object({
   workspaceId: z.string().min(1),
   title: z.string().min(1).max(200).optional(),
   body: z.string().max(50_000).optional(),
+  coverImageUrl: z.union([z.url(), z.literal(null)]).optional(),
   label: z.enum(CHANGELOG_LABEL_VALUES as [string, ...string[]]).optional(),
   postIds: z.array(z.string()).max(20).optional(),
 });
@@ -109,6 +114,7 @@ export async function updateChangelogEntryAction(input: {
   workspaceId: string;
   title?: string;
   body?: string;
+  coverImageUrl?: string | null;
   label?: string;
   postIds?: string[];
 }): Promise<ActionResult<{ id: string }>> {
@@ -138,6 +144,7 @@ export async function updateChangelogEntryAction(input: {
       {
         title: parsed.data.title,
         body: parsed.data.body,
+        coverImageUrl: parsed.data.coverImageUrl,
         label: parsed.data.label,
         postIds: parsed.data.postIds,
       }
@@ -274,6 +281,52 @@ export async function deleteChangelogEntryAction(input: {
       error: err instanceof Error ? err.message : "Failed to delete entry.",
     };
   }
+}
+
+// ─── Upload Cover Image ───────────────────────────────────────────────────────
+
+const MAX_COVER_IMAGE_BYTES = 4 * 1024 * 1024;
+const ALLOWED_COVER_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
+export async function uploadChangelogCoverImageAction(
+  formData: FormData
+): Promise<ActionResult<{ url: string }>> {
+  const session = await requireSession();
+  const workspaceId = String(formData.get("workspaceId") ?? "");
+  const file = formData.get("image");
+
+  const member = await getWorkspaceMember(workspaceId, session.user.id);
+  if (!member || !isAdminOrOwner(member.role)) {
+    return {
+      success: false,
+      error: "Only admins and owners can upload a cover image.",
+    };
+  }
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "Choose an image to upload." };
+  }
+  if (!ALLOWED_COVER_IMAGE_TYPES.has(file.type)) {
+    return { success: false, error: "Use a PNG, JPEG, WEBP, or GIF image." };
+  }
+  if (file.size > MAX_COVER_IMAGE_BYTES) {
+    return { success: false, error: "Image must be 4MB or smaller." };
+  }
+
+  const extension = file.type.split("/")[1];
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const url = await uploadFile(
+    `changelog/${workspaceId}-${Date.now()}.${extension}`,
+    buffer,
+    file.type
+  );
+
+  return { success: true, data: { url } };
 }
 
 // ─── Search Posts ─────────────────────────────────────────────────────────────

@@ -57,6 +57,7 @@ body {
   --color-success-subtle: var(--success-subtle);
   --color-success-light: var(--success-light);
   --color-warning: var(--warning);
+  --color-info: var(--info);
 
   /* Shadcn core */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -109,6 +110,7 @@ body {
   --success-subtle: oklch(0.97 0.04 145); /* emerald-50  */
   --success-light: oklch(0.78 0.13 145); /* emerald-300 (on dark bg) */
   --warning: oklch(0.58 0.15 65); /* amber-700   */
+  --info: oklch(0.5 0.16 255); /* blue-700    */
 
   /* ── Shadcn core ──────────────────────────── */
   --background: oklch(1 0 0);
@@ -155,6 +157,7 @@ body {
   --success-subtle: oklch(0.22 0.06 145);
   --success-light: oklch(0.78 0.13 145);
   --warning: oklch(0.72 0.15 65);
+  --info: oklch(0.7 0.14 255); /* blue-300 (on dark bg) */
 
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

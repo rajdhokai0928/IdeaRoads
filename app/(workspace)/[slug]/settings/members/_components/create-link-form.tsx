@@ -116,7 +116,7 @@ export function CreateLinkForm({
           >
             {copied ? (
               <span className="flex items-center gap-1.5">
-                <Check className="size-3.5" />
+                <Check className="size-3.5 text-success" />
                 Copied
               </span>
             ) : (

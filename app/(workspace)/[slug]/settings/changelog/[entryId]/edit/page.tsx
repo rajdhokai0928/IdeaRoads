@@ -61,6 +61,7 @@ export default async function EditChangelogEntryPage({ params }: Props) {
             id: entry.id,
             title: entry.title,
             body: entry.body,
+            coverImageUrl: entry.coverImageUrl,
             label: entry.label,
             isPublished: entry.isPublished,
             linkedPosts: entry.linkedPosts,

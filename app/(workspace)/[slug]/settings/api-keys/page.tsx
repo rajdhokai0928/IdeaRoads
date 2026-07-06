@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ApiKeyDocs } from "@/components/settings/api-key-docs";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { listApiKeys } from "@/lib/api-keys/queries";
 import { requireSession } from "@/lib/authz";
+import { adminBaseUrl } from "@/lib/urls";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -38,6 +40,7 @@ export default async function ApiKeysPage({ params }: Props) {
   return (
     <div className="px-4 py-6 max-w-2xl sm:px-8">
       <ApiKeysSection keys={keys} workspaceId={workspace.id} />
+      <ApiKeyDocs appUrl={adminBaseUrl()} />
     </div>
   );
 }

@@ -15,6 +15,8 @@ interface GeneralSettingsFormProps {
   canManage: boolean;
   changelogPublic: boolean;
   isOwner: boolean;
+  // Public Portal origin — where this workspace's board/roadmap/changelog live.
+  portalUrl: string;
   roadmapPublic: boolean;
   workspaceDescription: string;
   workspaceId: string;
@@ -140,6 +142,7 @@ export function GeneralSettingsForm({
   workspaceName,
   workspaceDescription,
   workspaceLogoUrl,
+  portalUrl,
   roadmapPublic,
   changelogPublic,
   canManage,
@@ -160,10 +163,9 @@ export function GeneralSettingsForm({
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [isDeleting, startDeleteTransition] = useTransition();
 
-  const appUrl =
-    typeof window === "undefined"
-      ? (process.env.NEXT_PUBLIC_APP_URL ?? "")
-      : window.location.origin;
+  // Public URL previews (slug / roadmap / changelog) live on the Public Portal
+  // host, which is passed in from the server — not this admin page's own origin.
+  const appUrl = portalUrl;
 
   function handleRoadmapToggle(value: boolean) {
     startTransition(async () => {

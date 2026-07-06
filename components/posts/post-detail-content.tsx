@@ -2,11 +2,11 @@ import { format } from "date-fns";
 import { ArrowLeft, GitMerge } from "lucide-react";
 import Link from "next/link";
 import CommentSection from "@/components/comments/comment-section";
+import AssigneeSelect from "@/components/posts/assignee-select";
 import CategorySelect from "@/components/posts/category-select";
 import DeletePostButton from "@/components/posts/delete-post-button";
 import EditPostButton from "@/components/posts/edit-post-button";
 import MergePostButton from "@/components/posts/merge-post-button";
-import MovePostButton from "@/components/posts/move-post-button";
 import PinButton from "@/components/posts/pin-button";
 import StatusSelect from "@/components/posts/status-select";
 import VoterListButton from "@/components/posts/voter-list-button";
@@ -16,6 +16,12 @@ interface Category {
   color: string;
   id: string;
   name: string;
+}
+
+interface Assignee {
+  email: string;
+  id: string;
+  name: string | null;
 }
 
 interface WorkspaceStatus {
@@ -34,13 +40,8 @@ interface StatusHistoryEntry {
   toStatus: string;
 }
 
-interface MoveTarget {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 interface PostDetailPost {
+  assignedToId: string | null;
   authorEmail: string;
   authorId: string | null;
   authorName: string | null;
@@ -49,6 +50,7 @@ interface PostDetailPost {
   categoryId: string | null;
   createdAt: Date;
   id: string;
+  imageUrl: string | null;
   isLocked: boolean;
   isPinned: boolean;
   mergedIntoId: string | null;
@@ -60,6 +62,7 @@ interface PostDetailPost {
 }
 
 interface PostDetailContentProps {
+  assignees: Assignee[];
   backLabel: string;
   boardHref: string;
   boardIsArchived: boolean;
@@ -71,12 +74,10 @@ interface PostDetailContentProps {
   isMember: boolean;
   isSignedIn: boolean;
   mergedTarget: { href: string; title: string } | null;
-  moveTargets: MoveTarget[];
   post: PostDetailPost;
   statusHistory: StatusHistoryEntry[];
   votedByUser: boolean;
   workspaceId: string;
-  workspaceSlug: string;
   workspaceStatuses: WorkspaceStatus[];
 }
 
@@ -97,11 +98,10 @@ export function PostDetailContent({
   votedByUser,
   workspaceStatuses,
   categories,
+  assignees,
   statusHistory,
-  moveTargets,
   mergedTarget,
   workspaceId,
-  workspaceSlug,
   currentUserId,
 }: PostDetailContentProps) {
   const isAuthor = !!currentUserId && post.authorId === currentUserId;
@@ -144,6 +144,15 @@ export function PostDetailContent({
                 postId={post.id}
                 workspaceId={workspaceId}
               />
+              {isMember && (
+                <AssigneeSelect
+                  assignees={assignees}
+                  canEdit={isAdminOrOwner}
+                  currentAssigneeId={post.assignedToId}
+                  postId={post.id}
+                  workspaceId={workspaceId}
+                />
+              )}
               <span className="text-xs text-muted-foreground">
                 by {post.authorName ?? post.authorEmail}
               </span>
@@ -199,6 +208,20 @@ export function PostDetailContent({
           </div>
         )}
 
+        {/* Attached image */}
+        {post.imageUrl && (
+          <div
+            className={post.body ? "mt-4" : "mt-6 border-t border-border pt-6"}
+          >
+            {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
+            <img
+              alt=""
+              className="max-h-96 w-auto border border-border object-contain"
+              src={post.imageUrl}
+            />
+          </div>
+        )}
+
         {/* Triage / clean-up actions (workspace members) and author delete */}
         {(isMember || isAuthor) && (
           <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border pt-4">
@@ -210,20 +233,11 @@ export function PostDetailContent({
               />
             )}
             {isMember && !post.mergedIntoId && (
-              <>
-                <MovePostButton
-                  boards={moveTargets}
-                  currentBoardId={post.boardId}
-                  postId={post.id}
-                  workspaceId={workspaceId}
-                  workspaceSlug={workspaceSlug}
-                />
-                <MergePostButton
-                  postId={post.id}
-                  postTitle={post.title}
-                  workspaceId={workspaceId}
-                />
-              </>
+              <MergePostButton
+                postId={post.id}
+                postTitle={post.title}
+                workspaceId={workspaceId}
+              />
             )}
             {(isAuthor || isAdminOrOwner) && (
               <EditPostButton

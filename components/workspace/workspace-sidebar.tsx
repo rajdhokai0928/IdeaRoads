@@ -6,7 +6,6 @@ import {
   Inbox,
   Key,
   LayoutDashboard,
-  LayoutGrid,
   Map as MapIcon,
   Megaphone,
   Menu,
@@ -15,7 +14,7 @@ import {
   Webhook,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
@@ -30,12 +29,6 @@ import { AccountMenu } from "@/components/workspace/account-menu";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface Board {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 interface WorkspaceOption {
   logoUrl: string | null;
   name: string;
@@ -43,7 +36,6 @@ interface WorkspaceOption {
 }
 
 interface WorkspaceSidebarProps {
-  boards: Board[];
   email: string;
   initialUnreadCount?: number;
   isAdminOrOwner: boolean;
@@ -56,7 +48,6 @@ interface WorkspaceSidebarProps {
 }
 
 export function WorkspaceSidebar({
-  boards,
   email,
   initialUnreadCount = 0,
   isAdminOrOwner,
@@ -68,7 +59,6 @@ export function WorkspaceSidebar({
   workspaces,
 }: WorkspaceSidebarProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -88,19 +78,6 @@ export function WorkspaceSidebar({
     }`;
   };
 
-  // The per-board "Feedback" links carry a ?board= query param (usePathname()
-  // never includes the query string), so their active state needs its own check.
-  const boardLink = (boardId: string) => {
-    const isActive =
-      pathname === `/${workspaceSlug}/feedback` &&
-      searchParams.get("board") === boardId;
-    return `flex cursor-pointer items-center gap-2 border-l-2 px-2 py-1.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-      isActive
-        ? "border-sidebar-foreground bg-sidebar-accent font-medium text-sidebar-foreground"
-        : "border-transparent text-sidebar-foreground/70 hover:border-sidebar-foreground/20 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-    }`;
-  };
-
   const sidebarContent = (
     <>
       {/* Workspace switcher */}
@@ -112,7 +89,7 @@ export function WorkspaceSidebar({
       />
 
       {/* Navigation */}
-      <nav className="scrollbar-thin flex flex-1 flex-col overflow-y-auto p-2">
+      <nav className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-2">
         {/* Dashboard + Notifications inbox */}
         <div className="space-y-0.5">
           <Link
@@ -140,16 +117,6 @@ export function WorkspaceSidebar({
             <Inbox className="size-4 shrink-0" />
             <span className="truncate">All Feedback</span>
           </Link>
-          {boards.map((board) => (
-            <Link
-              className={boardLink(board.id)}
-              href={`/${workspaceSlug}/feedback?board=${board.id}`}
-              key={board.id}
-            >
-              <LayoutGrid className="size-4 shrink-0" />
-              <span className="truncate">{board.name}</span>
-            </Link>
-          ))}
         </div>
 
         {/* Publish */}
@@ -179,13 +146,6 @@ export function WorkspaceSidebar({
             <p className="px-2 pb-1 pt-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
               Settings
             </p>
-            <Link
-              className={link(`/${workspaceSlug}/settings/boards`)}
-              href={`/${workspaceSlug}/settings/boards`}
-            >
-              <LayoutGrid className="size-4 shrink-0" />
-              <span className="truncate">Boards</span>
-            </Link>
             <Link
               className={link(`/${workspaceSlug}/settings/categories`)}
               href={`/${workspaceSlug}/settings/categories`}
@@ -238,8 +198,9 @@ export function WorkspaceSidebar({
         </div>
       )}
 
-      {/* User bar — click account name to open the settings menu */}
-      <div className="border-t border-sidebar-border p-3">
+      {/* User bar — click account name to open the settings menu. Styled to
+          mirror the workspace switcher at the top of the sidebar. */}
+      <div className="shrink-0">
         <AccountMenu
           email={email}
           isAdminOrOwner={isAdminOrOwner}
@@ -287,7 +248,7 @@ export function WorkspaceSidebar({
   }
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className="flex h-screen w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       {sidebarContent}
     </aside>
   );

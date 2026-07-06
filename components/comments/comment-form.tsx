@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { CommentData } from "./types";
 
@@ -26,6 +27,7 @@ export default function CommentForm({
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const pathname = usePathname();
 
   const MAX = 5000;
 
@@ -108,7 +110,7 @@ export default function CommentForm({
       <p className="text-sm text-muted-foreground py-2">
         <Link
           className="font-medium text-primary hover:underline"
-          href="/signin"
+          href={`/signin?next=${encodeURIComponent(pathname)}`}
         >
           Sign in
         </Link>{" "}
@@ -130,9 +132,7 @@ export default function CommentForm({
 
       {error && <p className="text-xs text-destructive">{error}</p>}
       {pendingMessage && (
-        <p className="text-xs text-amber-600 dark:text-amber-400">
-          {pendingMessage}
-        </p>
+        <p className="text-xs text-warning">{pendingMessage}</p>
       )}
 
       <div className="flex items-center justify-between">

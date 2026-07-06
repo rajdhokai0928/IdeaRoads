@@ -1,6 +1,5 @@
 import { Rss } from "lucide-react";
 import Link from "next/link";
-import { BoardSwitcher } from "@/components/portal/board-switcher";
 import { SquareAvatar } from "@/components/ui/square-avatar";
 
 interface Board {
@@ -11,15 +10,16 @@ interface Board {
 
 interface PortalHeaderProps {
   active?: "roadmap" | "changelog";
-  activeBoardSlug?: string;
   boards: Board[];
   changelogPublic: boolean;
+  currentPath?: string;
   isMember?: boolean;
   isSignedIn: boolean;
   logoUrl?: string | null;
   roadmapPublic: boolean;
   rssHref?: string;
   slug: string;
+  userEmail?: string | null;
   userImage?: string | null;
   userName?: string | null;
   workspaceName: string;
@@ -37,22 +37,29 @@ export function PortalHeader({
   workspaceName,
   logoUrl,
   boards,
-  activeBoardSlug,
   roadmapPublic,
   changelogPublic,
   isSignedIn,
   isMember = false,
   userImage,
   userName,
+  userEmail,
   active,
   rssHref,
+  currentPath,
 }: PortalHeaderProps) {
+  const profileFallback = (userName || userEmail || "?")
+    .charAt(0)
+    .toUpperCase();
   const navLinkClass =
     "px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors";
   const activeLinkClass =
     "px-3 py-1.5 text-sm font-medium text-foreground border-b-2 border-foreground";
 
   const homeHref = boards[0] ? `/${slug}/b/${boards[0].slug}` : `/${slug}`;
+  const signInHref = currentPath
+    ? `/signin?next=${encodeURIComponent(currentPath)}`
+    : "/signin";
 
   return (
     <header className="border-b border-border bg-background sticky top-0 z-10">
@@ -70,11 +77,6 @@ export function PortalHeader({
             />
             {workspaceName}
           </Link>
-          <BoardSwitcher
-            activeBoardSlug={activeBoardSlug}
-            boards={boards}
-            workspaceSlug={slug}
-          />
           <nav className="hidden sm:flex items-center gap-1">
             {(roadmapPublic || isMember) && (
               <Link
@@ -99,15 +101,6 @@ export function PortalHeader({
           </nav>
         </div>
         <div className="flex items-center gap-2">
-          {rssHref && (
-            <Link
-              aria-label="RSS feed"
-              className="flex size-9 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-              href={rssHref}
-            >
-              <Rss className="size-4" />
-            </Link>
-          )}
           {isSignedIn ? (
             <>
               {isMember && (
@@ -122,7 +115,7 @@ export function PortalHeader({
                 <SquareAvatar
                   alt={userName ?? "My profile"}
                   className="size-9"
-                  fallback={(userName ?? "?").charAt(0).toUpperCase()}
+                  fallback={profileFallback}
                   imageUrl={userImage}
                 />
               </Link>
@@ -130,7 +123,7 @@ export function PortalHeader({
           ) : (
             <Link
               className="px-3.5 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150"
-              href="/signin"
+              href={signInHref}
             >
               Sign In / Sign Up
             </Link>

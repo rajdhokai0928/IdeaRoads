@@ -99,7 +99,7 @@ export function PendingInvitesList({
                   </div>
                   {canRevoke && (
                     <Button
-                      className="text-muted-foreground hover:text-destructive shrink-0"
+                      className="text-destructive hover:opacity-70 shrink-0"
                       disabled={revoking === invite.id}
                       onClick={() => setPendingRevoke(invite)}
                       size="sm"

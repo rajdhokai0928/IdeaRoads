@@ -20,6 +20,17 @@ export async function getBoardById(id: string) {
   return row ?? null;
 }
 
+/** The workspace's single board (oldest first — there is exactly one per workspace). */
+export async function getWorkspaceBoard(workspaceId: string) {
+  const [row] = await db
+    .select()
+    .from(boards)
+    .where(eq(boards.workspaceId, workspaceId))
+    .orderBy(asc(boards.createdAt))
+    .limit(1);
+  return row ?? null;
+}
+
 export interface BoardListItem {
   description: string | null;
   displayOrder: number;
@@ -52,15 +63,4 @@ export async function listBoardsForWorkspace(
     .groupBy(boards.id)
     .orderBy(asc(boards.displayOrder), asc(boards.name));
   return rows;
-}
-
-/** Count of active (non-archived) boards — the value the board limit applies to. */
-export async function countActiveBoards(workspaceId: string): Promise<number> {
-  const [row] = await db
-    .select({ value: count() })
-    .from(boards)
-    .where(
-      and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false))
-    );
-  return row?.value ?? 0;
 }

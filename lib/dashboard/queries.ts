@@ -1,5 +1,5 @@
-import { and, desc, eq, gte, lt } from "drizzle-orm";
-import { boards, comments, posts, votes } from "@/db/schema";
+import { and, count, desc, eq, gte, lt, lte } from "drizzle-orm";
+import { boards, comments, posts, votes, workspaceMembers } from "@/db/schema";
 import { db } from "@/lib/db";
 
 export type BreakdownPeriod = "7d" | "30d" | "all";
@@ -7,6 +7,12 @@ export type BreakdownPeriod = "7d" | "30d" | "all";
 const PERIOD_DAYS: Record<Exclude<BreakdownPeriod, "all">, number> = {
   "7d": 7,
   "30d": 30,
+};
+
+export const PERIOD_LABELS: Record<BreakdownPeriod, string | null> = {
+  "7d": "the previous 7 days",
+  "30d": "the previous 30 days",
+  all: null,
 };
 
 interface DateRange {
@@ -53,6 +59,59 @@ export async function getBreakdownMetrics(
     }),
   ]);
   return { ...current, previous };
+}
+
+export interface StatusCountSnapshot {
+  memberCount: number;
+  statusCounts: Record<string, number>;
+}
+
+/**
+ * Cumulative totals (member count + post counts by status) as they stood at
+ * the start of the given period, so the dashboard can show "+N% vs previous
+ * period" growth alongside each stat card. "All time" has no prior cutoff to
+ * compare against, so callers should hide the delta in that case.
+ */
+export async function getPreviousPeriodSnapshot(
+  workspaceId: string,
+  period: BreakdownPeriod,
+  now: Date
+): Promise<StatusCountSnapshot | null> {
+  if (period === "all") {
+    return null;
+  }
+
+  const days = PERIOD_DAYS[period];
+  const cutoff = new Date(now.getTime() - days * 86_400_000);
+
+  const [statusRows, memberRows] = await Promise.all([
+    db
+      .select({ status: posts.status, value: count() })
+      .from(posts)
+      .where(
+        and(eq(posts.workspaceId, workspaceId), lte(posts.createdAt, cutoff))
+      )
+      .groupBy(posts.status),
+    db
+      .select({ value: count() })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          lte(workspaceMembers.joinedAt, cutoff)
+        )
+      ),
+  ]);
+
+  const statusCounts: Record<string, number> = {};
+  for (const row of statusRows) {
+    statusCounts[row.status] = row.value;
+  }
+
+  return {
+    memberCount: memberRows[0]?.value ?? 0,
+    statusCounts,
+  };
 }
 
 async function computeBreakdownCounts(

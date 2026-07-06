@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { ChangeIndicator } from "@/components/dashboard/change-indicator";
 
 interface StatCardProps {
   href?: string;
   label: string;
+  periodLabel?: string;
+  previousValue?: number | null;
   value: number | string;
   valueClassName?: string;
 }
@@ -12,7 +15,11 @@ export function StatCard({
   value,
   href,
   valueClassName,
+  previousValue,
+  periodLabel,
 }: StatCardProps) {
+  const showChange = previousValue != null && typeof value === "number";
+
   const content = (
     <>
       <p className="text-xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
@@ -23,6 +30,16 @@ export function StatCard({
       >
         {value}
       </p>
+      {showChange && (
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <ChangeIndicator current={value as number} previous={previousValue} />
+          {periodLabel && (
+            <span className="text-2xs text-muted-foreground">
+              vs {periodLabel}
+            </span>
+          )}
+        </div>
+      )}
     </>
   );
 

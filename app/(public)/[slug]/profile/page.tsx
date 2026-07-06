@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { ProfileActions } from "@/components/portal/profile-actions";
 import { PostsTable } from "@/components/posts/posts-table";
 import { SquareAvatar } from "@/components/ui/square-avatar";
 import { PortalHeader } from "@/components/workspace/portal-header";
-import { requireSession } from "@/lib/authz";
+import { WORKSPACE_MEMBER } from "@/config/platform";
+import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
 import { getNotificationPreferences } from "@/lib/notifications/queries";
@@ -30,7 +31,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicProfilePage({ params }: Props) {
   const { slug } = await params;
-  const session = await requireSession();
+  const session = await getCurrentSession();
+  if (!session) {
+    redirect(`/signin?next=${encodeURIComponent(`/${slug}/profile`)}`);
+  }
 
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) {
@@ -64,6 +68,8 @@ export default async function PublicProfilePage({ params }: Props) {
   ]);
 
   const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
+  const isMember = !!member;
+  const isAdminOrOwner = !!member && member.role !== WORKSPACE_MEMBER;
 
   const notificationPrefs = {
     emailStatusChange: prefs?.emailStatusChange ?? true,
@@ -74,7 +80,7 @@ export default async function PublicProfilePage({ params }: Props) {
     inAppChangelog: prefs?.inAppChangelog ?? true,
   };
 
-  const displayName = session.user.name ?? session.user.email;
+  const displayName = session.user.name?.trim() || session.user.email;
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,6 +92,7 @@ export default async function PublicProfilePage({ params }: Props) {
         logoUrl={workspace.logoUrl}
         roadmapPublic={workspace.roadmapPublic}
         slug={slug}
+        userEmail={session.user.email}
         userImage={session.user.image}
         userName={session.user.name}
         workspaceName={workspace.name}
@@ -132,9 +139,12 @@ export default async function PublicProfilePage({ params }: Props) {
           <div className="border border-border">
             <PostsTable
               categories={categories}
+              isAdminOrOwner={isAdminOrOwner}
+              isMember={isMember}
               isSignedIn={true}
               postHref={(post) => `/${slug}/b/${post.boardSlug}/p/${post.slug}`}
               posts={myPosts}
+              workspaceId={workspace.id}
               workspaceStatuses={workspaceStatuses}
             />
           </div>

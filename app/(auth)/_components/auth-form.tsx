@@ -90,9 +90,9 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
 
   useEffect(() => {
     if (session) {
-      router.replace("/post-auth");
+      router.replace(callbackURL);
     }
-  }, [router, session]);
+  }, [router, session, callbackURL]);
 
   if (isPending || session) {
     return null;

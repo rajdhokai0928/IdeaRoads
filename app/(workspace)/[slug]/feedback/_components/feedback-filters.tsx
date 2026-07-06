@@ -4,11 +4,6 @@ import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef, useTransition } from "react";
 
-interface Board {
-  id: string;
-  name: string;
-}
-
 interface Category {
   color: string;
   id: string;
@@ -23,12 +18,10 @@ interface WorkspaceStatus {
 }
 
 interface FeedbackFiltersProps {
-  activeBoardId: string;
   activeCategoryId: string;
   activeSearch: string;
   activeSort: "newest" | "top" | "trending";
   activeStatus: string;
-  boards: Board[];
   categories: Category[];
   workspaceStatuses: WorkspaceStatus[];
 }
@@ -43,9 +36,7 @@ export function FeedbackFilters({
   activeSort,
   activeStatus,
   activeCategoryId,
-  activeBoardId,
   activeSearch,
-  boards,
   workspaceStatuses,
   categories,
 }: FeedbackFiltersProps) {
@@ -54,6 +45,7 @@ export function FeedbackFilters({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const updateParam = useCallback(
     (updates: Record<string, string | null>) => {
@@ -83,6 +75,16 @@ export function FeedbackFilters({
     }, 300);
   }
 
+  function clearSearch() {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+    updateParam({ q: null });
+  }
+
   const activeCategories = categories.filter((c) => !c.isArchived);
 
   return (
@@ -109,22 +111,6 @@ export function FeedbackFilters({
 
         {/* Right controls */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Board filter */}
-          {boards.length > 1 && (
-            <select
-              className="text-xs border-0 bg-transparent text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer py-1 pr-6 pl-1"
-              onChange={(e) => updateParam({ board: e.target.value || null })}
-              value={activeBoardId}
-            >
-              <option value="">All boards</option>
-              {boards.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          )}
-
           {/* Category filter */}
           {activeCategories.length > 0 && (
             <select
@@ -167,12 +153,13 @@ export function FeedbackFilters({
           defaultValue={activeSearch}
           onChange={handleSearch}
           placeholder="Search feedback…"
-          type="search"
+          ref={searchInputRef}
+          type="text"
         />
         {activeSearch && (
           <button
             className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => updateParam({ q: null })}
+            onClick={clearSearch}
             type="button"
           >
             <X className="size-3.5" />

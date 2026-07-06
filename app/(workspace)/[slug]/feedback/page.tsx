@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PostsTable } from "@/components/posts/posts-table";
+import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
-import { listBoardsForWorkspace } from "@/lib/boards/queries";
+import { getWorkspaceBoard } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
 import {
   countWorkspacePostsFiltered,
@@ -22,7 +23,6 @@ const PAGE_SIZE = 20;
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{
-    board?: string;
     category?: string;
     new?: string;
     page?: string;
@@ -39,15 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function FeedbackPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const {
-    board,
-    category,
-    new: newParam,
-    page,
-    q,
-    sort,
-    status,
-  } = await searchParams;
+  const { category, new: newParam, page, q, sort, status } = await searchParams;
   const session = await requireSession();
 
   const workspace = await getWorkspaceBySlug(slug);
@@ -59,12 +51,12 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   if (!member) {
     notFound();
   }
+  const isAdminOrOwner = member.role !== WORKSPACE_MEMBER;
 
   const validSort: "newest" | "top" | "trending" =
     sort === "top" ? "top" : sort === "trending" ? "trending" : "newest";
   const validStatus = status ?? "";
   const validCategoryId = category ?? "";
-  const validBoardId = board ?? "";
   const searchQuery = q ?? "";
   const currentPage = Math.max(1, Number(page ?? 1));
 
@@ -72,12 +64,11 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
     sort: validSort,
     status: validStatus || undefined,
     categoryId: validCategoryId || undefined,
-    boardId: validBoardId || undefined,
     search: searchQuery || undefined,
     includeUnapproved: true,
   };
 
-  const [posts, totalCount, boards, categories, workspaceStatuses] =
+  const [posts, totalCount, board, categories, workspaceStatuses] =
     await Promise.all([
       listWorkspacePosts(workspace.id, {
         ...filterOpts,
@@ -86,7 +77,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
         offset: (currentPage - 1) * PAGE_SIZE,
       }),
       countWorkspacePostsFiltered(workspace.id, filterOpts),
-      listBoardsForWorkspace(workspace.id),
+      getWorkspaceBoard(workspace.id),
       getActiveCategoriesForWorkspace(workspace.id),
       getActiveWorkspaceStatuses(workspace.id),
     ]);
@@ -104,9 +95,6 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
     if (validCategoryId) {
       params.set("category", validCategoryId);
     }
-    if (validBoardId) {
-      params.set("board", validBoardId);
-    }
     if (searchQuery) {
       params.set("q", searchQuery);
     }
@@ -117,10 +105,6 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
     return `/${slug}/feedback${qs ? `?${qs}` : ""}`;
   }
 
-  const activeBoards = boards
-    .filter((b) => !b.isArchived)
-    .map((b) => ({ id: b.id, name: b.name }));
-
   return (
     <div className="flex flex-col">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-6 sm:px-8">
@@ -129,37 +113,38 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
             All Feedback
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Every piece of feedback across all boards in {workspace.name}.
+            Every piece of feedback in {workspace.name}.
           </p>
         </div>
-        {activeBoards.length > 0 && (
+        {board && (
           <AddFeedbackDialog
-            boards={activeBoards}
+            boardId={board.id}
             categories={categories}
-            defaultBoardId={validBoardId || undefined}
             defaultOpen={newParam === "1"}
             workspaceId={workspace.id}
             workspaceSlug={slug}
+            workspaceStatuses={workspaceStatuses}
           />
         )}
       </div>
 
       <FeedbackFilters
-        activeBoardId={validBoardId}
         activeCategoryId={validCategoryId}
         activeSearch={searchQuery}
         activeSort={validSort}
         activeStatus={validStatus}
-        boards={boards.map((b) => ({ id: b.id, name: b.name }))}
         categories={categories}
         workspaceStatuses={workspaceStatuses}
       />
 
       <PostsTable
         categories={categories}
+        isAdminOrOwner={isAdminOrOwner}
+        isMember={true}
         isSignedIn={true}
         postHref={(post) => `/${slug}/feedback/${post.id}`}
         posts={posts}
+        workspaceId={workspace.id}
         workspaceStatuses={workspaceStatuses}
       />
 

@@ -16,8 +16,8 @@ const LINKS = [
     heading: "Resources",
     items: [
       { label: "Demo", href: "/demo" },
-      { label: "Documentation", href: DOCS_URL, external: true },
-      { label: "Self-hosting Guide", href: DOCS_URL, external: true },
+      // { label: "Documentation", href: DOCS_URL, external: true },
+      // { label: "Self-hosting Guide", href: DOCS_URL, external: true },
     ],
   },
   {
@@ -82,7 +82,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 border-t border-border pt-6">
           <p className="text-xs text-muted-foreground">
-            © 2026 IdeaRoads. Open source under the MIT License.
+            © 2026 IdeaRoads. Open source for Product teams.
           </p>
         </div>
       </div>

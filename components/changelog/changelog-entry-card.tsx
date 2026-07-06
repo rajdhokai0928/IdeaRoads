@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
-import { truncateMarkdownToText } from "@/lib/changelog/markdown";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 
 interface ChangelogEntryCardProps {
   entry: {
@@ -9,6 +9,7 @@ interface ChangelogEntryCardProps {
     title: string;
     label: string;
     body: string;
+    coverImageUrl: string | null;
     publishedAt: Date | null;
     linkedPostCount: number;
   };
@@ -19,11 +20,22 @@ export function ChangelogEntryCard({
   entry,
   workspaceSlug,
 }: ChangelogEntryCardProps) {
-  const excerpt = truncateMarkdownToText(entry.body, 220);
+  const excerpt = truncateHtmlToText(entry.body, 220);
   const href = `/${workspaceSlug}/changelog/${entry.id}`;
 
   return (
     <article className="py-8 border-b border-border last:border-0">
+      {entry.coverImageUrl && (
+        <Link className="block mb-4" href={href}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
+          <img
+            alt=""
+            className="max-h-64 w-full border border-border object-cover"
+            src={entry.coverImageUrl}
+          />
+        </Link>
+      )}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3">
         <ChangelogLabelBadge label={entry.label} />
         {entry.publishedAt && (

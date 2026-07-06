@@ -8,6 +8,7 @@ export type ChangelogEntryRow = {
   workspaceId: string;
   title: string;
   body: string;
+  coverImageUrl: string | null;
   label: string;
   isPublished: boolean;
   publishedAt: Date | null;
@@ -63,6 +64,7 @@ export async function listChangelogEntries(
         workspaceId: changelogEntries.workspaceId,
         title: changelogEntries.title,
         body: changelogEntries.body,
+        coverImageUrl: changelogEntries.coverImageUrl,
         label: changelogEntries.label,
         isPublished: changelogEntries.isPublished,
         publishedAt: changelogEntries.publishedAt,

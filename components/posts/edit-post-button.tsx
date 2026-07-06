@@ -53,7 +53,7 @@ export default function EditPostButton({
   return (
     <>
       <button
-        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        className="flex items-center gap-1.5 text-xs text-primary hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         onClick={() => {
           setTitle(initialTitle);
           setBody(initialBody ?? "");

@@ -84,7 +84,6 @@ export default async function NewPostPage({ params, searchParams }: Props) {
       {isEmbed && <EmbedResizeReporter />}
       {!isEmbed && (
         <PortalHeader
-          activeBoardSlug={boardSlug}
           boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
           isMember={!!member}
@@ -92,6 +91,7 @@ export default async function NewPostPage({ params, searchParams }: Props) {
           logoUrl={workspace.logoUrl}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}
+          userEmail={session.user.email}
           userImage={session.user.image}
           userName={session.user.name}
           workspaceName={workspace.name}

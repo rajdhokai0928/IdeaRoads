@@ -89,7 +89,7 @@ export function InviteLinksList({
                 </div>
                 {canManage && (
                   <Button
-                    className="text-muted-foreground hover:text-destructive shrink-0"
+                    className="text-destructive hover:opacity-70 shrink-0"
                     disabled={revoking === link.id}
                     onClick={() => setPendingRevoke(link)}
                     size="sm"

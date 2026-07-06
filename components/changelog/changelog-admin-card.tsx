@@ -13,7 +13,7 @@ import {
 } from "@/app/actions/changelog";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { truncateMarkdownToText } from "@/lib/changelog/markdown";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 
 interface ChangelogAdminCardProps {
   entry: {
@@ -21,6 +21,7 @@ interface ChangelogAdminCardProps {
     title: string;
     label: string;
     body: string;
+    coverImageUrl: string | null;
     isPublished: boolean;
     publishedAt: Date | null;
     notifiedAt: Date | null;
@@ -38,7 +39,7 @@ export function ChangelogAdminCard({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const excerpt = truncateMarkdownToText(entry.body, 180);
+  const excerpt = truncateHtmlToText(entry.body, 180);
 
   function handlePublish() {
     startTransition(async () => {
@@ -95,10 +96,7 @@ export function ChangelogAdminCard({
         <div className="flex items-center gap-2.5 flex-wrap">
           <ChangelogLabelBadge label={entry.label} />
           {entry.isPublished ? (
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-emerald-700"
-              style={{ backgroundColor: "#d1fae518", borderRadius: 2 }}
-            >
+            <span className="inline-flex items-center gap-1 rounded-sm bg-success-subtle px-2 py-0.5 text-[11px] font-semibold text-success-foreground">
               <Globe className="size-2.5" />
               Published
             </span>
@@ -125,7 +123,7 @@ export function ChangelogAdminCard({
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
           <Link
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-primary/40 text-primary hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             href={`/${workspaceSlug}/settings/changelog/${entry.id}/edit`}
           >
             <Edit className="size-3" />
@@ -154,7 +152,7 @@ export function ChangelogAdminCard({
 
           <button
             aria-label="Delete entry"
-            className="flex items-center justify-center p-1.5 text-muted-foreground hover:text-destructive transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            className="flex items-center justify-center p-1.5 text-destructive hover:opacity-70 transition-opacity cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
             disabled={isPending}
             onClick={() => setDeleteDialogOpen(true)}
           >
@@ -174,17 +172,30 @@ export function ChangelogAdminCard({
         variant="destructive"
       />
 
-      {/* Title */}
-      <h3 className="mt-3 text-base font-semibold text-foreground leading-snug">
-        {entry.title}
-      </h3>
+      <div className="mt-3 flex gap-3">
+        {entry.coverImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          // biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image
+          <img
+            alt=""
+            className="size-14 shrink-0 border border-border object-cover"
+            src={entry.coverImageUrl}
+          />
+        )}
+        <div className="min-w-0">
+          {/* Title */}
+          <h3 className="text-base font-semibold text-foreground leading-snug">
+            {entry.title}
+          </h3>
 
-      {/* Excerpt */}
-      {excerpt && (
-        <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">
-          {excerpt}
-        </p>
-      )}
+          {/* Excerpt */}
+          {excerpt && (
+            <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">
+              {excerpt}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Footer */}
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">

@@ -4,7 +4,7 @@ import { EmbedSection } from "@/components/settings/embed-section";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { DEFAULT_EMBED_CONFIG, getEmbedConfig } from "@/lib/embed/queries";
-import { env } from "@/lib/env";
+import { portalBaseUrl } from "@/lib/urls";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -39,7 +39,7 @@ export default async function EmbedPage({ params }: Props) {
   return (
     <div className="px-4 py-6 max-w-2xl sm:px-8">
       <EmbedSection
-        appUrl={env.NEXT_PUBLIC_APP_URL}
+        appUrl={portalBaseUrl()}
         initialConfig={{
           mode: config?.mode ?? DEFAULT_EMBED_CONFIG.mode,
           position: config?.position ?? DEFAULT_EMBED_CONFIG.position,

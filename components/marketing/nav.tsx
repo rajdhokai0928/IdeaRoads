@@ -39,24 +39,6 @@ export function Nav() {
           >
             Demo
           </Link>
-
-          <a
-            className="rounded-none px-3 py-2 text-xs font-semibold uppercase tracking-ui text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
-            href={DOCS_URL}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Docs
-          </a>
-
-          <a
-            className="rounded-none px-3 py-2 text-xs font-semibold uppercase tracking-ui text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
-            href={GITHUB_REPO_URL}
-            rel="noreferrer"
-            target="_blank"
-          >
-            GitHub
-          </a>
         </nav>
 
         <div className="flex items-center gap-2">

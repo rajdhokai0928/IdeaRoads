@@ -94,7 +94,7 @@ export function AdminSidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="scrollbar-thin flex-1 overflow-y-auto px-3 py-5">
+      <nav className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 py-5">
         <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-ui text-sidebar-foreground/30">
           Navigation
         </p>

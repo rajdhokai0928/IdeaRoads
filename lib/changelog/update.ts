@@ -9,6 +9,7 @@ export async function updateChangelogEntry(
   updates: {
     title?: string;
     body?: string;
+    coverImageUrl?: string | null;
     label?: string;
     postIds?: string[];
   }
@@ -58,6 +59,9 @@ export async function updateChangelogEntry(
     }
     if (updates.body !== undefined) {
       entryUpdates.body = updates.body;
+    }
+    if (updates.coverImageUrl !== undefined) {
+      entryUpdates.coverImageUrl = updates.coverImageUrl;
     }
     if (updates.label !== undefined) {
       entryUpdates.label = updates.label;

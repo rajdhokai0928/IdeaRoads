@@ -22,6 +22,7 @@ export function ChangelogFilters({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const updateParam = useCallback(
     (updates: Record<string, string | null>) => {
@@ -51,6 +52,16 @@ export function ChangelogFilters({
     }, 300);
   }
 
+  function clearSearch() {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+    updateParam({ q: null });
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <div className="relative min-w-50 flex-1">
@@ -60,12 +71,13 @@ export function ChangelogFilters({
           defaultValue={activeSearch}
           onChange={handleSearch}
           placeholder="Search"
-          type="search"
+          ref={searchInputRef}
+          type="text"
         />
         {activeSearch && (
           <button
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => updateParam({ q: null })}
+            onClick={clearSearch}
             type="button"
           >
             <X className="size-3.5" />

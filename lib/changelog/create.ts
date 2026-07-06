@@ -9,6 +9,7 @@ export async function createChangelogEntry({
   createdBy,
   title,
   body = "",
+  coverImageUrl = null,
   label = "new_feature",
   postIds = [],
 }: {
@@ -16,6 +17,7 @@ export async function createChangelogEntry({
   createdBy: string;
   title: string;
   body?: string;
+  coverImageUrl?: string | null;
   label?: string;
   postIds?: string[];
 }) {
@@ -48,6 +50,7 @@ export async function createChangelogEntry({
       createdBy,
       title,
       body,
+      coverImageUrl,
       label,
     });
 

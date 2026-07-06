@@ -112,7 +112,7 @@ export default function VoteButton({
     <button
       aria-label={hasVoted ? "Remove vote" : "Vote for this post"}
       aria-pressed={hasVoted}
-      className={`flex w-16 flex-col items-center gap-1 border px-2 py-3 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`flex flex-col items-center gap-0.5 border px-2.5 py-1.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         disabled && !isPending
           ? "cursor-not-allowed opacity-50 border-border text-muted-foreground"
           : hasVoted
@@ -126,9 +126,6 @@ export default function VoteButton({
     >
       <ChevronUp className="size-4" />
       <span className="text-sm font-semibold tabular-nums">{count}</span>
-      <span className="whitespace-nowrap text-2xs uppercase tracking-wide">
-        {count === 1 ? "vote" : "votes"}
-      </span>
     </button>
   );
 }

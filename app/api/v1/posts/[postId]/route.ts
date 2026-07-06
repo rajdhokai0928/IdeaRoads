@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authenticateApiKey } from "@/lib/api-keys/auth";
+import { getBoardById } from "@/lib/boards/queries";
 import { getPost } from "@/lib/posts/queries";
 
 // GET /api/v1/posts/:postId — fetch a single post in the API key's workspace.
@@ -21,6 +22,13 @@ export async function GET(
 
   // Scope strictly to the key's workspace — never leak cross-tenant posts.
   if (!post || post.workspaceId !== auth.workspaceId || !post.isApproved) {
+    return NextResponse.json({ error: "Post not found." }, { status: 404 });
+  }
+
+  // Excludes private-board posts — this is a public API surface, not an
+  // admin one, so it follows the same visibility rule as every public page.
+  const board = await getBoardById(post.boardId);
+  if (!board?.isPublic) {
     return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
 

@@ -1,5 +1,6 @@
 import { MessageSquare, Plus, User } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface Category {
   color: string;
@@ -80,13 +81,12 @@ export function CategorySidebar({
   return (
     <aside className="w-full shrink-0 space-y-4 lg:w-56">
       {newPostHref && (
-        <Link
-          className="flex w-full items-center justify-center gap-1.5 bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90"
-          href={newPostHref}
-        >
-          <Plus className="size-4" />
-          Feedback
-        </Link>
+        <Button asChild className="w-full">
+          <Link href={newPostHref}>
+            <Plus data-icon="inline-start" />
+            Feedback
+          </Link>
+        </Button>
       )}
 
       <nav className="space-y-0.5">

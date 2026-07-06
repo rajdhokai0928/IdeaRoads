@@ -2,6 +2,7 @@
 
 import { Bell } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 interface NotificationBellProps {
@@ -15,6 +16,8 @@ export function NotificationBell({
 }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(initialCount);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pathname = usePathname();
+  const isActive = pathname.startsWith(`/${workspaceSlug}/notifications`);
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -49,7 +52,11 @@ export function NotificationBell({
 
   return (
     <Link
-      className="relative flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className={`flex cursor-pointer items-center gap-2 border-l-2 px-2 py-1.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        isActive
+          ? "border-sidebar-foreground bg-sidebar-accent font-medium text-sidebar-foreground"
+          : "border-transparent text-sidebar-foreground/70 hover:border-sidebar-foreground/20 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      }`}
       href={`/${workspaceSlug}/notifications`}
     >
       <span className="relative shrink-0">

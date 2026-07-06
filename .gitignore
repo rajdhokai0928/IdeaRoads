@@ -13,6 +13,9 @@ dist/
 .env.local
 .env.*.local
 
+# Locally stored uploads (only used when STORAGE_S3_* isn't configured)
+/public/uploads/
+
 # pnpm
 .pnpm-store/
 

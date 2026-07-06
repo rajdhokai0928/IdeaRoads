@@ -34,6 +34,7 @@ export function RoadmapFilters({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const updateParam = useCallback(
     (updates: Record<string, string | null>) => {
@@ -63,6 +64,16 @@ export function RoadmapFilters({
     }, 300);
   }
 
+  function clearSearch() {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+    updateParam({ q: null });
+  }
+
   const activeCategories = categories.filter((c) => !c.isArchived);
   const pillSelect =
     "h-9 cursor-pointer border border-border bg-background pl-3 pr-7 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -77,12 +88,13 @@ export function RoadmapFilters({
           defaultValue={activeSearch}
           onChange={handleSearch}
           placeholder="Search"
-          type="search"
+          ref={searchInputRef}
+          type="text"
         />
         {activeSearch && (
           <button
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => updateParam({ q: null })}
+            onClick={clearSearch}
             type="button"
           >
             <X className="size-3.5" />

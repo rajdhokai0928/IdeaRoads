@@ -10,6 +10,7 @@ import {
   setDefaultStatusAction,
   updateWorkspaceStatusAction,
 } from "@/app/actions/workspace-statuses";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const COLOR_PRESETS = [
@@ -191,13 +192,12 @@ export function StatusList({
     <div className="px-4 py-6 max-w-2xl space-y-6 sm:px-8">
       {/* Add button */}
       {canManage && !form && (
-        <button
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          onClick={openCreate}
-        >
-          <Plus className="size-3.5" />
-          New Status
-        </button>
+        <div className="flex justify-end">
+          <Button onClick={openCreate}>
+            <Plus data-icon="inline-start" />
+            New Status
+          </Button>
+        </div>
       )}
 
       {/* Inline form */}
@@ -338,7 +338,7 @@ export function StatusList({
                       </button>
                     )}
                     <button
-                      className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="p-1.5 text-primary hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       onClick={() => openEdit(s)}
                       title="Edit"
                     >
@@ -353,7 +353,7 @@ export function StatusList({
                     </button>
                     {!s.isDefault && (
                       <button
-                        className="p-1.5 text-muted-foreground hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         onClick={() => setDeleteTarget(s)}
                         title="Delete"
                       >
@@ -400,7 +400,7 @@ export function StatusList({
                       Restore
                     </button>
                     <button
-                      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       onClick={() => setDeleteTarget(s)}
                     >
                       <Trash2 className="size-3.5" />

@@ -1,0 +1,151 @@
+"use client";
+
+import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import CategorySelect from "@/components/posts/category-select";
+import { PostActionsMenu } from "@/components/posts/post-actions-menu";
+import type { PostsTableRow } from "@/components/posts/posts-table";
+import StatusSelect from "@/components/posts/status-select";
+import VisibilityToggle from "@/components/posts/visibility-toggle";
+import VoteButton from "@/components/voting/vote-button";
+
+interface Category {
+  color: string;
+  id: string;
+  name: string;
+}
+
+interface WorkspaceStatus {
+  color: string;
+  id: string;
+  isArchived: boolean;
+  name: string;
+  slug: string;
+}
+
+interface PostRowProps {
+  categories: Category[];
+  href: string;
+  isAdminOrOwner: boolean;
+  isMember: boolean;
+  isSignedIn: boolean;
+  post: PostsTableRow;
+  showBoardColumn: boolean;
+  workspaceId: string;
+  workspaceStatuses: WorkspaceStatus[];
+}
+
+// The whole row navigates to the post on click, matching the public board
+// list's pattern — only interactive controls (vote, category/status/visibility
+// selects) opt out (stopPropagation) so using them doesn't also trigger
+// navigation. The title keeps a real <Link> so keyboard nav, middle-click, and
+// "open in new tab" still work.
+export function PostRow({
+  post,
+  categories,
+  workspaceStatuses,
+  href,
+  isSignedIn,
+  isAdminOrOwner,
+  isMember,
+  workspaceId,
+  showBoardColumn,
+}: PostRowProps) {
+  const router = useRouter();
+
+  return (
+    <tr
+      className="cursor-pointer transition-colors duration-150 hover:bg-muted/40"
+      onClick={() => router.push(href)}
+    >
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the interactive control inside, not a new interaction */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
+      <td className="px-4 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+        <VoteButton
+          initialCount={post.upvotes}
+          initialHasVoted={post.hasVoted}
+          isSignedIn={isSignedIn}
+          postId={post.id}
+        />
+      </td>
+      <td className="max-w-64 px-4 py-3 align-top">
+        <Link
+          className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
+          href={href}
+        >
+          {post.title}
+        </Link>
+        {showBoardColumn && (
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {post.boardName}
+          </p>
+        )}
+      </td>
+      <td className="hidden max-w-72 px-4 py-3 align-top lg:table-cell">
+        <p className="line-clamp-2 text-xs text-muted-foreground">
+          {post.body ?? "—"}
+        </p>
+      </td>
+      <td className="hidden max-w-32 px-4 py-3 align-top sm:table-cell">
+        <p className="truncate text-xs text-muted-foreground">
+          {post.authorName ?? post.authorEmail}
+        </p>
+      </td>
+      <td className="hidden whitespace-nowrap px-4 py-3 align-top text-xs text-muted-foreground sm:table-cell">
+        {formatDistanceToNow(post.createdAt, { addSuffix: true })}
+      </td>
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the selects inside, not a new interaction */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
+      <td
+        className="hidden px-4 py-3 align-top md:table-cell"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <CategorySelect
+          canEdit={isMember}
+          categories={categories}
+          currentCategoryId={post.categoryId}
+          postId={post.id}
+          workspaceId={workspaceId}
+        />
+      </td>
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the selects inside, not a new interaction */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
+      <td className="px-4 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+        <StatusSelect
+          canEdit={isMember}
+          currentStatus={post.status}
+          postId={post.id}
+          workspaceId={workspaceId}
+          workspaceStatuses={workspaceStatuses}
+        />
+      </td>
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the selects inside, not a new interaction */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
+      <td className="px-4 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+        <VisibilityToggle
+          canEdit={isAdminOrOwner}
+          isApproved={post.isApproved}
+          postId={post.id}
+          workspaceId={workspaceId}
+        />
+      </td>
+      {isMember && (
+        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the menu inside, not a new interaction
+        // biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable
+        <td
+          className="px-4 py-3 align-top"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <PostActionsMenu
+            initialBody={post.body}
+            initialTitle={post.title}
+            postId={post.id}
+            postTitle={post.title}
+            workspaceId={workspaceId}
+          />
+        </td>
+      )}
+    </tr>
+  );
+}

@@ -103,10 +103,10 @@ function PendingCommentRow({
             onClick={handleApprove}
             title="Approve"
           >
-            <Check className="size-4 text-green-600" />
+            <Check className="size-4 text-success" />
           </button>
           <button
-            className="text-xs text-muted-foreground/40 hover:text-destructive transition-colors duration-150 focus-visible:outline-none disabled:opacity-50"
+            className="text-xs text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none disabled:opacity-50"
             disabled={isApproving || isDeleting}
             onClick={() => setShowDeleteDialog(true)}
             title="Delete"

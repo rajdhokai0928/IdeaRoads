@@ -7,15 +7,18 @@ import { BreakdownCard } from "@/components/dashboard/breakdown-card";
 import { LiveStreamCard } from "@/components/dashboard/live-stream-card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { PostsTable } from "@/components/posts/posts-table";
+import { Button } from "@/components/ui/button";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { workspaceMembers } from "@/db/schema";
 import { requireSession } from "@/lib/authz";
-import { listBoardsForWorkspace } from "@/lib/boards/queries";
+import { getWorkspaceBoard } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
 import type { ActivityType, BreakdownPeriod } from "@/lib/dashboard/queries";
 import {
   getBreakdownMetrics,
+  getPreviousPeriodSnapshot,
   getRecentActivity,
+  PERIOD_LABELS,
 } from "@/lib/dashboard/queries";
 import { db } from "@/lib/db";
 import {
@@ -67,23 +70,27 @@ export default async function WorkspaceDashboardPage({
       ? activityType
       : "all";
 
+  const now = new Date();
+
   const [
-    workspaceBoards,
+    board,
     [{ memberCount }],
     statusCounts,
+    previousSnapshot,
     breakdown,
     recentActivity,
     newestPosts,
     categories,
     workspaceStatuses,
   ] = await Promise.all([
-    listBoardsForWorkspace(workspace.id),
+    getWorkspaceBoard(workspace.id),
     db
       .select({ memberCount: count() })
       .from(workspaceMembers)
       .where(eq(workspaceMembers.workspaceId, workspace.id)),
     countWorkspacePostsByStatus(workspace.id),
-    getBreakdownMetrics(workspace.id, activePeriod, new Date()),
+    getPreviousPeriodSnapshot(workspace.id, activePeriod, now),
+    getBreakdownMetrics(workspace.id, activePeriod, now),
     getRecentActivity(workspace.id, { limit: 8, type: activeActivityType }),
     listWorkspacePosts(workspace.id, {
       sort: "newest",
@@ -95,18 +102,37 @@ export default async function WorkspaceDashboardPage({
     getActiveWorkspaceStatuses(workspace.id),
   ]);
 
-  const activeBoards = workspaceBoards.filter((b) => !b.isArchived);
   const totalPosts = Object.values(statusCounts).reduce((sum, n) => sum + n, 0);
   const openPosts = statusCounts.open ?? 0;
+  const underReviewPosts = statusCounts.under_review ?? 0;
   const plannedPosts = statusCounts.planned ?? 0;
+  const inProgressPosts = statusCounts.in_progress ?? 0;
   const completedPosts = statusCounts.completed ?? 0;
+  const closedPosts = statusCounts.closed ?? 0;
 
-  const addFeedbackHref = activeBoards[0] ? `/${slug}/feedback?new=1` : null;
-  const firstPublicBoard = activeBoards.find((b) => b.isPublic);
+  const periodLabel = PERIOD_LABELS[activePeriod] ?? undefined;
+  const previousMemberCount = previousSnapshot?.memberCount ?? null;
+  const previousTotalPosts = previousSnapshot
+    ? Object.values(previousSnapshot.statusCounts).reduce(
+        (sum, n) => sum + n,
+        0
+      )
+    : null;
+  const previousOpenPosts = previousSnapshot?.statusCounts.open ?? null;
+  const previousUnderReviewPosts =
+    previousSnapshot?.statusCounts.under_review ?? null;
+  const previousPlannedPosts = previousSnapshot?.statusCounts.planned ?? null;
+  const previousInProgressPosts =
+    previousSnapshot?.statusCounts.in_progress ?? null;
+  const previousCompletedPosts =
+    previousSnapshot?.statusCounts.completed ?? null;
+  const previousClosedPosts = previousSnapshot?.statusCounts.closed ?? null;
+
+  const addFeedbackHref = board ? `/${slug}/feedback?new=1` : null;
   const publicPortalHref = workspace.roadmapPublic
     ? `/${slug}/roadmap`
-    : firstPublicBoard
-      ? `/${slug}/b/${firstPublicBoard.slug}`
+    : board?.isPublic
+      ? `/${slug}/b/${board.slug}`
       : null;
 
   return (
@@ -136,51 +162,79 @@ export default async function WorkspaceDashboardPage({
             </a>
           )}
           {addFeedbackHref && (
-            <Link
-              className="flex items-center gap-1.5 bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              href={addFeedbackHref}
-            >
-              <Plus className="size-4" />
-              Add Feedback
-            </Link>
+            <Button asChild>
+              <Link href={addFeedbackHref}>
+                <Plus data-icon="inline-start" />
+                Add Feedback
+              </Link>
+            </Button>
           )}
         </div>
       </div>
 
       <div className="px-4 py-8 space-y-8 sm:px-8">
         {/* Stat cards */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <StatCard
-            href={isAdminOrOwner ? `/${slug}/settings/boards` : undefined}
-            label="Boards"
-            value={activeBoards.length}
-          />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard
             href={isAdminOrOwner ? `/${slug}/settings/members` : undefined}
             label="Members"
+            periodLabel={periodLabel}
+            previousValue={previousMemberCount}
             value={memberCount}
           />
           <StatCard
             href={`/${slug}/feedback`}
             label="Total posts"
+            periodLabel={periodLabel}
+            previousValue={previousTotalPosts}
             value={totalPosts}
           />
           <StatCard
             href={`/${slug}/feedback?status=open`}
             label="Open"
+            periodLabel={periodLabel}
+            previousValue={previousOpenPosts}
             value={openPosts}
+          />
+          <StatCard
+            href={`/${slug}/feedback?status=under_review`}
+            label="Under Review"
+            periodLabel={periodLabel}
+            previousValue={previousUnderReviewPosts}
+            value={underReviewPosts}
+            valueClassName="text-purple-600 dark:text-purple-400"
           />
           <StatCard
             href={`/${slug}/feedback?status=planned`}
             label="Planned"
+            periodLabel={periodLabel}
+            previousValue={previousPlannedPosts}
             value={plannedPosts}
             valueClassName="text-violet-600 dark:text-violet-400"
           />
           <StatCard
+            href={`/${slug}/feedback?status=in_progress`}
+            label="In Progress"
+            periodLabel={periodLabel}
+            previousValue={previousInProgressPosts}
+            value={inProgressPosts}
+            valueClassName="text-amber-600 dark:text-amber-400"
+          />
+          <StatCard
             href={`/${slug}/feedback?status=completed`}
             label="Completed"
+            periodLabel={periodLabel}
+            previousValue={previousCompletedPosts}
             value={completedPosts}
-            valueClassName="text-green-600 dark:text-green-400"
+            valueClassName="text-success"
+          />
+          <StatCard
+            href={`/${slug}/feedback?status=closed`}
+            label="Closed"
+            periodLabel={periodLabel}
+            previousValue={previousClosedPosts}
+            value={closedPosts}
+            valueClassName="text-muted-foreground"
           />
         </div>
 
@@ -209,9 +263,12 @@ export default async function WorkspaceDashboardPage({
           </div>
           <PostsTable
             categories={categories}
+            isAdminOrOwner={isAdminOrOwner}
+            isMember={true}
             isSignedIn={true}
             postHref={(post) => `/${slug}/feedback/${post.id}`}
             posts={newestPosts}
+            workspaceId={workspace.id}
             workspaceStatuses={workspaceStatuses}
           />
         </div>
@@ -228,8 +285,7 @@ export default async function WorkspaceDashboardPage({
                   Invite your team
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Team members can manage boards, review feedback, and keep your
-                  users updated.
+                  Team members can review feedback and keep your users updated.
                 </p>
               </div>
             </div>

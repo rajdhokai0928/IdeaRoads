@@ -1,12 +1,11 @@
 import { eq } from "drizzle-orm";
 import type { Job } from "pg-boss";
 import { changelogEntries, workspaces } from "@/db/schema";
-import { truncateMarkdownToText } from "@/lib/changelog/markdown";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 import { db } from "@/lib/db";
 import { enqueueEmail } from "@/lib/email/index";
 import { changelogEmailTemplate } from "@/lib/email/templates/changelog";
 import { buildUnsubscribeUrl } from "@/lib/email/unsubscribe";
-import { env } from "@/lib/env";
 import { createNotification } from "@/lib/notifications/create";
 import { isEmailNotificationEnabled } from "@/lib/notifications/queries";
 import type { SendChangelogEmailPayload } from "@/lib/worker/job-types";
@@ -56,7 +55,7 @@ async function processSendChangelogEmail(job: Job<SendChangelogEmailPayload>) {
     return;
   }
 
-  const bodyPreview = truncateMarkdownToText(entry.body, 300);
+  const bodyPreview = truncateHtmlToText(entry.body, 300);
 
   // Honour the voter's email-notification preference / unsubscribe choice
   // (opt-out model: no row = enabled). Guests with no account always receive it.
@@ -80,14 +79,17 @@ async function processSendChangelogEmail(job: Job<SendChangelogEmailPayload>) {
     await enqueueEmail({ to: voterEmail, subject, html, text });
   }
 
-  // In-app notification for signed-in voters
+  // In-app notification for signed-in voters — links to the admin changelog
+  // list (viewable by every workspace member, unlike the edit page which is
+  // Admin/Owner-only), since in-app notifications are only ever viewed from
+  // the workspace admin sidebar, not the public portal.
   if (voterUserId) {
     await createNotification({
       userId: voterUserId,
       workspaceId,
       type: "changelog_published",
       title: `New update: "${entryTitle}"`,
-      link: `${env.NEXT_PUBLIC_APP_URL}/${workspace.slug}/changelog/${entryId}`,
+      link: `/${workspace.slug}/settings/changelog`,
     });
   }
 }

@@ -400,6 +400,8 @@ export async function createPost(input: {
   authorId: string;
   authorName: string | null;
   authorEmail: string;
+  imageUrl?: string | null;
+  status?: string;
   isApproved?: boolean;
 }) {
   const [post] = await db
@@ -414,6 +416,8 @@ export async function createPost(input: {
       authorId: input.authorId,
       authorName: input.authorName,
       authorEmail: input.authorEmail,
+      imageUrl: input.imageUrl ?? null,
+      ...(input.status ? { status: input.status } : {}),
       isApproved: input.isApproved ?? true,
     })
     .returning({
@@ -442,6 +446,13 @@ export async function approvePost(postId: string): Promise<void> {
   await db
     .update(posts)
     .set({ isApproved: true, updatedAt: new Date() })
+    .where(eq(posts.id, postId));
+}
+
+export async function unapprovePost(postId: string): Promise<void> {
+  await db
+    .update(posts)
+    .set({ isApproved: false, updatedAt: new Date() })
     .where(eq(posts.id, postId));
 }
 
@@ -485,6 +496,13 @@ export async function setPinned(postId: string, isPinned: boolean) {
   await db
     .update(posts)
     .set({ isPinned, updatedAt: new Date() })
+    .where(eq(posts.id, postId));
+}
+
+export async function assignPost(postId: string, assignedToId: string | null) {
+  await db
+    .update(posts)
+    .set({ assignedToId, updatedAt: new Date() })
     .where(eq(posts.id, postId));
 }
 

@@ -1,11 +1,8 @@
-import { and, eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { WorkspaceSidebar } from "@/components/workspace/workspace-sidebar";
 import { WorkspaceSuspendedPage } from "@/components/workspace/workspace-suspended";
 import { ADMIN_ROLE, WORKSPACE_MEMBER } from "@/config/platform";
-import { boards } from "@/db/schema";
-import { requireSession } from "@/lib/authz";
-import { db } from "@/lib/db";
+import { getCurrentSession } from "@/lib/authz";
 import { getUnreadCount } from "@/lib/notifications/queries";
 import {
   getUserWorkspaces,
@@ -24,14 +21,22 @@ export default async function WorkspaceLayout({
 }: WorkspaceLayoutProps) {
   const { slug } = await params;
 
-  const session = await requireSession();
+  const session = await getCurrentSession();
+
+  // The entire workspace app is a separate, member-only application from the
+  // public portal — it must never redirect an unauthenticated or non-member
+  // visitor into the public portal. Anonymous visitors go to sign-in (with
+  // `next` preserved so they land back here once authenticated); signed-in
+  // non-members (customers) get a 404, keeping the admin area's existence
+  // invisible to them, same as the rest of the admin surface.
+  if (!session) {
+    redirect(`/signin?next=${encodeURIComponent(`/${slug}`)}`);
+  }
 
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) {
     notFound();
   }
-
-  const isOrbitAdmin = session.user.role === ADMIN_ROLE;
 
   // A suspended workspace is unavailable to everyone (PLATFORM.md §6) — Orbit
   // Admins govern it from /orbit, not from the live workspace.
@@ -44,24 +49,15 @@ export default async function WorkspaceLayout({
     notFound();
   }
 
-  // Archived boards are hidden from the workspace navigation (Feature 04).
-  const workspaceBoards = await db
-    .select({ id: boards.id, slug: boards.slug, name: boards.name })
-    .from(boards)
-    .where(
-      and(eq(boards.workspaceId, workspace.id), eq(boards.isArchived, false))
-    )
-    .orderBy(boards.displayOrder);
-
+  const isOrbitAdmin = session.user.role === ADMIN_ROLE;
   const isAdminOrOwner = member.role !== WORKSPACE_MEMBER;
   const email = session.user.email;
   const userWorkspaces = await getUserWorkspaces(session.user.id);
   const unreadCount = await getUnreadCount(session.user.id);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden md:flex-row">
+    <div className="fixed inset-0 flex flex-col overflow-hidden md:flex-row">
       <WorkspaceSidebar
-        boards={workspaceBoards}
         email={email}
         initialUnreadCount={unreadCount}
         isAdminOrOwner={isAdminOrOwner}
@@ -74,7 +70,7 @@ export default async function WorkspaceLayout({
       />
 
       {/* Main content */}
-      <main className="flex flex-1 flex-col overflow-y-auto bg-background">
+      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background">
         {children}
       </main>
     </div>

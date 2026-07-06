@@ -116,6 +116,36 @@ describe("GET /api/v1/posts — workspace scoping", () => {
     const res = await listPosts(req);
     expect(res.status).toBe(404);
   });
+
+  it("excludes posts on a private board", async () => {
+    const owner = await createTestUser();
+    const ws = await createTestWorkspace(owner.id, owner.email);
+    const privateBoard = await createTestBoard({
+      workspaceId: ws.id,
+      createdBy: owner.id,
+      isPublic: false,
+    });
+    const { rawKey } = await createTestApiKey({
+      workspaceId: ws.id,
+      userId: owner.id,
+    });
+    const privatePost = await createTestPost({
+      boardId: privateBoard.id,
+      workspaceId: ws.id,
+      authorId: owner.id,
+      authorEmail: owner.email,
+      isApproved: true,
+    });
+
+    const req = new NextRequest("http://localhost/api/v1/posts", {
+      headers: { Authorization: `Bearer ${rawKey}` },
+    });
+    const res = await listPosts(req);
+    const body = await res.json();
+
+    const ids: string[] = body.data.map((p: { id: string }) => p.id);
+    expect(ids).not.toContain(privatePost.id);
+  });
 });
 
 describe("GET /api/v1/posts — response consistency & pagination", () => {
@@ -221,6 +251,36 @@ describe("GET /api/v1/posts/:postId", () => {
     });
     const res = await getPost(req, {
       params: Promise.resolve({ postId: pending.id }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it("404s on a post belonging to a private board", async () => {
+    const owner = await createTestUser();
+    const ws = await createTestWorkspace(owner.id, owner.email);
+    const privateBoard = await createTestBoard({
+      workspaceId: ws.id,
+      createdBy: owner.id,
+      isPublic: false,
+    });
+    const { rawKey } = await createTestApiKey({
+      workspaceId: ws.id,
+      userId: owner.id,
+    });
+    const privatePost = await createTestPost({
+      boardId: privateBoard.id,
+      workspaceId: ws.id,
+      authorId: owner.id,
+      authorEmail: owner.email,
+      isApproved: true,
+    });
+
+    const req = new NextRequest(
+      `http://localhost/api/v1/posts/${privatePost.id}`,
+      { headers: { Authorization: `Bearer ${rawKey}` } }
+    );
+    const res = await getPost(req, {
+      params: Promise.resolve({ postId: privatePost.id }),
     });
     expect(res.status).toBe(404);
   });

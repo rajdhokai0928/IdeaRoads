@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "@/lib/env";
+import { adminBaseUrl } from "@/lib/urls";
 
 // Stateless, per-user unsubscribe tokens. The token carries the user id and an
 // HMAC signature over it (keyed by APP_SECRET), so the unsubscribe endpoint can
@@ -45,5 +46,6 @@ export function verifyUnsubscribeToken(token: string): string | null {
 
 export function buildUnsubscribeUrl(userId: string): string {
   const token = createUnsubscribeToken(userId);
-  return `${env.NEXT_PUBLIC_APP_URL}/api/unsubscribe?token=${encodeURIComponent(token)}`;
+  // Token-based (no session), works on any host; use the stable admin host.
+  return `${adminBaseUrl()}/api/unsubscribe?token=${encodeURIComponent(token)}`;
 }

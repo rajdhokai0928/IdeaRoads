@@ -33,6 +33,24 @@ pnpm dev            # starts Next.js + background worker concurrently
 
 Open `http://localhost:3000` and sign in with a magic link.
 
+### Two-host mode (Workspace vs Public Portal)
+
+The Workspace/Admin app and the Public Portal can run as independent
+applications with **isolated sessions** — signing into one never authenticates
+the other. Set two hosts in `.env`:
+
+```bash
+NEXT_PUBLIC_ADMIN_URL=http://app.localhost:3000
+NEXT_PUBLIC_PORTAL_URL=http://portal.localhost:3000
+```
+
+Then use `http://app.localhost:3000` for the admin app and
+`http://portal.localhost:3000` for a workspace's public portal
+(`portal.localhost:3000/{slug}/roadmap`, etc.). Browsers resolve `*.localhost`
+to loopback automatically; plain `http://localhost:3000` keeps working as a
+single-origin full app. Leave both vars unset for single-origin mode. See
+[`docs/migration/01-portal-subdomain-auth.md`](./docs/migration/01-portal-subdomain-auth.md).
+
 To promote yourself to superadmin:
 
 ```bash

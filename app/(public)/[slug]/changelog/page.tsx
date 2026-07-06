@@ -7,10 +7,10 @@ import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
-import { truncateMarkdownToText } from "@/lib/changelog/markdown";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 import { listChangelogEntries } from "@/lib/changelog/queries";
-import { env } from "@/lib/env";
 import { getNotificationPreferences } from "@/lib/notifications/queries";
+import { portalBaseUrl } from "@/lib/urls";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     openGraph: {
       title,
-      url: `${env.NEXT_PUBLIC_APP_URL}/${slug}/changelog`,
+      url: `${portalBaseUrl()}/${slug}/changelog`,
       type: "website",
     },
     robots: workspace.changelogPublic ? "index, follow" : "noindex, nofollow",
@@ -86,12 +86,14 @@ export default async function PublicChangelogIndexPage({
         active="changelog"
         boards={publicBoards}
         changelogPublic={workspace.changelogPublic}
+        currentPath={`/${slug}/changelog`}
         isMember={!!member}
         isSignedIn={isSignedIn}
         logoUrl={workspace.logoUrl}
         roadmapPublic={workspace.roadmapPublic}
         rssHref={`/${slug}/changelog/feed.xml`}
         slug={slug}
+        userEmail={session?.user.email}
         userImage={session?.user.image}
         userName={session?.user.name}
         workspaceName={workspace.name}
@@ -129,6 +131,20 @@ export default async function PublicChangelogIndexPage({
           <div className="mt-8 divide-y divide-border border-t border-border">
             {entries.map((entry) => (
               <article className="py-8" key={entry.id}>
+                {entry.coverImageUrl && (
+                  <Link
+                    className="block mb-4"
+                    href={`/${slug}/changelog/${entry.id}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
+                    <img
+                      alt=""
+                      className="max-h-64 w-full border border-border object-cover"
+                      src={entry.coverImageUrl}
+                    />
+                  </Link>
+                )}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                   <ChangelogLabelBadge label={entry.label} />
                   {entry.publishedAt && (
@@ -149,7 +165,7 @@ export default async function PublicChangelogIndexPage({
                   </Link>
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                  {truncateMarkdownToText(entry.body, 240)}
+                  {truncateHtmlToText(entry.body, 240)}
                 </p>
                 <Link
                   className="mt-3 inline-block text-sm font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

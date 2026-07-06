@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { WORKSPACE_MEMBER, WORKSPACE_OWNER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
+import { adminBaseUrl } from "@/lib/urls";
 import { listActiveInviteLinks } from "@/lib/workspaces/invite-links";
 import { listPendingInvites } from "@/lib/workspaces/invites";
 import {
@@ -45,9 +46,7 @@ export default async function InvitesPage({ params }: Props) {
     listActiveInviteLinks(workspace.id),
   ]);
 
-  const appUrl = (
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
-  ).replace(/\/$/, "");
+  const appUrl = adminBaseUrl();
 
   return (
     <div className="px-4 py-6 space-y-10 sm:px-8">

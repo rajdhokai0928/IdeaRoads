@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { getLabelInfo } from "@/lib/changelog/constants";
-import { truncateMarkdownToText } from "@/lib/changelog/markdown";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 import { listChangelogEntries } from "@/lib/changelog/queries";
-import { env } from "@/lib/env";
+import { portalBaseUrl } from "@/lib/urls";
 import { getWorkspaceBySlug } from "@/lib/workspaces/queries";
 
 export async function GET(
@@ -21,7 +21,7 @@ export async function GET(
     limit: 50,
   });
 
-  const appUrl = env.NEXT_PUBLIC_APP_URL;
+  const appUrl = portalBaseUrl();
   const channelUrl = `${appUrl}/${slug}/changelog`;
   const feedUrl = `${channelUrl}/feed.xml`;
 
@@ -35,7 +35,7 @@ export async function GET(
     .map((entry) => {
       const entryUrl = `${appUrl}/${slug}/changelog/${entry.id}`;
       const pubDate = new Date(entry.publishedAt!).toUTCString();
-      const description = truncateMarkdownToText(entry.body, 500);
+      const description = truncateHtmlToText(entry.body, 500);
       const categoryLabel = getLabelInfo(entry.label).label;
 
       return `    <item>

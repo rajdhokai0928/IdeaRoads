@@ -9,6 +9,7 @@ import {
   getWebhookSecretAction,
   updateWebhookEndpointAction,
 } from "@/app/actions/webhooks";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ALL_WEBHOOK_EVENTS,
@@ -306,13 +307,13 @@ export function WebhookEndpointsSection({
           </p>
         </div>
         {!showCreateForm && (
-          <button
-            className="shrink-0 px-3.5 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <Button
+            className="shrink-0"
             onClick={() => setShowCreateForm(true)}
             type="button"
           >
             Add endpoint
-          </button>
+          </Button>
         )}
       </div>
 
@@ -364,7 +365,7 @@ export function WebhookEndpointsSection({
                         <span
                           className={`shrink-0 inline-block px-1.5 py-0.5 text-2xs font-medium rounded-sm ${
                             ep.isEnabled
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              ? "bg-success-subtle text-success-foreground"
                               : "bg-muted text-muted-foreground"
                           }`}
                         >

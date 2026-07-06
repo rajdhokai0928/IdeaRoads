@@ -1,6 +1,6 @@
 import { PRODUCT_NAME } from "@/config/platform";
 import { getLabelInfo } from "@/lib/changelog/constants";
-import { env } from "@/lib/env";
+import { portalBaseUrl } from "@/lib/urls";
 
 export function changelogEmailTemplate({
   voterName,
@@ -24,7 +24,7 @@ export function changelogEmailTemplate({
   unsubscribeUrl?: string | null;
 }) {
   const labelInfo = getLabelInfo(entryLabel);
-  const entryUrl = `${env.NEXT_PUBLIC_APP_URL}/${workspaceSlug}/changelog/${entryId}`;
+  const entryUrl = `${portalBaseUrl()}/${workspaceSlug}/changelog/${entryId}`;
   const subject = `[${workspaceName}] ${labelInfo.label}: ${entryTitle}`;
   const unsubscribeHtml = unsubscribeUrl
     ? ` <a href="${unsubscribeUrl}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a>.`

@@ -1,6 +1,5 @@
 "use server";
 
-import { del, put } from "@vercel/blob";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -19,12 +18,13 @@ import { requireSession } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { enqueueEmail } from "@/lib/email";
 import { confirmEmailChangeTemplate } from "@/lib/email/templates/confirm-email-change";
-import { env } from "@/lib/env";
 import {
   createPendingEmailChange,
   deletePendingEmailChange,
   getPendingEmailChangeByToken,
 } from "@/lib/profile/email-change";
+import { deleteFile, uploadFile } from "@/lib/storage";
+import { adminBaseUrl } from "@/lib/urls";
 
 export interface ActionState {
   error?: string;
@@ -45,6 +45,10 @@ const ALLOWED_AVATAR_TYPES = new Set([
 
 export interface AvatarActionState extends ActionState {
   imageUrl?: string | null;
+}
+
+export interface NameActionState extends ActionState {
+  name?: string;
 }
 
 export async function updateAvatarAction(
@@ -71,19 +75,20 @@ export async function updateAvatarAction(
     .limit(1);
 
   const extension = file.type.split("/")[1];
-  const blob = await put(
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const url = await uploadFile(
     `avatars/${session.user.id}-${Date.now()}.${extension}`,
-    file,
-    { access: "public" }
+    buffer,
+    file.type
   );
 
   await db
     .update(user)
-    .set({ image: blob.url, updatedAt: new Date() })
+    .set({ image: url, updatedAt: new Date() })
     .where(eq(user.id, session.user.id));
 
   if (freshUser?.image) {
-    await del(freshUser.image).catch(() => {});
+    await deleteFile(freshUser.image).catch(() => {});
   }
 
   await audit({
@@ -96,7 +101,7 @@ export async function updateAvatarAction(
   });
 
   revalidatePath("/", "layout");
-  return { imageUrl: blob.url, success: "Profile picture updated." };
+  return { imageUrl: url, success: "Profile picture updated." };
 }
 
 export async function removeAvatarAction(): Promise<AvatarActionState> {
@@ -117,7 +122,7 @@ export async function removeAvatarAction(): Promise<AvatarActionState> {
     .set({ image: null, updatedAt: new Date() })
     .where(eq(user.id, session.user.id));
 
-  await del(freshUser.image).catch(() => {});
+  await deleteFile(freshUser.image).catch(() => {});
 
   await audit({
     action: "profile.avatar_removed",
@@ -133,9 +138,9 @@ export async function removeAvatarAction(): Promise<AvatarActionState> {
 }
 
 export async function updateNameAction(
-  _state: ActionState,
+  _state: NameActionState,
   formData: FormData
-): Promise<ActionState> {
+): Promise<NameActionState> {
   const session = await requireSession();
   const name = String(formData.get("name") ?? "").trim();
 
@@ -162,7 +167,7 @@ export async function updateNameAction(
   });
 
   revalidatePath("/", "layout");
-  return { success: "Name updated." };
+  return { success: "Name updated.", name };
 }
 
 export async function changeEmailAction(
@@ -197,7 +202,7 @@ export async function changeEmailAction(
   // (which match on email) could be hijacked by anyone who self-reports
   // someone else's email address, since that never required verification.
   const { token } = await createPendingEmailChange(current.user.id, newEmail);
-  const confirmUrl = `${env.NEXT_PUBLIC_APP_URL}/account/confirm-email/${token}`;
+  const confirmUrl = `${adminBaseUrl()}/account/confirm-email/${token}`;
 
   const { html, text } = await confirmEmailChangeTemplate({
     newEmail,

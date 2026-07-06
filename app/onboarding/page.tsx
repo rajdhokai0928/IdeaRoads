@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/app/onboarding/_components/onboarding-form";
 import { requireSession } from "@/lib/authz";
+import { portalBaseUrl } from "@/lib/urls";
 import { getFirstUserWorkspace } from "@/lib/workspaces/queries";
 
 export const metadata = {
@@ -26,10 +27,11 @@ export default async function OnboardingPage({
     }
   }
 
-  const appUrl = new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
-  );
-  const appHost = appUrl.hostname + (appUrl.port ? `:${appUrl.port}` : "");
+  // The slug preview shows the brand's shareable public address, which lives on
+  // the Public Portal host.
+  const portalUrl = new URL(portalBaseUrl());
+  const appHost =
+    portalUrl.hostname + (portalUrl.port ? `:${portalUrl.port}` : "");
 
   return <OnboardingForm appHost={appHost} isAdditional={!!isNew} />;
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { ImagePlus, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -7,6 +9,7 @@ import {
   createChangelogEntryAction,
   publishChangelogEntryAction,
   updateChangelogEntryAction,
+  uploadChangelogCoverImageAction,
 } from "@/app/actions/changelog";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { LinkedPostsSelector } from "@/components/changelog/linked-posts-selector";
@@ -14,6 +17,21 @@ import {
   CHANGELOG_LABEL_VALUES,
   getLabelInfo,
 } from "@/lib/changelog/constants";
+
+const QuillEditor = dynamic(
+  () => import("@/components/comments/quill-editor"),
+  {
+    ssr: false,
+  }
+);
+
+const MAX_COVER_IMAGE_BYTES = 4 * 1024 * 1024;
+const ALLOWED_COVER_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
 
 interface LinkedPost {
   boardName: string;
@@ -30,6 +48,7 @@ interface ChangelogEditorProps {
     id: string;
     title: string;
     body: string;
+    coverImageUrl: string | null;
     label: string;
     isPublished: boolean;
     linkedPosts: LinkedPost[];
@@ -37,8 +56,6 @@ interface ChangelogEditorProps {
   workspaceId: string;
   workspaceSlug: string;
 }
-
-type EditorTab = "write" | "preview";
 
 export function ChangelogEditor({
   workspaceId,
@@ -53,15 +70,19 @@ export function ChangelogEditor({
   );
   const [title, setTitle] = useState(initialEntry?.title ?? "");
   const [body, setBody] = useState(initialEntry?.body ?? "");
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(
+    initialEntry?.coverImageUrl ?? null
+  );
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [label, setLabel] = useState(initialEntry?.label ?? "new_feature");
   const [linkedPosts, setLinkedPosts] = useState<LinkedPost[]>(
     initialEntry?.linkedPosts ?? []
   );
-  const [tab, setTab] = useState<EditorTab>("write");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
     "idle"
   );
-  const [previewHtml, setPreviewHtml] = useState("");
   const isPublished = initialEntry?.isPublished ?? false;
 
   // Auto-save: debounced, fires after 30s of idle
@@ -80,6 +101,7 @@ export function ChangelogEditor({
           workspaceId,
           title: title.trim(),
           body,
+          coverImageUrl,
           label,
           postIds: linkedPosts.map((p) => p.id),
         });
@@ -88,6 +110,7 @@ export function ChangelogEditor({
           workspaceId,
           title: title.trim(),
           body,
+          coverImageUrl: coverImageUrl ?? undefined,
           label,
           postIds: linkedPosts.map((p) => p.id),
         });
@@ -100,7 +123,7 @@ export function ChangelogEditor({
     } catch {
       setSaveStatus("idle");
     }
-  }, [entryId, workspaceId, title, body, label, linkedPosts]);
+  }, [entryId, workspaceId, title, body, coverImageUrl, label, linkedPosts]);
 
   // Schedule auto-save whenever content changes
   useEffect(() => {
@@ -122,17 +145,48 @@ export function ChangelogEditor({
         clearTimeout(autoSaveRef.current);
       }
     };
-  }, [title, body, label, linkedPosts, doAutoSave]);
+  }, [title, doAutoSave]);
 
-  // Load preview HTML when switching to preview tab
-  useEffect(() => {
-    if (tab !== "preview") {
+  async function handleCoverImageChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0];
+    setCoverError(null);
+    if (!file) {
       return;
     }
-    import("@/lib/changelog/markdown").then(({ renderMarkdown }) => {
-      setPreviewHtml(renderMarkdown(body));
-    });
-  }, [tab, body]);
+    if (!ALLOWED_COVER_IMAGE_TYPES.has(file.type)) {
+      setCoverError("Use a PNG, JPEG, WEBP, or GIF image.");
+      return;
+    }
+    if (file.size > MAX_COVER_IMAGE_BYTES) {
+      setCoverError("Image must be 4MB or smaller.");
+      return;
+    }
+
+    setIsUploadingCover(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.set("image", file);
+      uploadFormData.set("workspaceId", workspaceId);
+      const result = await uploadChangelogCoverImageAction(uploadFormData);
+      if (!result.success) {
+        setCoverError(result.error);
+        return;
+      }
+      setCoverImageUrl(result.data.url);
+    } finally {
+      setIsUploadingCover(false);
+    }
+  }
+
+  function removeCoverImage() {
+    setCoverImageUrl(null);
+    setCoverError(null);
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
+  }
 
   function handleSaveDraft() {
     if (!title.trim()) {
@@ -149,6 +203,7 @@ export function ChangelogEditor({
           workspaceId,
           title: title.trim(),
           body,
+          coverImageUrl,
           label,
           postIds: linkedPosts.map((p) => p.id),
         });
@@ -163,6 +218,7 @@ export function ChangelogEditor({
           workspaceId,
           title: title.trim(),
           body,
+          coverImageUrl: coverImageUrl ?? undefined,
           label,
           postIds: linkedPosts.map((p) => p.id),
         });
@@ -193,6 +249,7 @@ export function ChangelogEditor({
           workspaceId,
           title: title.trim(),
           body,
+          coverImageUrl,
           label,
           postIds: linkedPosts.map((p) => p.id),
         });
@@ -205,6 +262,7 @@ export function ChangelogEditor({
           workspaceId,
           title: title.trim(),
           body,
+          coverImageUrl: coverImageUrl ?? undefined,
           label,
           postIds: linkedPosts.map((p) => p.id),
         });
@@ -243,6 +301,7 @@ export function ChangelogEditor({
         workspaceId,
         title: title.trim(),
         body,
+        coverImageUrl,
         label,
         postIds: linkedPosts.map((p) => p.id),
       });
@@ -279,6 +338,53 @@ export function ChangelogEditor({
             {title.length}/200
           </span>
         </div>
+      </div>
+
+      {/* Cover image */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+          Cover image
+          <span className="ml-1 text-muted-foreground font-normal normal-case">
+            (optional)
+          </span>
+        </label>
+        {coverImageUrl ? (
+          <div className="relative inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
+            <img
+              alt=""
+              className="max-h-48 w-auto border border-border object-contain"
+              src={coverImageUrl}
+            />
+            <button
+              aria-label="Remove cover image"
+              className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={removeCoverImage}
+              type="button"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        ) : (
+          <label
+            className={`flex w-full max-w-xs cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-4 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+              isUploadingCover ? "pointer-events-none opacity-50" : ""
+            }`}
+          >
+            <ImagePlus className="size-4" />
+            {isUploadingCover ? "Uploading…" : "Add a cover image"}
+            <input
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="sr-only"
+              disabled={isUploadingCover}
+              onChange={handleCoverImageChange}
+              ref={coverInputRef}
+              type="file"
+            />
+          </label>
+        )}
+        {coverError && <p className="text-xs text-destructive">{coverError}</p>}
       </div>
 
       {/* Label */}
@@ -325,60 +431,15 @@ export function ChangelogEditor({
 
       {/* Body */}
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-            Content
-          </label>
-          <div className="flex">
-            <button
-              className={`px-3 py-1 text-xs font-medium border-b-2 transition-colors cursor-pointer focus-visible:outline-none ${
-                tab === "write"
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setTab("write")}
-              type="button"
-            >
-              Write
-            </button>
-            <button
-              className={`px-3 py-1 text-xs font-medium border-b-2 transition-colors cursor-pointer focus-visible:outline-none ${
-                tab === "preview"
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setTab("preview")}
-              type="button"
-            >
-              Preview
-            </button>
-          </div>
-        </div>
-
-        {tab === "write" ? (
-          <textarea
-            className="w-full min-h-40 border border-border bg-background px-3 pt-2.5 pb-5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
-            maxLength={50_000}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Write your changelog in Markdown…&#10;&#10;## What's new&#10;&#10;- Feature A&#10;- Feature B"
-            rows={10}
-            value={body}
-          />
-        ) : (
-          <div
-            className="min-h-75 border border-border bg-muted/20 px-4 py-3 prose prose-sm max-w-none text-foreground"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: server-side sanitized via DOMPurify
-            dangerouslySetInnerHTML={{
-              __html:
-                previewHtml ||
-                "<p class='text-muted-foreground italic'>Nothing to preview yet.</p>",
-            }}
-          />
-        )}
-        <p className="text-xs text-muted-foreground">
-          Markdown supported: **bold**, *italic*, `code`, ## headings, - lists,
-          [link](url)
-        </p>
+        <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+          Content
+        </label>
+        <QuillEditor
+          minHeight={240}
+          onChange={(html) => setBody(html)}
+          placeholder="What shipped in this update?"
+          value={body}
+        />
       </div>
 
       {/* Linked Posts */}
@@ -409,7 +470,7 @@ export function ChangelogEditor({
             </span>
           )}
           {saveStatus === "saved" && (
-            <span className="text-xs text-emerald-600">Saved</span>
+            <span className="text-xs text-success">Saved</span>
           )}
         </div>
 

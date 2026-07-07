@@ -3,6 +3,13 @@
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef, useTransition } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface WorkspaceStatus {
   color: string;
@@ -82,9 +89,6 @@ export default function BoardFilters({
     updateParam({ myVotes: myVotesActive ? null : "true" });
   }
 
-  const pillSelect =
-    "h-9 cursor-pointer border border-border bg-background pl-3 pr-7 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
   return (
     <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-4">
       {/* Search */}
@@ -126,30 +130,38 @@ export default function BoardFilters({
           </button>
         )}
 
-        <select
-          className={pillSelect}
-          onChange={(e) => updateParam({ status: e.target.value || null })}
-          value={activeStatus}
+        <Select
+          onValueChange={(v) => updateParam({ status: v === "all" ? null : v })}
+          value={activeStatus || "all"}
         >
-          <option value="">Status</option>
-          {workspaceStatuses.map((s) => (
-            <option key={s.slug} value={s.slug}>
-              {s.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Status</SelectItem>
+            {workspaceStatuses.map((s) => (
+              <SelectItem key={s.slug} value={s.slug}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <select
-          className={pillSelect}
-          onChange={(e) => updateParam({ sort: e.target.value })}
+        <Select
+          onValueChange={(v) => updateParam({ sort: v })}
           value={activeSort}
         >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

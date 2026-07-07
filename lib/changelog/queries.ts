@@ -145,7 +145,11 @@ export async function getLinkedPosts(
   // boards or posts still pending moderation — the admin editor
   // (opts.publicOnly unset) still sees everything.
   if (opts.publicOnly) {
-    conditions.push(eq(boards.isPublic, true), eq(posts.isApproved, true));
+    conditions.push(
+      eq(boards.isPublic, true),
+      eq(posts.isApproved, true),
+      eq(posts.isDraft, false)
+    );
   }
 
   return db

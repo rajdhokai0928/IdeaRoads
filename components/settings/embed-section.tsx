@@ -3,6 +3,13 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateEmbedConfigAction } from "@/app/actions/embed";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { EmbedMode, EmbedPosition, EmbedTheme } from "@/lib/embed/queries";
 
 interface Props {
@@ -156,19 +163,22 @@ export function EmbedSection({
             >
               Launcher
             </label>
-            <select
-              className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Select
               disabled={isPending}
-              id="embed-mode"
-              onChange={(e) => setMode(e.target.value as EmbedMode)}
+              onValueChange={(v) => setMode(v as EmbedMode)}
               value={mode}
             >
-              {MODE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full" id="embed-mode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MODE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="mt-1 text-xs text-muted-foreground">
               Inline embeds in the page; the floating launcher adds a button
               that opens a panel.
@@ -182,19 +192,22 @@ export function EmbedSection({
             >
               Position
             </label>
-            <select
-              className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            <Select
               disabled={isPending || mode !== "button"}
-              id="embed-position"
-              onChange={(e) => setPosition(e.target.value as EmbedPosition)}
+              onValueChange={(v) => setPosition(v as EmbedPosition)}
               value={position}
             >
-              {POSITION_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full" id="embed-position">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {POSITION_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="mt-1 text-xs text-muted-foreground">
               Only applies to the floating launcher.
             </p>
@@ -207,19 +220,22 @@ export function EmbedSection({
             >
               Theme
             </label>
-            <select
-              className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Select
               disabled={isPending}
-              id="embed-theme"
-              onChange={(e) => setTheme(e.target.value as EmbedTheme)}
+              onValueChange={(v) => setTheme(v as EmbedTheme)}
               value={theme}
             >
-              {THEME_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full" id="embed-theme">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {THEME_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

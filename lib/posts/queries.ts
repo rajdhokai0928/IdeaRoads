@@ -71,8 +71,14 @@ export async function listBoardPosts(
     includeUnapproved = false,
   } = opts;
 
-  // Merged posts are hidden from active lists (Feature 05).
-  const conditions = [eq(posts.boardId, boardId), isNull(posts.mergedIntoId)];
+  // Merged posts are hidden from active lists (Feature 05). Drafts are never
+  // shown on the public board/portal — they live only in the admin feedback
+  // view until published.
+  const conditions = [
+    eq(posts.boardId, boardId),
+    isNull(posts.mergedIntoId),
+    eq(posts.isDraft, false),
+  ];
 
   // Moderation-held (unapproved) feedback is visible only to the team
   // (Brand Admins and Team Members); the public sees approved posts only
@@ -219,6 +225,10 @@ export async function listWorkspacePosts(
     userId?: string;
     authorId?: string;
     includeUnapproved?: boolean;
+    // Draft visibility: "exclude" (default — never return drafts, safe for any
+    // public/author surface), "include" (drafts + published, admin list view),
+    // "only" (drafts only, admin Draft filter).
+    drafts?: "exclude" | "include" | "only";
     limit?: number;
     offset?: number;
   } = {}
@@ -232,6 +242,7 @@ export async function listWorkspacePosts(
     userId,
     authorId,
     includeUnapproved = false,
+    drafts = "exclude",
     limit = 50,
     offset = 0,
   } = opts;
@@ -243,6 +254,11 @@ export async function listWorkspacePosts(
 
   if (!includeUnapproved) {
     conditions.push(eq(posts.isApproved, true));
+  }
+  if (drafts === "exclude") {
+    conditions.push(eq(posts.isDraft, false));
+  } else if (drafts === "only") {
+    conditions.push(eq(posts.isDraft, true));
   }
   if (status) {
     conditions.push(eq(posts.status, status));
@@ -283,6 +299,7 @@ export async function listWorkspacePosts(
     commentCount: posts.commentCount,
     isPinned: posts.isPinned,
     isApproved: posts.isApproved,
+    isDraft: posts.isDraft,
     authorName: posts.authorName,
     authorEmail: posts.authorEmail,
     createdAt: posts.createdAt,
@@ -333,6 +350,7 @@ export async function countWorkspacePostsFiltered(
     authorId?: string;
     search?: string;
     includeUnapproved?: boolean;
+    drafts?: "exclude" | "include" | "only";
   } = {}
 ): Promise<number> {
   const {
@@ -342,6 +360,7 @@ export async function countWorkspacePostsFiltered(
     authorId,
     search,
     includeUnapproved = false,
+    drafts = "exclude",
   } = opts;
 
   const conditions = [
@@ -350,6 +369,11 @@ export async function countWorkspacePostsFiltered(
   ];
   if (!includeUnapproved) {
     conditions.push(eq(posts.isApproved, true));
+  }
+  if (drafts === "exclude") {
+    conditions.push(eq(posts.isDraft, false));
+  } else if (drafts === "only") {
+    conditions.push(eq(posts.isDraft, true));
   }
   if (status) {
     conditions.push(eq(posts.status, status));
@@ -403,6 +427,7 @@ export async function createPost(input: {
   imageUrl?: string | null;
   status?: string;
   isApproved?: boolean;
+  isDraft?: boolean;
 }) {
   const [post] = await db
     .insert(posts)
@@ -419,11 +444,13 @@ export async function createPost(input: {
       imageUrl: input.imageUrl ?? null,
       ...(input.status ? { status: input.status } : {}),
       isApproved: input.isApproved ?? true,
+      isDraft: input.isDraft ?? false,
     })
     .returning({
       id: posts.id,
       slug: posts.slug,
       isApproved: posts.isApproved,
+      isDraft: posts.isDraft,
     });
   return post!;
 }
@@ -453,6 +480,14 @@ export async function unapprovePost(postId: string): Promise<void> {
   await db
     .update(posts)
     .set({ isApproved: false, updatedAt: new Date() })
+    .where(eq(posts.id, postId));
+}
+
+/** Publish a draft: it becomes visible per its board/approval settings. */
+export async function publishPost(postId: string): Promise<void> {
+  await db
+    .update(posts)
+    .set({ isDraft: false, updatedAt: new Date() })
     .where(eq(posts.id, postId));
 }
 
@@ -540,7 +575,7 @@ export async function listStatusHistory(postId: string) {
 
 // ─── Merge target search ──────────────────────────────────────────────────────
 
-/** Candidate posts to merge into: same workspace, approved, not merged, not self. */
+/** Candidate posts to merge into: same workspace, approved, published, not merged, not self. */
 export async function searchPostsForMerge(
   workspaceId: string,
   query: string,
@@ -549,6 +584,7 @@ export async function searchPostsForMerge(
   const conditions = [
     eq(posts.workspaceId, workspaceId),
     eq(posts.isApproved, true),
+    eq(posts.isDraft, false),
     isNull(posts.mergedIntoId),
     sql`${posts.id} <> ${excludePostId}`,
   ];

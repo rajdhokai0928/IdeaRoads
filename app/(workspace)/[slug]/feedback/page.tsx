@@ -24,6 +24,7 @@ interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{
     category?: string;
+    draft?: string;
     new?: string;
     page?: string;
     q?: string;
@@ -39,7 +40,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function FeedbackPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { category, new: newParam, page, q, sort, status } = await searchParams;
+  const {
+    category,
+    draft,
+    new: newParam,
+    page,
+    q,
+    sort,
+    status,
+  } = await searchParams;
   const session = await requireSession();
 
   const workspace = await getWorkspaceBySlug(slug);
@@ -59,6 +68,16 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   const validCategoryId = category ?? "";
   const searchQuery = q ?? "";
   const currentPage = Math.max(1, Number(page ?? 1));
+  // Draft filter: "only" shows drafts, "published" hides them, default shows all
+  // (published + drafts, so authors never lose track of a saved draft).
+  const validDraft: "all" | "only" | "published" =
+    draft === "only" ? "only" : draft === "published" ? "published" : "all";
+  const draftsOpt: "include" | "only" | "exclude" =
+    validDraft === "only"
+      ? "only"
+      : validDraft === "published"
+        ? "exclude"
+        : "include";
 
   const filterOpts = {
     sort: validSort,
@@ -66,6 +85,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
     categoryId: validCategoryId || undefined,
     search: searchQuery || undefined,
     includeUnapproved: true,
+    drafts: draftsOpt,
   };
 
   const [posts, totalCount, board, categories, workspaceStatuses] =
@@ -97,6 +117,9 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
     }
     if (searchQuery) {
       params.set("q", searchQuery);
+    }
+    if (validDraft !== "all") {
+      params.set("draft", validDraft);
     }
     if (targetPage > 1) {
       params.set("page", String(targetPage));
@@ -130,6 +153,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
 
       <FeedbackFilters
         activeCategoryId={validCategoryId}
+        activeDraft={validDraft}
         activeSearch={searchQuery}
         activeSort={validSort}
         activeStatus={validStatus}

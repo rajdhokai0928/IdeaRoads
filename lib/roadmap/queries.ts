@@ -53,6 +53,8 @@ export async function listPostsForRoadmap(
     inArray(posts.status, [...ROADMAP_STATUSES]),
     // Merged posts leave active lists, including the roadmap.
     isNull(posts.mergedIntoId),
+    // Unpublished drafts never appear on the roadmap (admin or public view).
+    eq(posts.isDraft, false),
   ];
 
   // Public view excludes private and archived boards

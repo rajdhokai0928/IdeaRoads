@@ -11,12 +11,21 @@ import { getWorkspaceMember } from "@/lib/workspaces/queries";
  * routes can't be used to reach private-board posts by id.
  */
 export async function isPostAccessible(
-  post: { boardId: string; workspaceId: string },
+  post: { boardId: string; workspaceId: string; isDraft?: boolean },
   userId: string | null
 ): Promise<boolean> {
   const board = await getBoardById(post.boardId);
   if (!board) {
     return false;
+  }
+  // Unpublished drafts are restricted to workspace members regardless of board
+  // visibility — the public must not be able to vote on or comment on them.
+  if (post.isDraft) {
+    if (!userId) {
+      return false;
+    }
+    const draftMember = await getWorkspaceMember(post.workspaceId, userId);
+    return !!draftMember;
   }
   if (board.isPublic) {
     return true;

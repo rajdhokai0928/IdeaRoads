@@ -20,8 +20,14 @@ export async function GET(
   const { postId } = await params;
   const post = await getPost(postId);
 
-  // Scope strictly to the key's workspace — never leak cross-tenant posts.
-  if (!post || post.workspaceId !== auth.workspaceId || !post.isApproved) {
+  // Scope strictly to the key's workspace — never leak cross-tenant posts or
+  // unpublished drafts.
+  if (
+    !post ||
+    post.workspaceId !== auth.workspaceId ||
+    !post.isApproved ||
+    post.isDraft
+  ) {
     return NextResponse.json({ error: "Post not found." }, { status: 404 });
   }
 

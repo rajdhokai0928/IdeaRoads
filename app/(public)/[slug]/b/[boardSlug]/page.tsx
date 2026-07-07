@@ -13,6 +13,7 @@ import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { getBoardBySlug, listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 import {
   buildEmbedQuery,
   embedWrapperProps,
@@ -240,7 +241,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
                         </div>
                         {post.body && (
                           <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                            {post.body}
+                            {truncateHtmlToText(post.body, 240)}
                           </p>
                         )}
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">

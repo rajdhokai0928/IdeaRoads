@@ -1,4 +1,5 @@
 import { PRODUCT_NAME } from "@/config/platform";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 
 export function newPostAlertEmailTemplate({
   adminName,
@@ -18,7 +19,8 @@ export function newPostAlertEmailTemplate({
   workspaceName: string;
 }) {
   const subject = `New post on ${boardName}: "${postTitle}"`;
-  const preview = postBody ? postBody.slice(0, 200) : null;
+  // postBody may be Quill HTML — strip tags for the plain-text email preview.
+  const preview = postBody ? truncateHtmlToText(postBody, 200) : null;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -38,7 +40,7 @@ export function newPostAlertEmailTemplate({
       <tr><td style="padding:24px 40px;">
         <p style="margin:0 0 4px;font-size:14px;color:#6b7280;">From <strong style="color:#374151;">${authorName}</strong></p>
         <h2 style="margin:12px 0 0;font-size:16px;font-weight:600;color:#111827;">${postTitle}</h2>
-        ${preview ? `<p style="margin:12px 0 0;font-size:14px;color:#6b7280;line-height:1.6;border-left:3px solid #e5e7eb;padding-left:12px;">${preview}${postBody && postBody.length > 200 ? "…" : ""}</p>` : ""}
+        ${preview ? `<p style="margin:12px 0 0;font-size:14px;color:#6b7280;line-height:1.6;border-left:3px solid #e5e7eb;padding-left:12px;">${preview}</p>` : ""}
         <div style="margin-top:24px;">
           <a href="${postUrl}" style="display:inline-block;padding:10px 20px;background:#111827;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">View post →</a>
         </div>

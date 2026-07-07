@@ -1,6 +1,7 @@
 "use client";
 
 import { ImagePlus, Plus, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -15,6 +16,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const QuillEditor = dynamic(
+  () => import("@/components/comments/quill-editor"),
+  { ssr: false }
+);
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -69,6 +82,9 @@ export function AddFeedbackDialog({
   const [imageError, setImageError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
+  const [pendingAction, setPendingAction] = useState<
+    null | "publish" | "draft"
+  >(null);
 
   function reset() {
     setTitle("");
@@ -76,6 +92,7 @@ export function AddFeedbackDialog({
     setCategoryId("");
     setStatus(defaultStatus);
     setTitleError(null);
+    setPendingAction(null);
     removeImage();
   }
 
@@ -106,8 +123,7 @@ export function AddFeedbackDialog({
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function submit(asDraft: boolean) {
     setTitleError(null);
 
     if (title.trim().length < 3) {
@@ -115,6 +131,7 @@ export function AddFeedbackDialog({
       return;
     }
 
+    setPendingAction(asDraft ? "draft" : "publish");
     startTransition(async () => {
       let imageUrl: string | undefined;
 
@@ -124,6 +141,7 @@ export function AddFeedbackDialog({
         const uploadResult = await uploadPostImageAction(imageFormData);
         if (!uploadResult.success) {
           setImageError(uploadResult.error);
+          setPendingAction(null);
           return;
         }
         imageUrl = uploadResult.data.url;
@@ -137,7 +155,10 @@ export function AddFeedbackDialog({
         categoryId: categoryId || undefined,
         imageUrl,
         status: status || undefined,
+        saveAsDraft: asDraft,
       });
+
+      setPendingAction(null);
 
       if (!result.success) {
         if (result.field === "title") {
@@ -148,11 +169,23 @@ export function AddFeedbackDialog({
         return;
       }
 
-      toast.success("Feedback created");
+      toast.success(result.data.isDraft ? "Draft saved" : "Feedback published");
       setOpen(false);
       reset();
-      router.push(`/${workspaceSlug}/feedback/${result.data.postId}`);
+      // Drafts: stay on the feedback list (refresh in place) so the new draft
+      // appears with its badge and the user can immediately create another.
+      // Published feedback: jump to the post so they can see it live.
+      if (result.data.isDraft) {
+        router.refresh();
+      } else {
+        router.push(`/${workspaceSlug}/feedback/${result.data.postId}`);
+      }
     });
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submit(false);
   }
 
   return (
@@ -202,23 +235,16 @@ export function AddFeedbackDialog({
           </div>
 
           <div>
-            <label
-              className="mb-1.5 block text-sm font-medium text-foreground"
-              htmlFor="feedback-body"
-            >
+            <span className="mb-1.5 block text-sm font-medium text-foreground">
               Description{" "}
               <span className="text-xs font-normal text-muted-foreground">
                 (optional)
               </span>
-            </label>
-            <textarea
-              className="w-full resize-none border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            </span>
+            <QuillEditor
               disabled={isPending}
-              id="feedback-body"
-              maxLength={10_000}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(html) => setBody(html)}
               placeholder="Add more context…"
-              rows={4}
               value={body}
             />
           </div>
@@ -231,19 +257,22 @@ export function AddFeedbackDialog({
               >
                 Status
               </label>
-              <select
-                className="w-full border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              <Select
                 disabled={isPending}
-                id="feedback-status"
-                onChange={(e) => setStatus(e.target.value)}
+                onValueChange={(v) => setStatus(v)}
                 value={status}
               >
-                {workspaceStatuses.map((s) => (
-                  <option key={s.slug} value={s.slug}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full" id="feedback-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {workspaceStatuses.map((s) => (
+                    <SelectItem key={s.slug} value={s.slug}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
@@ -258,20 +287,23 @@ export function AddFeedbackDialog({
               </span>
             </label>
             {categories.length > 0 ? (
-              <select
-                className="w-full border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              <Select
                 disabled={isPending}
-                id="feedback-category"
-                onChange={(e) => setCategoryId(e.target.value)}
-                value={categoryId}
+                onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}
+                value={categoryId || "none"}
               >
-                <option value="">No category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full" id="feedback-category">
+                  <SelectValue placeholder="No category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : (
               <p
                 className="border border-dashed border-input px-3 py-2 text-sm text-muted-foreground"
@@ -339,14 +371,21 @@ export function AddFeedbackDialog({
             )}
           </div>
 
-          <div className="flex justify-end">
-            <button
-              className="bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90 disabled:opacity-50"
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              disabled={isPending || title.trim().length < 3}
+              onClick={() => submit(true)}
+              type="button"
+              variant="outline"
+            >
+              {pendingAction === "draft" ? "Saving…" : "Save as Draft"}
+            </Button>
+            <Button
               disabled={isPending || title.trim().length < 3}
               type="submit"
             >
-              {isPending ? "Creating…" : "Create feedback"}
-            </button>
+              {pendingAction === "publish" ? "Publishing…" : "Publish"}
+            </Button>
           </div>
         </form>
       </DialogContent>

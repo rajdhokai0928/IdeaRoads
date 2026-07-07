@@ -9,6 +9,7 @@ import type { PostsTableRow } from "@/components/posts/posts-table";
 import StatusSelect from "@/components/posts/status-select";
 import VisibilityToggle from "@/components/posts/visibility-toggle";
 import VoteButton from "@/components/voting/vote-button";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 
 interface Category {
   color: string;
@@ -70,12 +71,19 @@ export function PostRow({
         />
       </td>
       <td className="max-w-64 px-4 py-3 align-top">
-        <Link
-          className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
-          href={href}
-        >
-          {post.title}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
+            href={href}
+          >
+            {post.title}
+          </Link>
+          {post.isDraft && (
+            <span className="inline-flex shrink-0 items-center px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+              Draft
+            </span>
+          )}
+        </div>
         {showBoardColumn && (
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {post.boardName}
@@ -84,7 +92,7 @@ export function PostRow({
       </td>
       <td className="hidden max-w-72 px-4 py-3 align-top lg:table-cell">
         <p className="line-clamp-2 text-xs text-muted-foreground">
-          {post.body ?? "—"}
+          {post.body ? truncateHtmlToText(post.body, 200) : "—"}
         </p>
       </td>
       <td className="hidden max-w-32 px-4 py-3 align-top sm:table-cell">
@@ -140,6 +148,8 @@ export function PostRow({
           <PostActionsMenu
             initialBody={post.body}
             initialTitle={post.title}
+            isDraft={post.isDraft}
+            isPinned={post.isPinned}
             postId={post.id}
             postTitle={post.title}
             workspaceId={workspaceId}

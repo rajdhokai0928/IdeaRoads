@@ -26,6 +26,8 @@ export async function GET(req: NextRequest) {
   const conditions = [
     eq(posts.workspaceId, auth.workspaceId),
     eq(posts.isApproved, true),
+    // Unpublished drafts are never exposed through the public API.
+    eq(posts.isDraft, false),
     // Excludes private-board posts — this is a public API surface, not an
     // admin one, so it follows the same visibility rule as every public page.
     eq(boards.isPublic, true),

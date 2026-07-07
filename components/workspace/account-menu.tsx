@@ -67,9 +67,9 @@ export function AccountMenu({
 
       <DropdownMenuContent
         align="start"
-        className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+        className="w-64 max-w-[calc(100vw-1rem)]"
         side="top"
-        sideOffset={4}
+        sideOffset={6}
       >
         <DropdownMenuLabel className="flex items-center gap-2.5 font-normal normal-case tracking-normal">
           <SquareAvatar

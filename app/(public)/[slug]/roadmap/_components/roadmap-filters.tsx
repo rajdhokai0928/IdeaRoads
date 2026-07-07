@@ -3,6 +3,13 @@
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef, useTransition } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Category {
   color: string;
@@ -75,8 +82,6 @@ export function RoadmapFilters({
   }
 
   const activeCategories = categories.filter((c) => !c.isArchived);
-  const pillSelect =
-    "h-9 cursor-pointer border border-border bg-background pl-3 pr-7 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
     <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-4 sm:px-8">
@@ -104,31 +109,41 @@ export function RoadmapFilters({
 
       <div className="flex flex-wrap items-center gap-2.5">
         {activeCategories.length > 0 && (
-          <select
-            className={pillSelect}
-            onChange={(e) => updateParam({ category: e.target.value || null })}
-            value={activeCategoryId}
+          <Select
+            onValueChange={(v) =>
+              updateParam({ category: v === "all" ? null : v })
+            }
+            value={activeCategoryId || "all"}
           >
-            <option value="">All items</option>
-            {activeCategories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All items</SelectItem>
+              {activeCategories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
 
-        <select
-          className={pillSelect}
-          onChange={(e) => updateParam({ sort: e.target.value })}
+        <Select
+          onValueChange={(v) => updateParam({ sort: v })}
           value={activeSort}
         >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

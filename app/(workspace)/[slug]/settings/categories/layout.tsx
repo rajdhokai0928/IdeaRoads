@@ -3,15 +3,7 @@ interface Props {
 }
 
 export default function CategoriesSettingsLayout({ children }: Props) {
-  return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-border px-4 py-6 sm:px-8">
-        <h1 className="text-xl font-semibold text-foreground">Categories</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Organize feedback posts with workspace-level categories.
-        </p>
-      </div>
-      <div className="flex-1 overflow-y-auto">{children}</div>
-    </div>
-  );
+  // The page header (title + description) is rendered inside CategoryList so the
+  // "New Category" action can sit on the same row as the title.
+  return <div className="flex h-full flex-col">{children}</div>;
 }

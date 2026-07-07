@@ -1,10 +1,17 @@
 "use client";
 
-import { ChevronDown, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { assignPostAction } from "@/app/actions/posts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Assignee {
   email: string;
@@ -36,9 +43,8 @@ export default function AssigneeSelect({
 
   const current = assignees.find((a) => a.id === currentAssigneeId) ?? null;
 
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value;
-    const assigneeId = value === "" ? null : value;
+  function handleChange(value: string) {
+    const assigneeId = value === "unassigned" ? null : value;
     if (assigneeId === currentAssigneeId) {
       return;
     }
@@ -67,22 +73,25 @@ export default function AssigneeSelect({
   }
 
   return (
-    <div className="relative inline-flex items-center">
-      <select
-        className="appearance-none bg-muted pl-2.5 pr-7 py-1 text-xs font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-        disabled={isPending}
-        onChange={handleChange}
-        style={{ borderRadius: 2 }}
-        value={currentAssigneeId ?? ""}
+    <Select
+      disabled={isPending}
+      onValueChange={handleChange}
+      value={currentAssigneeId ?? "unassigned"}
+    >
+      <SelectTrigger
+        className="h-auto gap-1.5 rounded-xs border-0 bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+        size="sm"
       >
-        <option value="">Unassigned</option>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="unassigned">Unassigned</SelectItem>
         {assignees.map((a) => (
-          <option key={a.id} value={a.id}>
+          <SelectItem key={a.id} value={a.id}>
             {a.name ?? a.email}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-1.5 size-3 text-muted-foreground opacity-60" />
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

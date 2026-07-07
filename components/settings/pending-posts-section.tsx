@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { approvePostAction, deletePostAction } from "@/app/actions/posts";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { truncateHtmlToText } from "@/lib/changelog/html";
 
 interface PendingPost {
   authorEmail: string;
@@ -96,7 +97,7 @@ export function PendingPostsSection({ workspaceId, posts }: Props) {
                 </p>
                 {post.body && (
                   <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                    {post.body}
+                    {truncateHtmlToText(post.body, 200)}
                   </p>
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">

@@ -1,6 +1,7 @@
 import { and, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
+import { AuditTypeSelect } from "@/components/admin/audit-type-select";
 import { OrbitPageHeader } from "@/components/admin/orbit-page-header";
 import { auditLogs } from "@/db/schema";
 import { db } from "@/lib/db";
@@ -132,18 +133,14 @@ export default async function OrbitAuditLogPage({ searchParams }: Props) {
           />
         </div>
 
-        <select
-          className="h-8 border border-border bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        <AuditTypeSelect
           defaultValue={type}
           name="type"
-        >
-          <option value="">All entity types</option>
-          {ENTITY_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t.charAt(0).toUpperCase() + t.slice(1).replace("_", " ")}
-            </option>
-          ))}
-        </select>
+          options={ENTITY_TYPES.map((t) => ({
+            label: t.charAt(0).toUpperCase() + t.slice(1).replace("_", " "),
+            value: t,
+          }))}
+        />
 
         <button
           className="h-8 border border-border bg-card px-3 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent"

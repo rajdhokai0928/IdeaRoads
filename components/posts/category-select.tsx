@@ -1,10 +1,16 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { updatePostCategoryAction } from "@/app/actions/categories";
 import { CategoryChip } from "@/components/categories/category-chip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Category {
   color: string;
@@ -32,9 +38,8 @@ export default function CategorySelect({
 
   const current = categories.find((c) => c.id === currentCategoryId) ?? null;
 
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value;
-    const categoryId = value === "" ? null : value;
+  function handleChange(value: string) {
+    const categoryId = value === "none" ? null : value;
     if (categoryId === currentCategoryId) {
       return;
     }
@@ -52,22 +57,25 @@ export default function CategorySelect({
   }
 
   return (
-    <div className="relative inline-flex items-center">
-      <select
-        className="appearance-none bg-muted pl-2.5 pr-7 py-1 text-xs font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-        disabled={isPending}
-        onChange={handleChange}
-        style={{ borderRadius: 2 }}
-        value={currentCategoryId ?? ""}
+    <Select
+      disabled={isPending}
+      onValueChange={handleChange}
+      value={currentCategoryId ?? "none"}
+    >
+      <SelectTrigger
+        className="h-auto gap-1.5 rounded-xs border-0 bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+        size="sm"
       >
-        <option value="">No category</option>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">No category</SelectItem>
         {categories.map((c) => (
-          <option key={c.id} value={c.id}>
+          <SelectItem key={c.id} value={c.id}>
             {c.name}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-1.5 size-3 text-muted-foreground opacity-60" />
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

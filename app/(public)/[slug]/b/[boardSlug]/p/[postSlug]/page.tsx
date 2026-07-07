@@ -86,6 +86,12 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
     notFound();
   }
 
+  // Unpublished drafts never appear on the public portal — they are managed
+  // from the admin feedback view until published.
+  if (post.isDraft) {
+    notFound();
+  }
+
   // Pending (unapproved) feedback is visible to members only.
   if (!post.isApproved && !isMember) {
     notFound();

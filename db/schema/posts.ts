@@ -47,6 +47,10 @@ export const posts = pgTable(
     isPinned: boolean("is_pinned").notNull().default(false),
     isLocked: boolean("is_locked").notNull().default(false),
     isApproved: boolean("is_approved").notNull().default(true),
+    // Unpublished draft: saved by a workspace member but never surfaced on any
+    // public/output surface (portal, roadmap, changelog, public API) and never
+    // fires new-post notifications/webhooks until it is published.
+    isDraft: boolean("is_draft").notNull().default(false),
     // Set when this post has been merged into another; the merged post is locked
     // and hidden from active lists (it points to its target).
     mergedIntoId: text("merged_into_id").references(
@@ -69,5 +73,6 @@ export const posts = pgTable(
     index("posts_assigned_to_id_idx").on(t.assignedToId),
     index("posts_workspace_id_created_at_idx").on(t.workspaceId, t.createdAt),
     index("posts_category_id_idx").on(t.categoryId),
+    index("posts_workspace_id_is_draft_idx").on(t.workspaceId, t.isDraft),
   ]
 );

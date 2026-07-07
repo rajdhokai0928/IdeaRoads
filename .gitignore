@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+public/uploads
 
 # Next.js
 .next/

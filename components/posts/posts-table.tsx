@@ -12,6 +12,8 @@ export interface PostsTableRow {
   hasVoted: boolean;
   id: string;
   isApproved: boolean;
+  isDraft: boolean;
+  isPinned: boolean;
   slug: string;
   status: string;
   title: string;

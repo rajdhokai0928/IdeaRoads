@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import {
@@ -24,6 +25,7 @@ import {
   deletePost,
   generatePostSlug,
   getPost,
+  publishPost,
   recordStatusChange,
   searchPostsForMerge,
   setPinned,
@@ -60,6 +62,7 @@ const createPostSchema = z.object({
   categoryId: z.string().min(1).optional(),
   imageUrl: z.url().optional(),
   status: z.string().min(1).optional(),
+  saveAsDraft: z.boolean().optional(),
 });
 
 export async function createPostAction(input: {
@@ -70,8 +73,14 @@ export async function createPostAction(input: {
   categoryId?: string;
   imageUrl?: string;
   status?: string;
+  saveAsDraft?: boolean;
 }): Promise<
-  ActionResult<{ isPending: boolean; postId: string; postSlug: string }>
+  ActionResult<{
+    isPending: boolean;
+    isDraft: boolean;
+    postId: string;
+    postSlug: string;
+  }>
 > {
   const session = await requireSession();
 
@@ -90,6 +99,7 @@ export async function createPostAction(input: {
   // archived boards remain restricted to workspace members.
   const [boardRow] = await db
     .select({
+      slug: boards.slug,
       workspaceId: boards.workspaceId,
       isPublic: boards.isPublic,
       isArchived: boards.isArchived,
@@ -132,6 +142,7 @@ export async function createPostAction(input: {
   // Fetch workspace moderation settings
   const [workspaceRow] = await db
     .select({
+      slug: workspaces.slug,
       moderationMode: workspaces.moderationMode,
       spamKeywords: workspaces.spamKeywords,
     })
@@ -196,6 +207,12 @@ export async function createPostAction(input: {
     status = targetStatus.slug;
   }
 
+  // Saving as a draft is a workspace-member (triage) capability — a public
+  // User's submission can never be a draft, even if the flag is forged. Drafts
+  // are held back from every public surface and fire no notifications/webhooks
+  // until published (see publishPostAction).
+  const isDraft = Boolean(parsed.data.saveAsDraft) && Boolean(actorMember);
+
   const slug = await generatePostSlug(parsed.data.boardId, parsed.data.title);
 
   const post = await createPost({
@@ -211,6 +228,7 @@ export async function createPostAction(input: {
     imageUrl: parsed.data.imageUrl,
     status,
     isApproved,
+    isDraft,
   });
 
   audit({
@@ -221,18 +239,22 @@ export async function createPostAction(input: {
     actorName: session.user.name ?? null,
     entityType: "post",
     entityId: post.id,
-    description: `Created post: ${parsed.data.title}`,
+    description: isDraft
+      ? `Saved draft: ${parsed.data.title}`
+      : `Created post: ${parsed.data.title}`,
     metadata: {
       boardId: parsed.data.boardId,
       workspaceId: parsed.data.workspaceId,
       title: parsed.data.title,
       slug,
       isApproved,
+      isDraft,
     },
   });
 
-  // Only notify admins when post is immediately visible
-  if (post.isApproved) {
+  // Only notify admins / fire webhooks when the post is immediately visible —
+  // never for a draft (those side-effects run at publish time instead).
+  if (post.isApproved && !isDraft) {
     enqueueNewPostAlerts({
       postId: post.id,
       postTitle: parsed.data.title,
@@ -254,12 +276,22 @@ export async function createPostAction(input: {
     });
   }
 
+  // Keep the admin feedback list (and the public board, for a live post) in
+  // sync so a freshly created draft/post shows up without a manual reload.
+  if (workspaceRow?.slug) {
+    revalidatePath(`/${workspaceRow.slug}/feedback`);
+    if (!isDraft && post.isApproved) {
+      revalidatePath(`/${workspaceRow.slug}/b/${boardRow.slug}`);
+    }
+  }
+
   return {
     success: true,
     data: {
       postId: post.id,
       postSlug: post.slug,
       isPending: !post.isApproved,
+      isDraft: post.isDraft,
     },
   };
 }
@@ -378,30 +410,34 @@ export async function updatePostStatusAction(input: {
     },
   });
 
-  // Notify voters (fire-and-forget)
-  enqueueStatusChangeEmails({
-    postId: parsed.data.postId,
-    postTitle: post.title,
-    postSlug: post.slug,
-    boardId: post.boardId,
-    workspaceId: parsed.data.workspaceId,
-    fromStatus: post.status,
-    toStatus: parsed.data.status,
-    changedById: session.user.id,
-  }).catch((err) =>
-    console.error("[posts] failed to enqueue status-change emails", err)
-  );
-
-  dispatchWebhookEvent(
-    parsed.data.workspaceId,
-    WEBHOOK_EVENTS.POST_STATUS_CHANGED,
-    {
-      id: parsed.data.postId,
-      title: post.title,
+  // A draft isn't public yet, so a status change on it must not notify voters
+  // or fire webhooks — those outbound workflows only run once it's published.
+  if (!post.isDraft) {
+    // Notify voters (fire-and-forget)
+    enqueueStatusChangeEmails({
+      postId: parsed.data.postId,
+      postTitle: post.title,
+      postSlug: post.slug,
+      boardId: post.boardId,
+      workspaceId: parsed.data.workspaceId,
       fromStatus: post.status,
       toStatus: parsed.data.status,
-    }
-  );
+      changedById: session.user.id,
+    }).catch((err) =>
+      console.error("[posts] failed to enqueue status-change emails", err)
+    );
+
+    dispatchWebhookEvent(
+      parsed.data.workspaceId,
+      WEBHOOK_EVENTS.POST_STATUS_CHANGED,
+      {
+        id: parsed.data.postId,
+        title: post.title,
+        fromStatus: post.status,
+        toStatus: parsed.data.status,
+      }
+    );
+  }
 
   return { success: true, data: undefined };
 }
@@ -500,6 +536,72 @@ export async function deletePostAction(input: {
   });
 
   return { success: true, data: undefined };
+}
+
+// ─── Duplicate Post ──────────────────────────────────────────────────────────
+
+export async function duplicatePostAction(input: {
+  postId: string;
+  workspaceId: string;
+}): Promise<ActionResult<{ postId: string }>> {
+  const session = await requireSession();
+
+  const post = await getPost(input.postId);
+  if (!post || post.workspaceId !== input.workspaceId) {
+    return { success: false, error: "Post not found." };
+  }
+
+  // Duplicating is a team triage action (mirrors pin/merge; PLATFORM.md §4).
+  const actorMember = await getWorkspaceMember(
+    input.workspaceId,
+    session.user.id
+  );
+  if (!actorMember) {
+    return {
+      success: false,
+      error: "You don't have permission to duplicate this post.",
+    };
+  }
+
+  const title = `${post.title} (copy)`;
+  const slug = await generatePostSlug(post.boardId, title);
+
+  const created = await createPost({
+    boardId: post.boardId,
+    workspaceId: input.workspaceId,
+    slug,
+    title,
+    body: post.body,
+    categoryId: post.categoryId,
+    authorId: session.user.id,
+    authorName: session.user.name ?? null,
+    authorEmail: session.user.email,
+    imageUrl: post.imageUrl,
+    status: post.status,
+    isApproved: true,
+    // A copy inherits the source's draft state — duplicating a draft must not
+    // silently publish it.
+    isDraft: post.isDraft,
+  });
+
+  audit({
+    workspaceId: input.workspaceId,
+    action: "post.created",
+    actorId: session.user.id,
+    actorEmail: session.user.email,
+    actorName: session.user.name ?? null,
+    entityType: "post",
+    entityId: created.id,
+    description: `Duplicated post: ${post.title}`,
+    metadata: {
+      workspaceId: input.workspaceId,
+      sourcePostId: post.id,
+      title,
+      slug,
+    },
+  });
+
+  return { success: true, data: { postId: created.id } };
 }
 
 // ─── Update Post (edit title / body) ─────────────────────────────────────────
@@ -743,6 +845,104 @@ export async function approvePostAction(input: {
       err
     )
   );
+
+  return { success: true, data: undefined };
+}
+
+// ─── Publish Draft ───────────────────────────────────────────────────────────
+
+export async function publishPostAction(input: {
+  postId: string;
+  workspaceId: string;
+}): Promise<ActionResult<undefined>> {
+  const session = await requireSession();
+
+  // Publishing feedback is a workspace-member (triage) capability, same as
+  // creating/managing it (PLATFORM.md §4).
+  const actorMember = await getWorkspaceMember(
+    input.workspaceId,
+    session.user.id
+  );
+  if (!actorMember) {
+    return {
+      success: false,
+      error: "You don't have permission to publish this feedback.",
+    };
+  }
+
+  const post = await getPost(input.postId);
+  if (!post || post.workspaceId !== input.workspaceId) {
+    return { success: false, error: "Post not found." };
+  }
+
+  if (!post.isDraft) {
+    // Already published — treat as a no-op so double-clicks are harmless.
+    return { success: true, data: undefined };
+  }
+
+  await publishPost(input.postId);
+
+  audit({
+    workspaceId: input.workspaceId,
+    action: "post.published",
+    actorId: session.user.id,
+    actorEmail: session.user.email,
+    actorName: session.user.name ?? null,
+    entityType: "post",
+    entityId: post.id,
+    entityName: post.title,
+    description: `Published draft: ${post.title}`,
+    metadata: { workspaceId: input.workspaceId, boardId: post.boardId },
+  });
+
+  // Fire the same side-effects a normal published post triggers at creation —
+  // but only now, at publish time. A draft that was auto-approved becomes
+  // publicly visible; a moderation-held draft still waits for approval.
+  if (post.isApproved) {
+    enqueueNewPostAlerts({
+      postId: post.id,
+      postTitle: post.title,
+      postBody: post.body ?? null,
+      postSlug: post.slug,
+      boardId: post.boardId,
+      workspaceId: input.workspaceId,
+      authorId: post.authorId ?? "",
+      authorName: post.authorName ?? post.authorEmail ?? "Someone",
+    }).catch((err) =>
+      console.error(
+        "[posts] failed to enqueue new-post alerts after publish",
+        err
+      )
+    );
+
+    dispatchWebhookEvent(input.workspaceId, WEBHOOK_EVENTS.POST_CREATED, {
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      boardId: post.boardId,
+    });
+  }
+
+  // Now that it's live, refresh the admin views and every public surface it can
+  // appear on so it shows up without waiting for a cache to expire.
+  const [wsRow] = await db
+    .select({ slug: workspaces.slug })
+    .from(workspaces)
+    .where(eq(workspaces.id, input.workspaceId))
+    .limit(1);
+  const [boardRow] = await db
+    .select({ slug: boards.slug })
+    .from(boards)
+    .where(eq(boards.id, post.boardId))
+    .limit(1);
+  if (wsRow?.slug) {
+    revalidatePath(`/${wsRow.slug}/feedback`);
+    revalidatePath(`/${wsRow.slug}/feedback/${post.id}`);
+    revalidatePath(`/${wsRow.slug}/roadmap`);
+    if (boardRow?.slug) {
+      revalidatePath(`/${wsRow.slug}/b/${boardRow.slug}`);
+    }
+  }
 
   return { success: true, data: undefined };
 }

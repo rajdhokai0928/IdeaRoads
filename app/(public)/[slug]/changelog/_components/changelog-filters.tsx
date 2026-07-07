@@ -4,6 +4,13 @@ import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef, useTransition } from "react";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   CHANGELOG_LABEL_VALUES,
   CHANGELOG_LABELS,
 } from "@/lib/changelog/constants";
@@ -85,18 +92,22 @@ export function ChangelogFilters({
         )}
       </div>
 
-      <select
-        className="h-9 cursor-pointer border border-border bg-background pl-3 pr-7 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        onChange={(e) => updateParam({ label: e.target.value || null })}
-        value={activeLabel}
+      <Select
+        onValueChange={(v) => updateParam({ label: v === "all" ? null : v })}
+        value={activeLabel || "all"}
       >
-        <option value="">Tags</option>
-        {CHANGELOG_LABEL_VALUES.map((value) => (
-          <option key={value} value={value}>
-            {CHANGELOG_LABELS[value].label}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tags</SelectItem>
+          {CHANGELOG_LABEL_VALUES.map((value) => (
+            <SelectItem key={value} value={value}>
+              {CHANGELOG_LABELS[value].label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

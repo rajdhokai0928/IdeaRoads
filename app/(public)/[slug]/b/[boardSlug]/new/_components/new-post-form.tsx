@@ -1,10 +1,23 @@
 "use client";
 
 import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { createPostAction, uploadPostImageAction } from "@/app/actions/posts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const QuillEditor = dynamic(
+  () => import("@/components/comments/quill-editor"),
+  { ssr: false }
+);
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -54,7 +67,6 @@ export default function NewPostForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const boardHref = `/${workspaceSlug}/b/${boardSlug}${embedQuery}`;
-  const bodyRemaining = 10_000 - body.length;
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -192,28 +204,19 @@ export default function NewPostForm({
 
           {/* Body */}
           <div>
-            <label
-              className="block text-sm font-medium text-foreground mb-1.5"
-              htmlFor="post-body"
-            >
+            <span className="block text-sm font-medium text-foreground mb-1.5">
               Description{" "}
               <span className="text-muted-foreground font-normal text-xs">
                 (optional)
               </span>
-            </label>
-            <textarea
-              className="w-full resize-none px-3 py-2.5 text-sm bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            </span>
+            <QuillEditor
               disabled={isPending}
-              id="post-body"
-              maxLength={10_000}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Add more context what problem does this solve? What would the ideal solution look like?"
-              rows={7}
+              minHeight={120}
+              onChange={(html) => setBody(html)}
+              placeholder="Add more context — what problem does this solve? What would the ideal solution look like?"
               value={body}
             />
-            <p className="mt-1 text-xs text-muted-foreground text-right">
-              {bodyRemaining.toLocaleString()} characters remaining
-            </p>
           </div>
 
           {/* Category (optional) */}
@@ -228,20 +231,23 @@ export default function NewPostForm({
                   (optional)
                 </span>
               </label>
-              <select
-                className="w-full px-3 py-2.5 text-sm bg-background border border-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              <Select
                 disabled={isPending}
-                id="post-category"
-                onChange={(e) => setCategoryId(e.target.value)}
-                value={categoryId}
+                onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}
+                value={categoryId || "none"}
               >
-                <option value="">No category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full" id="post-category">
+                  <SelectValue placeholder="No category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 

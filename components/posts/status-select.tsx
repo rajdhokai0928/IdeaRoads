@@ -1,9 +1,15 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { updatePostStatusAction } from "@/app/actions/posts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface WorkspaceStatus {
   color: string;
@@ -34,8 +40,7 @@ export default function StatusSelect({
   const activeStatuses = workspaceStatuses.filter((s) => !s.isArchived);
   const current = workspaceStatuses.find((s) => s.slug === currentStatus);
 
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const status = e.target.value;
+  function handleChange(status: string) {
     if (status === currentStatus) {
       return;
     }
@@ -69,21 +74,24 @@ export default function StatusSelect({
   }
 
   return (
-    <div className="relative inline-flex items-center">
-      <select
-        className="appearance-none bg-muted pl-2.5 pr-7 py-1 text-xs font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-        disabled={isPending}
-        onChange={handleChange}
-        style={{ borderRadius: 2 }}
-        value={currentStatus}
+    <Select
+      disabled={isPending}
+      onValueChange={handleChange}
+      value={currentStatus}
+    >
+      <SelectTrigger
+        className="h-auto gap-1.5 rounded-xs border-0 bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+        size="sm"
       >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
         {activeStatuses.map((s) => (
-          <option key={s.slug} value={s.slug}>
+          <SelectItem key={s.slug} value={s.slug}>
             {s.name}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-1.5 size-3 text-muted-foreground opacity-60" />
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

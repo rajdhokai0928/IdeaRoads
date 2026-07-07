@@ -3,6 +3,13 @@
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef, useTransition } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Category {
   color: string;
@@ -19,6 +26,7 @@ interface WorkspaceStatus {
 
 interface FeedbackFiltersProps {
   activeCategoryId: string;
+  activeDraft: "all" | "only" | "published";
   activeSearch: string;
   activeSort: "newest" | "top" | "trending";
   activeStatus: string;
@@ -36,6 +44,7 @@ export function FeedbackFilters({
   activeSort,
   activeStatus,
   activeCategoryId,
+  activeDraft,
   activeSearch,
   workspaceStatuses,
   categories,
@@ -113,35 +122,65 @@ export function FeedbackFilters({
         <div className="flex flex-wrap items-center gap-3">
           {/* Category filter */}
           {activeCategories.length > 0 && (
-            <select
-              className="text-xs border-0 bg-transparent text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer py-1 pr-6 pl-1"
-              onChange={(e) =>
-                updateParam({ category: e.target.value || null })
+            <Select
+              onValueChange={(v) =>
+                updateParam({ category: v === "all" ? null : v })
               }
-              value={activeCategoryId}
+              value={activeCategoryId || "all"}
             >
-              <option value="">All categories</option>
-              {activeCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger
+                className="text-xs text-muted-foreground"
+                size="sm"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All categories</SelectItem>
+                {activeCategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
 
           {/* Status filter */}
-          <select
-            className="text-xs border-0 bg-transparent text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer py-1 pr-6 pl-1"
-            onChange={(e) => updateParam({ status: e.target.value || null })}
-            value={activeStatus}
+          <Select
+            onValueChange={(v) =>
+              updateParam({ status: v === "all" ? null : v })
+            }
+            value={activeStatus || "all"}
           >
-            <option value="">All statuses</option>
-            {workspaceStatuses.map((s) => (
-              <option key={s.slug} value={s.slug}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              {workspaceStatuses.map((s) => (
+                <SelectItem key={s.slug} value={s.slug}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Draft filter */}
+          <Select
+            onValueChange={(v) =>
+              updateParam({ draft: v === "all" ? null : v, page: null })
+            }
+            value={activeDraft}
+          >
+            <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All &amp; drafts</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="only">Drafts</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

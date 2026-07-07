@@ -1,13 +1,29 @@
-import { and, count, desc, eq, lt } from "drizzle-orm";
+import { and, count, desc, eq, inArray, lt } from "drizzle-orm";
 import {
   notificationPreferences,
   notifications,
 } from "@/db/schema/notifications";
+import { posts } from "@/db/schema/posts";
 import { db } from "@/lib/db";
 
 export type NotificationRow = typeof notifications.$inferSelect;
 export type NotificationPreferencesRow =
   typeof notificationPreferences.$inferSelect;
+
+// A notification row augmented with whether the resource it links to still
+// exists. `targetMissing` lets the UI mark deleted-resource notifications as
+// removed and avoid navigating the user into a 404.
+export type NotificationListItem = NotificationRow & { targetMissing: boolean };
+
+// Every deletable notification target is a feedback post linked as
+// `/{workspaceSlug}/feedback/{postId}` (comments, replies, status changes,
+// assignments and new-post alerts all point here). Changelog notifications link
+// to the always-present settings list page, so they are never "missing".
+const FEEDBACK_LINK_RE = /^\/[^/]+\/feedback\/([^/?#]+)/;
+
+function extractFeedbackPostId(link: string): string | null {
+  return FEEDBACK_LINK_RE.exec(link)?.[1] ?? null;
+}
 
 // ─── Unread Count ─────────────────────────────────────────────────────────────
 
@@ -26,11 +42,11 @@ export async function getUnreadCount(userId: string): Promise<number> {
 export async function listNotifications(
   userId: string,
   opts: { page?: number; limit?: number } = {}
-): Promise<{ items: NotificationRow[]; total: number; hasMore: boolean }> {
+): Promise<{ items: NotificationListItem[]; total: number; hasMore: boolean }> {
   const { page = 1, limit = 30 } = opts;
   const offset = (page - 1) * limit;
 
-  const [items, [{ value: total }]] = await Promise.all([
+  const [rows, [{ value: total }]] = await Promise.all([
     db
       .select()
       .from(notifications)
@@ -43,6 +59,34 @@ export async function listNotifications(
       .from(notifications)
       .where(eq(notifications.userId, userId)),
   ]);
+
+  // Resolve which linked feedback posts still exist in a single batched query,
+  // so a deleted post can be surfaced as "removed" instead of a broken link.
+  const postIds = Array.from(
+    new Set(
+      rows
+        .map((n) => extractFeedbackPostId(n.link))
+        .filter((id): id is string => id !== null)
+    )
+  );
+  const existingPostIds = new Set<string>();
+  if (postIds.length > 0) {
+    const existing = await db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(inArray(posts.id, postIds));
+    for (const row of existing) {
+      existingPostIds.add(row.id);
+    }
+  }
+
+  const items: NotificationListItem[] = rows.map((n) => {
+    const postId = extractFeedbackPostId(n.link);
+    return {
+      ...n,
+      targetMissing: postId !== null && !existingPostIds.has(postId),
+    };
+  });
 
   return {
     items,

@@ -6,6 +6,13 @@ import { type FormEvent, useState } from "react";
 import { inviteMemberAction } from "@/app/actions/members";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface InviteFormProps {
   canInviteAdmin: boolean;
@@ -85,15 +92,19 @@ export function InviteForm({ workspaceId, canInviteAdmin }: InviteFormProps) {
             )}
           </div>
           {canInviteAdmin && (
-            <select
-              className="h-10 border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Select
               disabled={submitting}
-              onChange={(e) => setRole(e.target.value as "member" | "admin")}
+              onValueChange={(v) => setRole(v as "member" | "admin")}
               value={role}
             >
-              <option value="member">Team Member</option>
-              <option value="admin">Brand Admin</option>
-            </select>
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Team Member</SelectItem>
+                <SelectItem value="admin">Brand Admin</SelectItem>
+              </SelectContent>
+            </Select>
           )}
           <Button disabled={submitting || !email.trim()} type="submit">
             {submitting ? (

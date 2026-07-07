@@ -4,11 +4,11 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { NotificationEmptyState } from "@/components/notifications/notification-empty-state";
 import { NotificationItem } from "@/components/notifications/notification-item";
-import type { NotificationRow } from "@/lib/notifications/queries";
+import type { NotificationListItem } from "@/lib/notifications/queries";
 
 interface NotificationListProps {
   hasMore: boolean;
-  initialItems: NotificationRow[];
+  initialItems: NotificationListItem[];
   total: number;
   workspaceId: string;
 }
@@ -19,7 +19,7 @@ export function NotificationList({
   total,
   workspaceId,
 }: NotificationListProps) {
-  const [items, setItems] = useState<NotificationRow[]>(initialItems);
+  const [items, setItems] = useState<NotificationListItem[]>(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [page, setPage] = useState(1);
   const [isPending, startTransition] = useTransition();
@@ -75,7 +75,7 @@ export function NotificationList({
     now.getDate()
   ).getTime();
   const startOfWeek = startOfToday - 6 * 24 * 60 * 60 * 1000;
-  const groups: { label: string; items: NotificationRow[] }[] = [
+  const groups: { label: string; items: NotificationListItem[] }[] = [
     { label: "Today", items: [] },
     { label: "This week", items: [] },
     { label: "Earlier", items: [] },

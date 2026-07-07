@@ -1,6 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { AuditLogRow } from "@/lib/audit/queries";
 
 interface Props {
@@ -78,10 +85,9 @@ export function AuditLogTable({
     <div>
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <select
-          className="h-8 border border-border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          onChange={(e) => {
-            const val = e.target.value;
+        <Select
+          onValueChange={(v) => {
+            const val = v === "all" ? "" : v;
             window.location.href = buildUrl(workspaceSlug, {
               action: filterAction,
               actor: filterActor,
@@ -89,15 +95,20 @@ export function AuditLogTable({
               page: 1,
             });
           }}
-          value={filterEntityType ?? ""}
+          value={filterEntityType || "all"}
         >
-          <option value="">All types</option>
-          {ENTITY_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t.charAt(0).toUpperCase() + t.slice(1).replace("_", " ")}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            {ENTITY_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t.charAt(0).toUpperCase() + t.slice(1).replace("_", " ")}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <form
           action={`/${workspaceSlug}/settings/audit-log`}

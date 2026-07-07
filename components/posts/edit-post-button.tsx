@@ -1,10 +1,16 @@
 "use client";
 
 import { Pencil } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updatePostAction } from "@/app/actions/posts";
+
+const QuillEditor = dynamic(
+  () => import("@/components/comments/quill-editor"),
+  { ssr: false }
+);
 
 interface EditPostButtonProps {
   initialBody: string | null;
@@ -99,17 +105,12 @@ export default function EditPostButton({
                 />
               </div>
               <div className="space-y-1">
-                <label
-                  className="block text-xs font-medium text-foreground"
-                  htmlFor="edit-post-body"
-                >
+                <span className="block text-xs font-medium text-foreground">
                   Description
-                </label>
-                <textarea
-                  className="w-full min-h-32 border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  id="edit-post-body"
-                  maxLength={10_000}
-                  onChange={(e) => setBody(e.target.value)}
+                </span>
+                <QuillEditor
+                  disabled={isPending}
+                  onChange={(html) => setBody(html)}
                   placeholder="Add more detail (optional)"
                   value={body}
                 />

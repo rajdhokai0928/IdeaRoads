@@ -180,242 +180,251 @@ export function CategoryList({
   const archived = categories.filter((c) => c.isArchived);
 
   return (
-    <div className="px-4 py-6 max-w-2xl space-y-6 sm:px-8">
-      {/* Add button */}
-      {canManage && !form && (
-        <div className="flex justify-end">
-          <Button onClick={openCreate}>
+    <div className="flex h-full flex-col">
+      {/* Page header — title/description on the left, New Category on the right */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-6 sm:px-8">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Categories</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Organize feedback posts with workspace-level categories.
+          </p>
+        </div>
+        {canManage && !form && (
+          <Button className="h-10 px-6" onClick={openCreate}>
             <Plus data-icon="inline-start" />
             New Category
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Inline form */}
-      {form && canManage && (
-        <form
-          className="border border-border p-4 space-y-4"
-          onSubmit={handleSubmit}
-        >
-          <h3 className="text-sm font-semibold text-foreground">
-            {form.mode === "create" ? "New Category" : "Edit Category"}
-          </h3>
+      {/* Centered content column */}
+      <div className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:px-8">
+        {/* Inline form */}
+        {form && canManage && (
+          <form
+            className="border border-border p-4 space-y-4"
+            onSubmit={handleSubmit}
+          >
+            <h3 className="text-sm font-semibold text-foreground">
+              {form.mode === "create" ? "New Category" : "Edit Category"}
+            </h3>
 
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-foreground mb-1">
-                Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                maxLength={64}
-                onChange={(e) =>
-                  setForm((f) => f && { ...f, name: e.target.value })
-                }
-                placeholder="e.g. Bug, Feature Request"
-                type="text"
-                value={form.name}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-foreground mb-1">
-                Description{" "}
-                <span className="text-muted-foreground font-normal">
-                  (optional)
-                </span>
-              </label>
-              <input
-                className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                maxLength={200}
-                onChange={(e) =>
-                  setForm((f) => f && { ...f, description: e.target.value })
-                }
-                placeholder="Short description"
-                type="text"
-                value={form.description}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-foreground mb-2">
-                Color
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {COLOR_PRESETS.map((c) => (
-                  <button
-                    className="size-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    key={c}
-                    onClick={() => setForm((f) => f && { ...f, color: c })}
-                    style={{
-                      backgroundColor: c,
-                      borderColor: form.color === c ? "#000" : "transparent",
-                    }}
-                    title={c}
-                    type="button"
-                  />
-                ))}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1">
+                  Name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  maxLength={64}
+                  onChange={(e) =>
+                    setForm((f) => f && { ...f, name: e.target.value })
+                  }
+                  placeholder="e.g. Bug, Feature Request"
+                  type="text"
+                  value={form.name}
+                />
               </div>
-              {form.name && (
-                <div className="mt-2">
-                  <CategoryChip
-                    color={form.color}
-                    name={form.name || "Preview"}
-                  />
+
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1">
+                  Description{" "}
+                  <span className="text-muted-foreground font-normal">
+                    (optional)
+                  </span>
+                </label>
+                <input
+                  className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  maxLength={200}
+                  onChange={(e) =>
+                    setForm((f) => f && { ...f, description: e.target.value })
+                  }
+                  placeholder="Short description"
+                  type="text"
+                  value={form.description}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-2">
+                  Color
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {COLOR_PRESETS.map((c) => (
+                    <button
+                      className="size-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      key={c}
+                      onClick={() => setForm((f) => f && { ...f, color: c })}
+                      style={{
+                        backgroundColor: c,
+                        borderColor: form.color === c ? "#000" : "transparent",
+                      }}
+                      title={c}
+                      type="button"
+                    />
+                  ))}
                 </div>
-              )}
+                {form.name && (
+                  <div className="mt-2">
+                    <CategoryChip
+                      color={form.color}
+                      name={form.name || "Preview"}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+
+            <div className="flex items-center gap-2">
+              <button
+                className="px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                disabled={isPending}
+                type="submit"
+              >
+                {isPending
+                  ? "Saving…"
+                  : form.mode === "create"
+                    ? "Create"
+                    : "Save Changes"}
+              </button>
+              <button
+                className="px-4 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                disabled={isPending}
+                onClick={closeForm}
+                type="button"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Active categories */}
+        {active.length === 0 && !form ? (
+          <div className="border border-dashed border-border py-12 text-center">
+            <p className="text-sm text-muted-foreground">No categories yet.</p>
+            {canManage && (
+              <button
+                className="mt-3 text-sm text-primary hover:underline focus-visible:outline-none"
+                onClick={openCreate}
+              >
+                Create your first category
+              </button>
+            )}
+          </div>
+        ) : (
+          active.length > 0 && (
+            <div className="border border-border divide-y divide-border">
+              {active.map((cat) => (
+                <div className="flex items-center gap-4 px-4 py-4" key={cat.id}>
+                  <CategoryChip color={cat.color} name={cat.name} />
+                  {cat.description && (
+                    <span className="text-xs text-muted-foreground truncate flex-1">
+                      {cat.description}
+                    </span>
+                  )}
+                  {canManage && (
+                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                      <button
+                        className="p-1.5 text-primary hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => openEdit(cat)}
+                        title="Edit"
+                      >
+                        <Edit2 className="size-3.5" />
+                      </button>
+                      <button
+                        className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setArchiveTarget(cat)}
+                        title="Archive"
+                      >
+                        <Archive className="size-3.5" />
+                      </button>
+                      <button
+                        className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setDeleteTarget(cat)}
+                        title="Delete"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* Archived categories */}
+        {archived.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Archived
+            </p>
+            <div className="border border-border divide-y divide-border opacity-60">
+              {archived.map((cat) => (
+                <div className="flex items-center gap-4 px-4 py-4" key={cat.id}>
+                  <CategoryChip color={cat.color} name={cat.name} />
+                  {cat.description && (
+                    <span className="text-xs text-muted-foreground truncate flex-1">
+                      {cat.description}
+                    </span>
+                  )}
+                  {canManage && (
+                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                      <button
+                        className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-xs"
+                        onClick={() => setArchiveTarget(cat)}
+                        title="Restore"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setDeleteTarget(cat)}
+                        title="Delete"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-          {error && <p className="text-xs text-destructive">{error}</p>}
+        {/* Confirm delete */}
+        <ConfirmDialog
+          confirmLabel="Delete"
+          description={`Delete "${deleteTarget?.name}"? Posts in this category will become uncategorized. This action cannot be undone.`}
+          isPending={isPending}
+          onConfirm={handleDelete}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          open={!!deleteTarget}
+          title="Delete Category"
+          variant="destructive"
+        />
 
-          <div className="flex items-center gap-2">
-            <button
-              className="px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              disabled={isPending}
-              type="submit"
-            >
-              {isPending
-                ? "Saving…"
-                : form.mode === "create"
-                  ? "Create"
-                  : "Save Changes"}
-            </button>
-            <button
-              className="px-4 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              disabled={isPending}
-              onClick={closeForm}
-              type="button"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Active categories */}
-      {active.length === 0 && !form ? (
-        <div className="border border-dashed border-border py-12 text-center">
-          <p className="text-sm text-muted-foreground">No categories yet.</p>
-          {canManage && (
-            <button
-              className="mt-3 text-sm text-primary hover:underline focus-visible:outline-none"
-              onClick={openCreate}
-            >
-              Create your first category
-            </button>
-          )}
-        </div>
-      ) : (
-        active.length > 0 && (
-          <div className="border border-border divide-y divide-border">
-            {active.map((cat) => (
-              <div className="flex items-center gap-3 px-4 py-3" key={cat.id}>
-                <CategoryChip color={cat.color} name={cat.name} />
-                {cat.description && (
-                  <span className="text-xs text-muted-foreground truncate flex-1">
-                    {cat.description}
-                  </span>
-                )}
-                {canManage && (
-                  <div className="ml-auto flex items-center gap-1 shrink-0">
-                    <button
-                      className="p-1.5 text-primary hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      onClick={() => openEdit(cat)}
-                      title="Edit"
-                    >
-                      <Edit2 className="size-3.5" />
-                    </button>
-                    <button
-                      className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      onClick={() => setArchiveTarget(cat)}
-                      title="Archive"
-                    >
-                      <Archive className="size-3.5" />
-                    </button>
-                    <button
-                      className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      onClick={() => setDeleteTarget(cat)}
-                      title="Delete"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )
-      )}
-
-      {/* Archived categories */}
-      {archived.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-            Archived
-          </p>
-          <div className="border border-border divide-y divide-border opacity-60">
-            {archived.map((cat) => (
-              <div className="flex items-center gap-3 px-4 py-3" key={cat.id}>
-                <CategoryChip color={cat.color} name={cat.name} />
-                {cat.description && (
-                  <span className="text-xs text-muted-foreground truncate flex-1">
-                    {cat.description}
-                  </span>
-                )}
-                {canManage && (
-                  <div className="ml-auto flex items-center gap-1 shrink-0">
-                    <button
-                      className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-xs"
-                      onClick={() => setArchiveTarget(cat)}
-                      title="Restore"
-                    >
-                      Restore
-                    </button>
-                    <button
-                      className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      onClick={() => setDeleteTarget(cat)}
-                      title="Delete"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Confirm delete */}
-      <ConfirmDialog
-        confirmLabel="Delete"
-        description={`Delete "${deleteTarget?.name}"? Posts in this category will become uncategorized. This action cannot be undone.`}
-        isPending={isPending}
-        onConfirm={handleDelete}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        open={!!deleteTarget}
-        title="Delete Category"
-        variant="destructive"
-      />
-
-      {/* Confirm archive */}
-      <ConfirmDialog
-        confirmLabel={archiveTarget?.isArchived ? "Restore" : "Archive"}
-        description={
-          archiveTarget?.isArchived
-            ? `Restore "${archiveTarget?.name}"? It will be available for new posts again.`
-            : `Archive "${archiveTarget?.name}"? It will be hidden from new post selections.`
-        }
-        isPending={isPending}
-        onConfirm={handleArchiveToggle}
-        onOpenChange={(open) => !open && setArchiveTarget(null)}
-        open={!!archiveTarget}
-        title={
-          archiveTarget?.isArchived ? "Restore Category" : "Archive Category"
-        }
-        variant="default"
-      />
+        {/* Confirm archive */}
+        <ConfirmDialog
+          confirmLabel={archiveTarget?.isArchived ? "Restore" : "Archive"}
+          description={
+            archiveTarget?.isArchived
+              ? `Restore "${archiveTarget?.name}"? It will be available for new posts again.`
+              : `Archive "${archiveTarget?.name}"? It will be hidden from new post selections.`
+          }
+          isPending={isPending}
+          onConfirm={handleArchiveToggle}
+          onOpenChange={(open) => !open && setArchiveTarget(null)}
+          open={!!archiveTarget}
+          title={
+            archiveTarget?.isArchived ? "Restore Category" : "Archive Category"
+          }
+          variant="default"
+        />
+      </div>
     </div>
   );
 }

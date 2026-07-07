@@ -1,13 +1,15 @@
 import { format } from "date-fns";
-import { ArrowLeft, GitMerge } from "lucide-react";
+import { ArrowLeft, FilePen, GitMerge } from "lucide-react";
 import Link from "next/link";
 import CommentSection from "@/components/comments/comment-section";
 import AssigneeSelect from "@/components/posts/assignee-select";
 import CategorySelect from "@/components/posts/category-select";
 import DeletePostButton from "@/components/posts/delete-post-button";
 import EditPostButton from "@/components/posts/edit-post-button";
+import { FeedbackBody } from "@/components/posts/feedback-body";
 import MergePostButton from "@/components/posts/merge-post-button";
 import PinButton from "@/components/posts/pin-button";
+import PublishDraftButton from "@/components/posts/publish-draft-button";
 import StatusSelect from "@/components/posts/status-select";
 import VoterListButton from "@/components/posts/voter-list-button";
 import VoteButton from "@/components/voting/vote-button";
@@ -51,6 +53,7 @@ interface PostDetailPost {
   createdAt: Date;
   id: string;
   imageUrl: string | null;
+  isDraft: boolean;
   isLocked: boolean;
   isPinned: boolean;
   mergedIntoId: string | null;
@@ -123,6 +126,29 @@ export function PostDetailContent({
       )}
 
       <div className="px-4 py-8 max-w-3xl sm:px-8">
+        {/* Draft banner — members only; the public route 404s drafts so this
+            only ever renders in the admin feedback view. */}
+        {post.isDraft && isMember && (
+          <div className="mb-6 flex flex-col gap-3 border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <FilePen className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  This feedback is a draft
+                </p>
+                <p className="mt-0.5 text-xs text-amber-700/80 dark:text-amber-300/70">
+                  It isn't visible on your public portal, roadmap, changelog, or
+                  API, and no notifications have been sent. Publish it to make
+                  it visible.
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0">
+              <PublishDraftButton postId={post.id} workspaceId={workspaceId} />
+            </div>
+          </div>
+        )}
+
         {/* Post header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex-1 min-w-0">
@@ -202,9 +228,10 @@ export function PostDetailContent({
         {/* Post body */}
         {post.body && (
           <div className="mt-6 border-t border-border pt-6">
-            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-              {post.body}
-            </p>
+            <FeedbackBody
+              body={post.body}
+              className="text-sm text-foreground leading-relaxed"
+            />
           </div>
         )}
 

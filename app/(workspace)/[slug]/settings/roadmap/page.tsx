@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
+import { PageHeader } from "@/components/ui/page";
 import { requireSession } from "@/lib/authz";
 import { listPostsForRoadmap } from "@/lib/roadmap/queries";
 import {
@@ -44,14 +45,14 @@ export default async function WorkspaceRoadmapPage({ params }: Props) {
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-border px-4 py-6 sm:px-8">
-        <h1 className="text-xl font-semibold text-foreground">Roadmap</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {totalPosts === 0
+      <PageHeader
+        description={
+          totalPosts === 0
             ? "No items on the roadmap yet."
-            : `${totalPosts} item${totalPosts === 1 ? "" : "s"} across all columns`}
-        </p>
-      </div>
+            : `${totalPosts} item${totalPosts === 1 ? "" : "s"} across all columns`
+        }
+        title="Roadmap"
+      />
       <div className="flex-1">
         <RoadmapBoard
           data={roadmapData}

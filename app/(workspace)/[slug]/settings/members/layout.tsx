@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/page";
 import { SettingsTabs } from "./_components/settings-tabs";
 
 interface Props {
@@ -12,15 +13,13 @@ export default async function MembersSettingsLayout({
   const { slug } = await params;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-border px-4 py-6 sm:px-8">
-        <h1 className="text-xl font-semibold text-foreground">Team Members</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage workspace membership and invitations.
-        </p>
-      </div>
+    <div className="flex h-full flex-col">
+      <PageHeader
+        description="Manage workspace membership and invitations."
+        title="Team Members"
+      />
       <SettingsTabs slug={slug} />
-      <div className="flex-1 overflow-y-auto">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }

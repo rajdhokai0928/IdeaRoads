@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AccountSettingsContent } from "@/components/profile/account-settings-content";
+import { ContentContainer, PageShell } from "@/components/ui/page";
 import { requireSession } from "@/lib/authz";
 import {
   getWorkspaceBySlug,
@@ -31,21 +32,16 @@ export default async function WorkspaceAccountPage({ params }: Props) {
   }
 
   return (
-    <div>
-      <div className="border-b border-border px-4 py-6 sm:px-8">
-        <h1 className="text-xl font-semibold text-foreground">
-          Account Settings
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your personal profile, active sessions, and account data.
-        </p>
-      </div>
-      <div className="px-4 py-6 sm:px-8">
+    <PageShell
+      description="Manage your personal profile, active sessions, and account data."
+      title="Account Settings"
+    >
+      <ContentContainer>
         <AccountSettingsContent
           currentSessionToken={session.session.token}
           userId={session.user.id}
         />
-      </div>
-    </div>
+      </ContentContainer>
+    </PageShell>
   );
 }

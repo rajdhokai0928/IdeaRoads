@@ -3,19 +3,22 @@
 import { Smile } from "lucide-react";
 import { useState } from "react";
 import { REACTION_EMOJIS } from "@/config/platform";
-import type { ReactionGroup } from "./types";
+import type { CommentApi, ReactionGroup } from "./types";
 
 interface CommentReactionsProps {
+  api?: CommentApi;
   commentId: string;
   initialReactions: ReactionGroup[];
   isSignedIn: boolean;
 }
 
 export default function CommentReactions({
+  api,
   commentId,
   initialReactions,
   isSignedIn,
 }: CommentReactionsProps) {
+  const commentBaseUrl = api?.commentBaseUrl ?? "/api/comments";
   const [reactions, setReactions] = useState<ReactionGroup[]>(initialReactions);
   const [showPicker, setShowPicker] = useState(false);
   const [pendingEmoji, setPendingEmoji] = useState<string | null>(null);
@@ -61,7 +64,7 @@ export default function CommentReactions({
     }
 
     try {
-      await fetch(`/api/comments/${commentId}/reactions`, {
+      await fetch(`${commentBaseUrl}/${commentId}/reactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emoji }),

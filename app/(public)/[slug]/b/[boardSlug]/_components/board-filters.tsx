@@ -1,8 +1,9 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef, useTransition } from "react";
+import { useCallback, useTransition } from "react";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -44,12 +45,13 @@ export default function BoardFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const updateParam = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
+      // Any filter/sort/search change resets pagination back to the first page,
+      // so you never land on an out-of-range page of the new result set.
+      params.delete("page");
       for (const [key, value] of Object.entries(updates)) {
         if (value === null || value === "" || value === "newest") {
           params.delete(key);
@@ -65,26 +67,6 @@ export default function BoardFilters({
     [router, pathname, searchParams]
   );
 
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = setTimeout(() => {
-      updateParam({ q: value || null });
-    }, 300);
-  }
-
-  function clearSearch() {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    if (searchInputRef.current) {
-      searchInputRef.current.value = "";
-    }
-    updateParam({ q: null });
-  }
-
   function toggleMyVotes() {
     updateParam({ myVotes: myVotesActive ? null : "true" });
   }
@@ -92,26 +74,12 @@ export default function BoardFilters({
   return (
     <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-4">
       {/* Search */}
-      <div className="relative min-w-50 flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <input
-          className="h-9 w-full border border-border bg-background pl-9 pr-8 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          defaultValue={activeSearch}
-          onChange={handleSearch}
-          placeholder="Search"
-          ref={searchInputRef}
-          type="text"
-        />
-        {activeSearch && (
-          <button
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={clearSearch}
-            type="button"
-          >
-            <X className="size-3.5" />
-          </button>
-        )}
-      </div>
+      <SearchInput
+        className="h-9 min-w-50 flex-1"
+        defaultValue={activeSearch}
+        onSearch={(value) => updateParam({ q: value || null })}
+        placeholder="Search"
+      />
 
       {/* Right controls */}
       <div className="flex flex-wrap items-center gap-2.5">

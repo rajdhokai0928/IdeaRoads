@@ -1,8 +1,8 @@
 "use client";
 
-import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef, useTransition } from "react";
+import { useCallback, useTransition } from "react";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -28,7 +28,7 @@ interface FeedbackFiltersProps {
   activeCategoryId: string;
   activeDraft: "all" | "only" | "published";
   activeSearch: string;
-  activeSort: "newest" | "top" | "trending";
+  activeSort: "newest" | "top";
   activeStatus: string;
   categories: Category[];
   workspaceStatuses: WorkspaceStatus[];
@@ -36,7 +36,6 @@ interface FeedbackFiltersProps {
 
 const SORT_TABS = [
   { label: "Newest", value: "newest" },
-  { label: "Trending", value: "trending" },
   { label: "Most Voted", value: "top" },
 ] as const;
 
@@ -53,8 +52,6 @@ export function FeedbackFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const updateParam = useCallback(
     (updates: Record<string, string | null>) => {
@@ -73,26 +70,6 @@ export function FeedbackFilters({
     },
     [router, pathname, searchParams]
   );
-
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = setTimeout(() => {
-      updateParam({ q: value || null });
-    }, 300);
-  }
-
-  function clearSearch() {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    if (searchInputRef.current) {
-      searchInputRef.current.value = "";
-    }
-    updateParam({ q: null });
-  }
 
   const activeCategories = categories.filter((c) => !c.isArchived);
 
@@ -185,25 +162,13 @@ export function FeedbackFilters({
       </div>
 
       {/* Search bar */}
-      <div className="relative border-b border-border">
-        <Search className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-        <input
-          className="w-full bg-transparent py-2.5 pl-14 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+      <div className="border-b border-border px-4 py-2">
+        <SearchInput
+          className="w-full sm:max-w-sm"
           defaultValue={activeSearch}
-          onChange={handleSearch}
+          onSearch={(value) => updateParam({ q: value || null })}
           placeholder="Search feedback…"
-          ref={searchInputRef}
-          type="text"
         />
-        {activeSearch && (
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={clearSearch}
-            type="button"
-          >
-            <X className="size-3.5" />
-          </button>
-        )}
       </div>
     </div>
   );

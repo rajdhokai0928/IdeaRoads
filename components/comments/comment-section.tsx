@@ -41,6 +41,7 @@ export default async function CommentSection({
     authorName: c.authorName,
     authorAvatar: c.authorAvatar,
     isGuest: !c.authorId,
+    isOwn: !!currentUserId && c.authorId === currentUserId,
     createdAt: c.createdAt.toISOString(),
     reactions: (reactionsMap.get(c.id) ?? []).sort((a, b) => b.count - a.count),
     replies: c.replies.map(
@@ -54,6 +55,7 @@ export default async function CommentSection({
         authorName: r.authorName,
         authorAvatar: r.authorAvatar,
         isGuest: !r.authorId,
+        isOwn: !!currentUserId && r.authorId === currentUserId,
         createdAt: r.createdAt.toISOString(),
         reactions: (reactionsMap.get(r.id) ?? []).sort(
           (a, b) => b.count - a.count

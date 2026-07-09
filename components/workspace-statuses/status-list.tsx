@@ -12,6 +12,7 @@ import {
 } from "@/app/actions/workspace-statuses";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PageHeader } from "@/components/ui/page";
 
 const COLOR_PRESETS = [
   "#6b7280",
@@ -191,20 +192,18 @@ export function StatusList({
   return (
     <div className="flex h-full flex-col">
       {/* Page header — title/description on the left, New Status on the right */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-6 sm:px-8">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Statuses</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage the statuses available for feedback posts in this workspace.
-          </p>
-        </div>
-        {canManage && !form && (
-          <Button className="h-10 px-6" onClick={openCreate}>
-            <Plus data-icon="inline-start" />
-            New Status
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        actions={
+          canManage && !form ? (
+            <Button onClick={openCreate}>
+              <Plus data-icon="inline-start" />
+              New Status
+            </Button>
+          ) : undefined
+        }
+        description="Manage the statuses available for feedback posts in this workspace."
+        title="Statuses"
+      />
 
       {/* Centered content column */}
       <div className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:px-8">

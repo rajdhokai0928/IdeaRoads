@@ -17,20 +17,31 @@ export function RoadmapPostCard({
   isSignedIn,
   useWorkspaceLinks,
 }: RoadmapPostCardProps) {
+  // Carry the roadmap as the navigation origin so the detail page's Back button
+  // returns here instead of the board / All Feedback. Read by both post-detail
+  // pages via resolveBackTarget(); falls back gracefully when absent.
+  const roadmapHref = useWorkspaceLinks
+    ? `/${workspaceSlug}/settings/roadmap`
+    : `/${workspaceSlug}/roadmap`;
+  const backParams = `?from=${encodeURIComponent(roadmapHref)}&fromLabel=Roadmap`;
+
   // Fixed by which route rendered this card, never by who's viewing — the
   // public roadmap never redirects into the workspace app on its own.
-  const postHref = useWorkspaceLinks
-    ? `/${workspaceSlug}/feedback/${post.id}`
-    : `/${workspaceSlug}/b/${post.boardSlug}/p/${post.slug}`;
+  const postHref =
+    (useWorkspaceLinks
+      ? `/${workspaceSlug}/feedback/${post.id}`
+      : `/${workspaceSlug}/b/${post.boardSlug}/p/${post.slug}`) + backParams;
   const boardHref = useWorkspaceLinks
     ? `/${workspaceSlug}/feedback?board=${post.boardId}`
     : `/${workspaceSlug}/b/${post.boardSlug}`;
 
   return (
-    <div className="group bg-background border border-border p-4 hover:border-border/80 hover:shadow-sm transition-all duration-150">
+    // `relative` anchors the title's stretched-link overlay to the whole card.
+    <div className="group relative bg-background border border-border p-4 hover:border-border/80 hover:shadow-sm transition-all duration-150">
       <div className="flex items-start gap-3">
-        {/* Vote button — compact */}
-        <div className="shrink-0">
+        {/* Vote button — kept above the card-wide link overlay (z-10) so voting
+            never triggers navigation. */}
+        <div className="relative z-10 shrink-0">
           <VoteButton
             initialCount={post.upvotes}
             initialHasVoted={post.hasVoted}
@@ -47,8 +58,13 @@ export function RoadmapPostCard({
             {post.isPinned && (
               <Pin className="size-3 text-muted-foreground shrink-0 mt-0.5" />
             )}
+            {/* The title is the single navigation target. Its `after:inset-0`
+                overlay stretches over the whole card, making the entire card
+                clickable with one real <Link> — keyboard nav, focus, middle-
+                click and "open in new tab" all keep working, and there is no
+                second/duplicate click handler. */}
             <Link
-              className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors leading-snug group-hover:underline underline-offset-2"
+              className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors leading-snug group-hover:underline underline-offset-2 focus-visible:outline-none focus-visible:underline after:absolute after:inset-0 after:content-['']"
               href={postHref}
             >
               {post.title}
@@ -71,12 +87,13 @@ export function RoadmapPostCard({
             )}
           </div>
 
-          <Link
-            className="mt-2 inline-block text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+          {/* Board link stays a distinct target, elevated above the overlay. */}
+          {/* <Link
+            className="relative z-10 mt-2 inline-block text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
             href={boardHref}
           >
             {post.boardName}
-          </Link>
+          </Link> */}
         </div>
       </div>
     </div>

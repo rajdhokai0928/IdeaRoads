@@ -4,9 +4,18 @@ import { z } from "zod";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
-import { CHANGELOG_LABEL_VALUES } from "@/lib/changelog/constants";
+import {
+  CHANGELOG_LABEL_VALUES,
+  getLabelInfo,
+} from "@/lib/changelog/constants";
 import { createChangelogEntry } from "@/lib/changelog/create";
 import { deleteChangelogEntry } from "@/lib/changelog/delete";
+import {
+  ChangelogLabelError,
+  createChangelogLabel,
+  deleteChangelogLabel,
+  updateChangelogLabel,
+} from "@/lib/changelog/labels";
 import {
   publishChangelogEntry,
   unpublishChangelogEntry,
@@ -34,8 +43,13 @@ const createEntrySchema = z.object({
     .max(200, "Title must be 200 characters or fewer."),
   body: z.string().max(50_000).default(""),
   coverImageUrl: z.url().optional(),
+  // A built-in key or any custom label the author created. Kept short and plain
+  // (rendered as text in a badge, so no markup handling needed).
   label: z
-    .enum(CHANGELOG_LABEL_VALUES as [string, ...string[]])
+    .string()
+    .trim()
+    .min(1)
+    .max(40, "Label must be 40 characters or fewer.")
     .default("new_feature"),
   postIds: z.array(z.string()).max(20).default([]),
 });
@@ -105,7 +119,7 @@ const updateEntrySchema = z.object({
   title: z.string().min(1).max(200).optional(),
   body: z.string().max(50_000).optional(),
   coverImageUrl: z.union([z.url(), z.literal(null)]).optional(),
-  label: z.enum(CHANGELOG_LABEL_VALUES as [string, ...string[]]).optional(),
+  label: z.string().trim().min(1).max(40).optional(),
   postIds: z.array(z.string()).max(20).optional(),
 });
 
@@ -360,4 +374,154 @@ export async function searchPostsForChangelogAction(input: {
   } catch {
     return { success: false, error: "Failed to search posts." };
   }
+}
+
+// ─── Changelog Labels (custom, persisted) ─────────────────────────────────────
+// Creating/renaming/deleting custom labels is admin/owner-only, matching entry
+// management. The five built-in labels aren't stored and can't be edited.
+
+const labelNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Label name is required.")
+  .max(40, "Label must be 40 characters or fewer.");
+
+// A custom label may not shadow a built-in (by key or display name).
+function collidesWithBuiltin(name: string): boolean {
+  const lower = name.trim().toLowerCase();
+  return CHANGELOG_LABEL_VALUES.some(
+    (l) =>
+      l.toLowerCase() === lower || getLabelInfo(l).label.toLowerCase() === lower
+  );
+}
+
+async function requireLabelManager(workspaceId: string) {
+  const session = await requireSession();
+  const member = await getWorkspaceMember(workspaceId, session.user.id);
+  if (!member || !isAdminOrOwner(member.role)) {
+    return null;
+  }
+  return session;
+}
+
+export async function createChangelogLabelAction(input: {
+  workspaceId: string;
+  name: string;
+  color?: string;
+}): Promise<ActionResult<{ id: string; name: string; color: string }>> {
+  const parsed = labelNameSchema.safeParse(input.name);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid name.",
+    };
+  }
+  if (collidesWithBuiltin(parsed.data)) {
+    return { success: false, error: "That label already exists." };
+  }
+
+  const session = await requireLabelManager(input.workspaceId);
+  if (!session) {
+    return {
+      success: false,
+      error: "Only admins and owners can manage changelog labels.",
+    };
+  }
+
+  try {
+    const label = await createChangelogLabel(input.workspaceId, {
+      name: parsed.data,
+      color: input.color,
+    });
+    audit({
+      action: "changelog_label.created",
+      actorId: session.user.id,
+      actorEmail: session.user.email,
+      description: `Changelog label created: ${label.name}`,
+      entityType: "changelog_label",
+      entityId: label.id,
+      metadata: { name: label.name, workspaceId: input.workspaceId },
+    });
+    return { success: true, data: label };
+  } catch (err) {
+    if (err instanceof ChangelogLabelError) {
+      return { success: false, error: err.message };
+    }
+    return { success: false, error: "Failed to create label." };
+  }
+}
+
+export async function updateChangelogLabelAction(input: {
+  labelId: string;
+  workspaceId: string;
+  name?: string;
+  color?: string;
+}): Promise<ActionResult<{ id: string; name: string; color: string }>> {
+  if (input.name !== undefined) {
+    const parsed = labelNameSchema.safeParse(input.name);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "Invalid name.",
+      };
+    }
+    if (collidesWithBuiltin(parsed.data)) {
+      return { success: false, error: "That label already exists." };
+    }
+  }
+
+  const session = await requireLabelManager(input.workspaceId);
+  if (!session) {
+    return {
+      success: false,
+      error: "Only admins and owners can manage changelog labels.",
+    };
+  }
+
+  try {
+    const label = await updateChangelogLabel(input.labelId, input.workspaceId, {
+      name: input.name?.trim(),
+      color: input.color,
+    });
+    audit({
+      action: "changelog_label.updated",
+      actorId: session.user.id,
+      actorEmail: session.user.email,
+      description: `Changelog label updated: ${label.name}`,
+      entityType: "changelog_label",
+      entityId: label.id,
+      metadata: { name: label.name, workspaceId: input.workspaceId },
+    });
+    return { success: true, data: label };
+  } catch (err) {
+    if (err instanceof ChangelogLabelError) {
+      return { success: false, error: err.message };
+    }
+    return { success: false, error: "Failed to update label." };
+  }
+}
+
+export async function deleteChangelogLabelAction(input: {
+  labelId: string;
+  workspaceId: string;
+}): Promise<ActionResult<undefined>> {
+  const session = await requireLabelManager(input.workspaceId);
+  if (!session) {
+    return {
+      success: false,
+      error: "Only admins and owners can manage changelog labels.",
+    };
+  }
+
+  await deleteChangelogLabel(input.labelId, input.workspaceId);
+  audit({
+    action: "changelog_label.deleted",
+    actorId: session.user.id,
+    actorEmail: session.user.email,
+    description: "Changelog label deleted",
+    entityType: "changelog_label",
+    entityId: input.labelId,
+    metadata: { workspaceId: input.workspaceId },
+  });
+  return { success: true, data: undefined };
 }

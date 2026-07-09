@@ -1,5 +1,5 @@
 import { count, eq } from "drizzle-orm";
-import { ExternalLink, Plus, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,6 +8,7 @@ import { LiveStreamCard } from "@/components/dashboard/live-stream-card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { PostsTable } from "@/components/posts/posts-table";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { workspaceMembers } from "@/db/schema";
 import { requireSession } from "@/lib/authz";
@@ -129,48 +130,23 @@ export default async function WorkspaceDashboardPage({
   const previousClosedPosts = previousSnapshot?.statusCounts.closed ?? null;
 
   const addFeedbackHref = board ? `/${slug}/feedback?new=1` : null;
-  const publicPortalHref = workspace.roadmapPublic
-    ? `/${slug}/roadmap`
-    : board?.isPublic
-      ? `/${slug}/b/${board.slug}`
-      : null;
 
   return (
     <div className="flex flex-col">
-      {/* Page header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-6 sm:px-8">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">
-            {workspace.name}
-          </h1>
-          {workspace.description && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {workspace.description}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {publicPortalHref && (
-            <a
-              className="flex items-center gap-1.5 border border-border px-3.5 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              href={publicPortalHref}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <ExternalLink className="size-4" />
-              Open Public Portal
-            </a>
-          )}
-          {addFeedbackHref && (
+      <PageHeader
+        actions={
+          addFeedbackHref ? (
             <Button asChild>
               <Link href={addFeedbackHref}>
                 <Plus data-icon="inline-start" />
                 Add Feedback
               </Link>
             </Button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+        description={workspace.description || undefined}
+        title={workspace.name}
+      />
 
       <div className="px-4 py-8 space-y-8 sm:px-8">
         {/* Stat cards */}

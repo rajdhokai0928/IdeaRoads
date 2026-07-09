@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PostsPagination } from "@/components/posts/posts-pagination";
 import { PostsTable } from "@/components/posts/posts-table";
+import { PageHeader } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { getWorkspaceBoard } from "@/lib/boards/queries";
@@ -62,8 +63,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   }
   const isAdminOrOwner = member.role !== WORKSPACE_MEMBER;
 
-  const validSort: "newest" | "top" | "trending" =
-    sort === "top" ? "top" : sort === "trending" ? "trending" : "newest";
+  const validSort: "newest" | "top" = sort === "top" ? "top" : "newest";
   const validStatus = status ?? "";
   const validCategoryId = category ?? "";
   const searchQuery = q ?? "";
@@ -102,7 +102,9 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
       getActiveWorkspaceStatuses(workspace.id),
     ]);
 
-  const hasMore = currentPage * PAGE_SIZE < totalCount;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
 
   function pageHref(targetPage: number) {
     const params = new URLSearchParams();
@@ -130,26 +132,22 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-6 sm:px-8">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">
-            All Feedback
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Every piece of feedback in {workspace.name}.
-          </p>
-        </div>
-        {board && (
-          <AddFeedbackDialog
-            boardId={board.id}
-            categories={categories}
-            defaultOpen={newParam === "1"}
-            workspaceId={workspace.id}
-            workspaceSlug={slug}
-            workspaceStatuses={workspaceStatuses}
-          />
-        )}
-      </div>
+      <PageHeader
+        actions={
+          board ? (
+            <AddFeedbackDialog
+              boardId={board.id}
+              categories={categories}
+              defaultOpen={newParam === "1"}
+              workspaceId={workspace.id}
+              workspaceSlug={slug}
+              workspaceStatuses={workspaceStatuses}
+            />
+          ) : undefined
+        }
+        description={`Every piece of feedback in ${workspace.name}.`}
+        title="All Feedback"
+      />
 
       <FeedbackFilters
         activeCategoryId={validCategoryId}
@@ -172,29 +170,17 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
         workspaceStatuses={workspaceStatuses}
       />
 
-      {(currentPage > 1 || hasMore) && (
-        <div className="flex items-center justify-between gap-4 border-t border-border px-4 py-3 sm:px-8">
+      {totalPages > 1 && (
+        <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-border px-4 py-3 sm:flex-row sm:px-8">
           <span className="text-xs text-muted-foreground">
-            Page {currentPage} · {totalCount.toLocaleString()} total
+            Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of{" "}
+            {totalCount.toLocaleString()}
           </span>
-          <div className="flex items-center gap-2">
-            {currentPage > 1 && (
-              <Link
-                className="px-3 py-1.5 text-xs border border-border hover:bg-muted transition-colors duration-150"
-                href={pageHref(currentPage - 1)}
-              >
-                Previous
-              </Link>
-            )}
-            {hasMore && (
-              <Link
-                className="px-3 py-1.5 text-xs border border-border hover:bg-muted transition-colors duration-150"
-                href={pageHref(currentPage + 1)}
-              >
-                Next
-              </Link>
-            )}
-          </div>
+          <PostsPagination
+            currentPage={currentPage}
+            hrefForPage={pageHref}
+            totalPages={totalPages}
+          />
         </div>
       )}
     </div>

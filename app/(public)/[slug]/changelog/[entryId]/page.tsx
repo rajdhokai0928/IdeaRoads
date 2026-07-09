@@ -9,6 +9,7 @@ import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
+import { WORKSPACE_MEMBER } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { sanitizeChangelogHtml } from "@/lib/changelog/html";
@@ -201,9 +202,9 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
         {/* Comments */}
         <div className="mt-12 pt-8 border-t border-border">
           <ChangelogCommentSection
+            canModerate={!!member && member.role !== WORKSPACE_MEMBER}
             changelogEntryId={entry.id}
             currentUserId={session?.user.id ?? null}
-            isMember={!!member}
             isSignedIn={isSignedIn}
           />
         </div>

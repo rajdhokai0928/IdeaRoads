@@ -57,9 +57,13 @@ export async function listPostsForRoadmap(
     eq(posts.isDraft, false),
   ];
 
-  // Public view excludes private and archived boards
+  // Public view excludes private/archived boards and posts hidden from the
+  // public. "Hide from public" (the visibility toggle) sets isApproved = false,
+  // the same flag every other public post query filters on — the roadmap must
+  // honor it too. Admins still see hidden posts so they can manage them.
   if (!isAdmin) {
     conditions.push(eq(boards.isPublic, true));
+    conditions.push(eq(posts.isApproved, true));
   }
   conditions.push(eq(boards.isArchived, false));
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import { Pin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CategorySelect from "@/components/posts/category-select";
@@ -72,6 +73,15 @@ export function PostRow({
       </td>
       <td className="max-w-64 px-4 py-3 align-top">
         <div className="flex items-center gap-2">
+          {post.isPinned && (
+            <span
+              className="inline-flex shrink-0 items-center text-muted-foreground"
+              title="Pinned"
+            >
+              <Pin className="size-3.5" />
+              <span className="sr-only">Pinned</span>
+            </span>
+          )}
           <Link
             className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
             href={href}
@@ -97,7 +107,7 @@ export function PostRow({
       </td>
       <td className="hidden max-w-32 px-4 py-3 align-top sm:table-cell">
         <p className="truncate text-xs text-muted-foreground">
-          {post.authorName ?? post.authorEmail}
+          {post.authorName || post.authorEmail}
         </p>
       </td>
       <td className="hidden whitespace-nowrap px-4 py-3 align-top text-xs text-muted-foreground sm:table-cell">
@@ -123,6 +133,7 @@ export function PostRow({
         <StatusSelect
           canEdit={isMember}
           currentStatus={post.status}
+          isDraft={post.isDraft}
           postId={post.id}
           workspaceId={workspaceId}
           workspaceStatuses={workspaceStatuses}
@@ -146,8 +157,7 @@ export function PostRow({
           onClick={(e) => e.stopPropagation()}
         >
           <PostActionsMenu
-            initialBody={post.body}
-            initialTitle={post.title}
+            detailHref={href}
             isDraft={post.isDraft}
             isPinned={post.isPinned}
             postId={post.id}

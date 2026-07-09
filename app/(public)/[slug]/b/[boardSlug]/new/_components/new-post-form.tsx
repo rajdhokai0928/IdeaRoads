@@ -158,7 +158,7 @@ export default function NewPostForm({
         </div>
       )}
 
-      <div className="px-8 py-8 max-w-2xl">
+      <div className="px-8 py-8 max-w-5xl mx-auto w-full">
         <h1 className="text-xl font-semibold text-foreground mb-6">
           Submit feedback
         </h1>
@@ -304,8 +304,14 @@ export default function NewPostForm({
             <p className="text-sm text-destructive">{generalError}</p>
           )}
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 pt-1">
+          {/* Actions — pinned to the bottom-right of the form */}
+          <div className="flex items-center justify-end gap-3 border-t border-border pt-5">
+            <Link
+              className="px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              href={boardHref}
+            >
+              Cancel
+            </Link>
             <button
               className="px-5 py-2.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
               disabled={isPending || title.trim().length < 3}
@@ -313,12 +319,6 @@ export default function NewPostForm({
             >
               {isPending ? "Submitting…" : "Submit feedback"}
             </button>
-            <Link
-              className="px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              href={boardHref}
-            >
-              Cancel
-            </Link>
           </div>
         </form>
       </div>

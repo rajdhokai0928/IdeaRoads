@@ -15,6 +15,7 @@ export * from "@/db/schema/comments";
 export * from "@/db/schema/comment-reactions";
 export * from "@/db/schema/changelog";
 export * from "@/db/schema/changelog-comments";
+export * from "@/db/schema/changelog-labels";
 export * from "@/db/schema/notifications";
 export * from "@/db/schema/roadmap-followers";
 export * from "@/db/schema/blocked-users";

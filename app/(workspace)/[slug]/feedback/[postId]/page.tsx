@@ -5,6 +5,7 @@ import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { getBoardById } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import { resolveBackTarget } from "@/lib/navigation/back-target";
 import { getPost, listStatusHistory } from "@/lib/posts/queries";
 import { hasUserVoted } from "@/lib/voting";
 import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
@@ -16,6 +17,7 @@ import {
 
 interface Props {
   params: Promise<{ slug: string; postId: string }>;
+  searchParams: Promise<{ edit?: string; from?: string; fromLabel?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -24,8 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: post?.title ?? "Post" };
 }
 
-export default async function AdminPostDetailPage({ params }: Props) {
+export default async function AdminPostDetailPage({
+  params,
+  searchParams,
+}: Props) {
   const { slug, postId } = await params;
+  const { edit, from, fromLabel } = await searchParams;
   const session = await requireSession();
 
   const workspace = await getWorkspaceBySlug(slug);
@@ -76,14 +82,24 @@ export default async function AdminPostDetailPage({ params }: Props) {
     }
   }
 
+  // Back returns to the navigation origin (e.g. the Roadmap) when supplied,
+  // otherwise to All Feedback.
+  const back = resolveBackTarget({
+    from,
+    fromLabel,
+    fallbackHref: `/${slug}/feedback`,
+    fallbackLabel: board.name,
+  });
+
   return (
     <PostDetailContent
       assignees={assignees}
-      backLabel={board.name}
-      boardHref={`/${slug}/feedback`}
+      backLabel={back.label}
+      boardHref={back.href}
       boardIsArchived={board.isArchived}
       categories={categories}
       currentUserId={session.user.id}
+      defaultEditing={edit === "1"}
       isAdminOrOwner={isAdminOrOwner}
       isMember={true}
       isSignedIn={true}

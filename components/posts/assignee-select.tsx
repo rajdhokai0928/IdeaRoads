@@ -67,7 +67,7 @@ export default function AssigneeSelect({
     return current ? (
       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
         <UserRound className="size-3" />
-        {current.name ?? current.email}
+        {current.name || current.email}
       </span>
     ) : null;
   }
@@ -88,7 +88,7 @@ export default function AssigneeSelect({
         <SelectItem value="unassigned">Unassigned</SelectItem>
         {assignees.map((a) => (
           <SelectItem key={a.id} value={a.id}>
-            {a.name ?? a.email}
+            {a.name || a.email}
           </SelectItem>
         ))}
       </SelectContent>

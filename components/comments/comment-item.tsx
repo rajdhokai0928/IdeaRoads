@@ -1,12 +1,14 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight, Trash2 } from "lucide-react";
+import { CornerDownRight, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { FeedbackBody } from "@/components/posts/feedback-body";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import CommentEditForm from "./comment-edit-form";
 import CommentReactions from "./comment-reactions";
-import type { CommentData, ReplyData } from "./types";
+import type { CommentApi, CommentData, ReplyData } from "./types";
 
 function getInitials(name: string | null): string {
   if (!name) {
@@ -22,6 +24,7 @@ function getInitials(name: string | null): string {
 }
 
 interface CommentItemProps {
+  api?: CommentApi;
   canModerate: boolean;
   comment: CommentData | ReplyData;
   currentUserId: string | null;
@@ -33,6 +36,7 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({
+  api,
   comment,
   currentUserId,
   canModerate,
@@ -42,9 +46,13 @@ export default function CommentItem({
   onReply,
   onDelete,
 }: CommentItemProps) {
+  const commentBaseUrl = api?.commentBaseUrl ?? "/api/comments";
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  // Local copy of the body so an inline edit shows immediately (optimistic).
+  const [body, setBody] = useState(comment.body);
 
   const displayName = comment.isDeleted
     ? "Deleted"
@@ -54,6 +62,8 @@ export default function CommentItem({
   const canDelete =
     !comment.isDeleted &&
     (canModerate || (!!currentUserId && !!comment.authorName));
+  // Only the comment's own author may edit it (never a moderator).
+  const canEdit = isSignedIn && comment.isOwn && !comment.isDeleted;
   // Replying to a deleted comment stays allowed — the thread is preserved
   // (Feature 07), so a deleted comment keeps its place as a valid reply target.
   const canReply = depth === 0 && !isLocked && onReply;
@@ -62,7 +72,7 @@ export default function CommentItem({
   async function handleConfirmDelete() {
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/comments/${comment.id}`, {
+      const res = await fetch(`${commentBaseUrl}/${comment.id}`, {
         method: "DELETE",
       });
       if (res.ok || res.status === 204) {
@@ -123,38 +133,62 @@ export default function CommentItem({
             </span>
           </div>
 
-          {/* Body — rendered as HTML from Quill */}
+          {/* Body — Quill HTML, sanitized on render (strips scripts / event
+              handlers, keeps formatting + images). Swaps to an inline editor
+              when the author is editing. */}
           {comment.isDeleted ? (
             <p className="mt-1 text-sm italic leading-relaxed text-muted-foreground">
               This comment has been deleted.
             </p>
+          ) : isEditing ? (
+            <CommentEditForm
+              api={api}
+              commentId={comment.id}
+              initialBody={body}
+              onCancel={() => setIsEditing(false)}
+              onSaved={(newBody) => {
+                setBody(newBody);
+                setIsEditing(false);
+              }}
+            />
           ) : (
-            <div
-              className="comment-body mt-1 text-sm leading-relaxed text-foreground wrap-break-word"
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: content from our own Quill editor
-              dangerouslySetInnerHTML={{ __html: comment.body }}
+            <FeedbackBody
+              body={body}
+              className="mt-1 text-sm leading-relaxed text-foreground wrap-break-word"
             />
           )}
 
-          {/* Reactions — can't react to a deleted comment */}
-          {!comment.isDeleted && (
+          {/* Reactions — hidden while editing and on deleted comments */}
+          {!comment.isDeleted && !isEditing && (
             <CommentReactions
+              api={api}
               commentId={comment.id}
               initialReactions={comment.reactions}
               isSignedIn={isSignedIn}
             />
           )}
 
-          {/* Actions */}
-          {(canReply || canDelete) && (
+          {/* Actions — hidden while editing */}
+          {!isEditing && (canReply || canEdit || canDelete) && (
             <div className="mt-2 flex items-center gap-3">
               {canReply && (
                 <button
                   className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={onReply}
+                  type="button"
                 >
                   <CornerDownRight className="size-3" />
                   Reply
+                </button>
+              )}
+              {canEdit && (
+                <button
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setIsEditing(true)}
+                  type="button"
+                >
+                  <Pencil className="size-3" />
+                  Edit
                 </button>
               )}
               {canDelete && (
@@ -162,6 +196,7 @@ export default function CommentItem({
                   aria-label="Delete comment"
                   className="inline-flex items-center gap-1 text-xs text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none"
                   onClick={() => setShowDeleteDialog(true)}
+                  type="button"
                 >
                   <Trash2 className="size-3" />
                   Delete

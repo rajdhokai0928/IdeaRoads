@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ContentContainer } from "@/components/ui/page";
 import { BlockedUsersSection } from "@/components/settings/blocked-users-section";
 import { ModerationSettingsForm } from "@/components/settings/moderation-settings-form";
 import { PendingPostsSection } from "@/components/settings/pending-posts-section";
@@ -41,7 +42,7 @@ export default async function ModerationPage({ params }: Props) {
   ]);
 
   return (
-    <div className="px-4 py-6 max-w-2xl space-y-10 sm:px-8">
+    <ContentContainer className="space-y-10">
       <ModerationSettingsForm
         commentModeration={workspace.commentModeration}
         moderationMode={workspace.moderationMode}
@@ -55,6 +56,6 @@ export default async function ModerationPage({ params }: Props) {
         blockedUsers={blockedUsers}
         workspaceId={workspace.id}
       />
-    </div>
+    </ContentContainer>
   );
 }

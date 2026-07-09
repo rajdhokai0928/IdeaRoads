@@ -1,7 +1,23 @@
 import { and, count, desc, eq, ilike, sql } from "drizzle-orm";
 import { cache } from "react";
 import { changelogEntries, changelogPosts, posts } from "@/db/schema";
+import { CHANGELOG_LABEL_VALUES } from "@/lib/changelog/constants";
 import { db } from "@/lib/db";
+
+/** Distinct custom labels used across a workspace's entries (built-ins excluded). */
+export async function getDistinctChangelogLabels(
+  workspaceId: string
+): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ label: changelogEntries.label })
+    .from(changelogEntries)
+    .where(eq(changelogEntries.workspaceId, workspaceId));
+  const builtins = new Set<string>(CHANGELOG_LABEL_VALUES);
+  return rows
+    .map((r) => r.label)
+    .filter((l): l is string => !!l && !builtins.has(l))
+    .sort();
+}
 
 export type ChangelogEntryRow = {
   id: string;

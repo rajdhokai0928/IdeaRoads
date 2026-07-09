@@ -680,3 +680,11 @@ body {
 .comment-body h3 {
   font-size: 0.9375rem;
 }
+/* Inline images (e.g. images uploaded into a comment) render responsively. */
+.comment-body img {
+  max-width: 100%;
+  height: auto;
+  margin: 0.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}

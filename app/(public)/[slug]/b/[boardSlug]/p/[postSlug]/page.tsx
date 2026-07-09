@@ -17,6 +17,7 @@ import {
   embedWrapperProps,
   parseEmbedParams,
 } from "@/lib/embed/style";
+import { resolveBackTarget } from "@/lib/navigation/back-target";
 import { getPost, getPostBySlug, listStatusHistory } from "@/lib/posts/queries";
 import { hasUserVoted } from "@/lib/voting";
 import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
@@ -32,6 +33,8 @@ interface Props {
     embed?: string;
     theme?: string;
     accentColor?: string;
+    from?: string;
+    fromLabel?: string;
   }>;
 }
 
@@ -51,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostDetailPage({ params, searchParams }: Props) {
   const { slug, boardSlug, postSlug } = await params;
-  const { embed, theme, accentColor } = await searchParams;
+  const { embed, theme, accentColor, from, fromLabel } = await searchParams;
   const embedParams = parseEmbedParams({ embed, theme, accentColor });
   const { isEmbed } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
@@ -135,7 +138,14 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
     }
   }
 
-  const boardHref = `/${slug}/b/${boardSlug}`;
+  // Back returns to wherever the user came from (e.g. the Roadmap) when a valid
+  // `from` is supplied; otherwise it falls back to this post's board.
+  const back = resolveBackTarget({
+    from,
+    fromLabel,
+    fallbackHref: `/${slug}/b/${boardSlug}`,
+    fallbackLabel: board.name,
+  });
 
   return (
     <div
@@ -162,8 +172,8 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
 
       <PostDetailContent
         assignees={assignees}
-        backLabel={board.name}
-        boardHref={boardHref}
+        backLabel={back.label}
+        boardHref={back.href}
         boardIsArchived={board.isArchived}
         categories={categories}
         currentUserId={session?.user.id ?? null}

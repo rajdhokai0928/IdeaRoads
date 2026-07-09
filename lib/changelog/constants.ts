@@ -16,8 +16,14 @@ export function isValidLabel(value: string): value is ChangelogLabel {
   return value in CHANGELOG_LABELS;
 }
 
-export function getLabelInfo(label: string) {
-  return (
-    CHANGELOG_LABELS[label as ChangelogLabel] ?? CHANGELOG_LABELS.new_feature
-  );
+// Neutral colour for user-created (custom) labels that aren't a built-in.
+export const CUSTOM_LABEL_COLOR = "#6b7280";
+
+export function getLabelInfo(label: string): { color: string; label: string } {
+  const builtin = CHANGELOG_LABELS[label as ChangelogLabel];
+  if (builtin) {
+    return builtin;
+  }
+  // Custom label: display the text as entered, with a neutral colour.
+  return { label, color: CUSTOM_LABEL_COLOR };
 }

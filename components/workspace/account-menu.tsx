@@ -8,7 +8,6 @@ import {
   Shield,
   Sliders,
   User,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -96,15 +95,6 @@ export function AccountMenu({
                 <Link href={`/${workspaceSlug}/settings/general`}>
                   <Sliders />
                   General
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                asChild
-                className={itemClass(`/${workspaceSlug}/settings/members`)}
-              >
-                <Link href={`/${workspaceSlug}/settings/members`}>
-                  <Users />
-                  Members
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem

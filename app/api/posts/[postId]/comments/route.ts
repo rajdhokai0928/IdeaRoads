@@ -52,6 +52,9 @@ export async function GET(req: NextRequest, { params }: Params) {
     authorName: c.isDeleted ? null : c.authorName,
     authorAvatar: c.isDeleted ? null : c.authorAvatar,
     isGuest: !c.authorId,
+    // Whether this comment belongs to the current viewer — drives the Edit
+    // affordance without ever exposing author ids.
+    isOwn: !!session && c.authorId === session.user.id,
     createdAt: c.createdAt,
     replies: c.replies.map((r) => ({
       id: r.id,
@@ -63,6 +66,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       authorName: r.isDeleted ? null : r.authorName,
       authorAvatar: r.isDeleted ? null : r.authorAvatar,
       isGuest: !r.authorId,
+      isOwn: !!session && r.authorId === session.user.id,
       createdAt: r.createdAt,
     })),
   }));
@@ -134,6 +138,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         authorName: comment.authorName,
         authorAvatar: comment.authorAvatar,
         isGuest: false,
+        isOwn: true,
         createdAt: comment.createdAt,
       },
       { status: 201 }

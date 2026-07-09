@@ -101,7 +101,7 @@ export function PendingPostsSection({ workspaceId, posts }: Props) {
                   </p>
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">
-                  by {post.authorName ?? post.authorEmail} ·{" "}
+                  by {post.authorName || post.authorEmail} ·{" "}
                   {new Intl.DateTimeFormat("en", {
                     dateStyle: "medium",
                     timeStyle: "short",

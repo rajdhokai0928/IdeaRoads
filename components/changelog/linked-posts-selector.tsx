@@ -97,7 +97,7 @@ export function LinkedPostsSelector({
               key={post.id}
               style={{ borderRadius: 2 }}
             >
-              <span className="truncate max-w-[200px]">{post.title}</span>
+              <span className="truncate max-w-50">{post.title}</span>
               <button
                 aria-label={`Remove ${post.title}`}
                 className="text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none"

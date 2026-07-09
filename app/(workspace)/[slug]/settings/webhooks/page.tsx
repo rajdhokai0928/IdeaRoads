@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ContentContainer } from "@/components/ui/page";
 import { WebhookEndpointsSection } from "@/components/settings/webhook-endpoints-section";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
@@ -37,12 +38,12 @@ export default async function WebhooksPage({ params }: Props) {
   const endpoints = await listWebhookEndpoints(workspace.id);
 
   return (
-    <div className="px-4 py-6 max-w-2xl sm:px-8">
+    <ContentContainer>
       <WebhookEndpointsSection
         encryptionAvailable={isEncryptionAvailable()}
         endpoints={endpoints}
         workspaceId={workspace.id}
       />
-    </div>
+    </ContentContainer>
   );
 }

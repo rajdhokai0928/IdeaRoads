@@ -1,7 +1,29 @@
 import { createId } from "@paralleldrive/cuid2";
 import { eq, sql } from "drizzle-orm";
 import { categories } from "@/db/schema";
+import { DEFAULT_CATEGORIES } from "@/lib/categories/defaults";
 import { db } from "@/lib/db";
+
+// Seed the workspace's default categories. Bulk-insert with fixed values
+// (mirrors seedDefaultStatuses) — a fresh workspace has no existing categories,
+// so no slug de-duplication is needed. Accepts an optional transaction so it can
+// run atomically inside createWorkspace().
+export async function seedDefaultCategories(
+  workspaceId: string,
+  tx?: Parameters<Parameters<typeof db.transaction>[0]>[0]
+) {
+  const executor = tx ?? db;
+  await executor.insert(categories).values(
+    DEFAULT_CATEGORIES.map((c) => ({
+      id: createId(),
+      workspaceId,
+      name: c.name,
+      slug: c.slug,
+      color: c.color,
+      displayOrder: c.displayOrder,
+    }))
+  );
+}
 
 function slugify(name: string): string {
   return (

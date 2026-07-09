@@ -77,9 +77,12 @@ export function WorkspaceSwitcher({
                 key={ws.slug}
               >
                 <Link href={`/${ws.slug}`}>
+                  {/* Pin the avatar's letter colour so the DropdownMenuItem's
+                      focus rule (`**:text-accent-foreground`) can't recolour the
+                      fallback letter to dark-on-dark and hide it on hover. */}
                   <SquareAvatar
                     alt={ws.name}
-                    className="size-5 shrink-0 text-2xs font-semibold"
+                    className="size-5 shrink-0 text-2xs font-semibold text-sidebar-foreground!"
                     fallback={ws.name.charAt(0).toUpperCase()}
                     imageUrl={ws.logoUrl}
                   />

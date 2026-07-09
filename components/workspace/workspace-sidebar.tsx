@@ -11,6 +11,7 @@ import {
   Menu,
   Shield,
   Tag,
+  Users,
   Webhook,
 } from "lucide-react";
 import Link from "next/link";
@@ -146,6 +147,13 @@ export function WorkspaceSidebar({
             <p className="px-2 pb-1 pt-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
               Settings
             </p>
+            <Link
+              className={link(`/${workspaceSlug}/settings/members`)}
+              href={`/${workspaceSlug}/settings/members`}
+            >
+              <Users className="size-4 shrink-0" />
+              <span className="truncate">Members</span>
+            </Link>
             <Link
               className={link(`/${workspaceSlug}/settings/categories`)}
               href={`/${workspaceSlug}/settings/categories`}

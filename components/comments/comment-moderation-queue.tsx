@@ -7,20 +7,23 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { commentPreviewText } from "@/lib/comments/preview";
-import type { CommentData, ReplyData } from "./types";
+import type { CommentApi, CommentData, ReplyData } from "./types";
 
 type PendingComment = (CommentData | ReplyData) & { replies?: ReplyData[] };
 
 interface CommentModerationQueueProps {
+  api?: CommentApi;
   pending: PendingComment[];
 }
 
 function PendingCommentRow({
   comment,
+  commentBaseUrl,
   onApprove,
   onDelete,
 }: {
   comment: PendingComment;
+  commentBaseUrl: string;
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
@@ -31,7 +34,7 @@ function PendingCommentRow({
   async function handleApprove() {
     setIsApproving(true);
     try {
-      const res = await fetch(`/api/comments/${comment.id}/approve`, {
+      const res = await fetch(`${commentBaseUrl}/${comment.id}/approve`, {
         method: "PATCH",
       });
       if (res.ok) {
@@ -47,7 +50,7 @@ function PendingCommentRow({
   async function handleConfirmDelete() {
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/comments/${comment.id}`, {
+      const res = await fetch(`${commentBaseUrl}/${comment.id}`, {
         method: "DELETE",
       });
       if (res.ok || res.status === 204) {
@@ -130,10 +133,12 @@ function PendingCommentRow({
 }
 
 export default function CommentModerationQueue({
+  api,
   pending: initialPending,
 }: CommentModerationQueueProps) {
   const router = useRouter();
   const [pending, setPending] = useState<PendingComment[]>(initialPending);
+  const commentBaseUrl = api?.commentBaseUrl ?? "/api/comments";
 
   if (pending.length === 0) {
     return null;
@@ -157,6 +162,7 @@ export default function CommentModerationQueue({
         {pending.map((comment) => (
           <PendingCommentRow
             comment={comment}
+            commentBaseUrl={commentBaseUrl}
             key={comment.id}
             onApprove={handleApprove}
             onDelete={handleDelete}

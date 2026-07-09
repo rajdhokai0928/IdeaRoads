@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ContentContainer } from "@/components/ui/page";
 import { EmbedSection } from "@/components/settings/embed-section";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
@@ -37,7 +38,7 @@ export default async function EmbedPage({ params }: Props) {
   const config = await getEmbedConfig(workspace.id);
 
   return (
-    <div className="px-4 py-6 max-w-2xl sm:px-8">
+    <ContentContainer>
       <EmbedSection
         appUrl={portalBaseUrl()}
         initialConfig={{
@@ -51,6 +52,6 @@ export default async function EmbedPage({ params }: Props) {
         workspaceId={workspace.id}
         workspaceSlug={slug}
       />
-    </div>
+    </ContentContainer>
   );
 }

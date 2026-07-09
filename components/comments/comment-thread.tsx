@@ -4,9 +4,10 @@ import { useState } from "react";
 import CommentForm from "./comment-form";
 import CommentItem from "./comment-item";
 import CommentReplyForm from "./comment-reply-form";
-import type { CommentData, ReplyData } from "./types";
+import type { CommentApi, CommentData, ReplyData } from "./types";
 
 interface CommentThreadProps {
+  api?: CommentApi;
   canModerate: boolean;
   currentUserId: string | null;
   initialComments: CommentData[];
@@ -22,6 +23,7 @@ interface ThreadState {
 }
 
 export default function CommentThread({
+  api,
   initialComments,
   postId,
   isSignedIn,
@@ -94,6 +96,7 @@ export default function CommentThread({
         </p>
         <div className="pt-6">
           <CommentForm
+            api={api}
             isLocked={isLocked}
             isSignedIn={isSignedIn}
             onSuccess={handleCommentAdded}
@@ -119,6 +122,7 @@ export default function CommentThread({
         {approvedThreads.map((thread) => (
           <div key={thread.comment.id}>
             <CommentItem
+              api={api}
               canModerate={canModerate}
               comment={thread.comment}
               currentUserId={currentUserId}
@@ -138,6 +142,7 @@ export default function CommentThread({
                   .filter((r) => r.isApproved || canModerate)
                   .map((reply) => (
                     <CommentItem
+                      api={api}
                       canModerate={canModerate}
                       comment={reply}
                       currentUserId={currentUserId}
@@ -156,6 +161,7 @@ export default function CommentThread({
             {/* Inline reply form */}
             {thread.showReplyForm && (
               <CommentReplyForm
+                api={api}
                 isSignedIn={isSignedIn}
                 key={`reply-form-${thread.comment.id}`}
                 onCancel={() => toggleReplyForm(thread.comment.id)}
@@ -174,6 +180,7 @@ export default function CommentThread({
       {!isLocked && (
         <div className="pt-6 mt-2 border-t border-border">
           <CommentForm
+            api={api}
             isLocked={isLocked}
             isSignedIn={isSignedIn}
             onSuccess={handleCommentAdded}

@@ -2,9 +2,11 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChangelogCommentSection } from "@/components/changelog/changelog-comment-section";
 import { ChangelogEditor } from "@/components/changelog/changelog-editor";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
+import { listChangelogLabels } from "@/lib/changelog/labels";
 import { getChangelogEntryById } from "@/lib/changelog/queries";
 import {
   getWorkspaceBySlug,
@@ -36,6 +38,8 @@ export default async function EditChangelogEntryPage({ params }: Props) {
     notFound();
   }
 
+  const initialLabels = await listChangelogLabels(workspace.id);
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b border-border px-4 py-4 sm:px-8 flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -57,6 +61,7 @@ export default async function EditChangelogEntryPage({ params }: Props) {
       </div>
       <div className="flex-1 overflow-y-auto">
         <ChangelogEditor
+          initialLabels={initialLabels}
           initialEntry={{
             id: entry.id,
             title: entry.title,
@@ -69,6 +74,16 @@ export default async function EditChangelogEntryPage({ params }: Props) {
           workspaceId={workspace.id}
           workspaceSlug={slug}
         />
+        <div className="w-full max-w-3xl px-4 pb-10 sm:px-8">
+          <div className="pt-8 border-t border-border">
+            <ChangelogCommentSection
+              canModerate={true}
+              changelogEntryId={entry.id}
+              currentUserId={session.user.id}
+              isSignedIn={true}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

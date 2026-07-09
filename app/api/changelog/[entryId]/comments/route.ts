@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
+import { WORKSPACE_MEMBER } from "@/config/platform";
 import { changelogEntries } from "@/db/schema";
 import { getCurrentSession } from "@/lib/authz";
 import {
@@ -7,7 +8,7 @@ import {
   ChangelogCommentNotFoundError,
   createChangelogComment,
 } from "@/lib/changelog-comments/create";
-import { listChangelogComments } from "@/lib/changelog-comments/queries";
+import { listChangelogCommentsWithReplies } from "@/lib/changelog-comments/queries";
 import { db } from "@/lib/db";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
@@ -15,7 +16,42 @@ interface Params {
   params: Promise<{ entryId: string }>;
 }
 
-export async function GET(_req: NextRequest, { params }: Params) {
+// Shape a comment/reply row into the payload the shared comment components
+// expect. `postId` mirrors the entry id so the reused CommentData shape is
+// satisfied — the components use it only for the default (feedback) endpoint,
+// which the changelog `api` config overrides.
+function sanitize(
+  c: {
+    id: string;
+    changelogEntryId: string;
+    parentId: string | null;
+    body: string;
+    isDeleted: boolean;
+    isApproved: boolean;
+    authorId: string | null;
+    authorName: string | null;
+    authorAvatar: string | null;
+    createdAt: Date;
+  },
+  currentUserId: string | null
+) {
+  return {
+    id: c.id,
+    postId: c.changelogEntryId,
+    changelogEntryId: c.changelogEntryId,
+    parentId: c.parentId,
+    body: c.body,
+    isDeleted: c.isDeleted,
+    isApproved: c.isApproved,
+    authorName: c.isDeleted ? null : c.authorName,
+    authorAvatar: c.isDeleted ? null : c.authorAvatar,
+    isGuest: !c.authorId,
+    isOwn: !!currentUserId && c.authorId === currentUserId,
+    createdAt: c.createdAt,
+  };
+}
+
+export async function GET(req: NextRequest, { params }: Params) {
   const { entryId } = await params;
   const session = await getCurrentSession();
 
@@ -32,25 +68,28 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Entry not found." }, { status: 404 });
   }
 
-  const isMember = session
-    ? !!(await getWorkspaceMember(entry.workspaceId, session.user.id))
-    : false;
+  const member = session
+    ? await getWorkspaceMember(entry.workspaceId, session.user.id)
+    : null;
+  const isMember = !!member;
+  const canModerate = !!member && member.role !== WORKSPACE_MEMBER;
+
   if (!entry.isPublished && !isMember) {
     return NextResponse.json({ error: "Entry not found." }, { status: 404 });
   }
 
-  const comments = await listChangelogComments(entryId);
+  const includeUnapproved =
+    canModerate && req.nextUrl.searchParams.get("includeUnapproved") === "true";
+
+  const threaded = await listChangelogCommentsWithReplies(entryId, {
+    includeUnapproved,
+  });
+  const uid = session?.user.id ?? null;
+
   return NextResponse.json(
-    comments.map((c) => ({
-      id: c.id,
-      changelogEntryId: c.changelogEntryId,
-      body: c.body,
-      isDeleted: c.isDeleted,
-      authorName: c.isDeleted ? null : c.authorName,
-      authorAvatar: c.isDeleted ? null : c.authorAvatar,
-      isGuest: !c.authorId,
-      authorId: c.authorId,
-      createdAt: c.createdAt,
+    threaded.map((c) => ({
+      ...sanitize(c, uid),
+      replies: c.replies.map((r) => sanitize(r, uid)),
     }))
   );
 }
@@ -63,7 +102,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Sign in to comment." }, { status: 401 });
   }
 
-  let body: { body?: string } = {};
+  let body: { body?: string; parentId?: string } = {};
   try {
     body = await req.json();
   } catch {
@@ -79,7 +118,10 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   const [entry] = await db
-    .select({ workspaceId: changelogEntries.workspaceId })
+    .select({
+      workspaceId: changelogEntries.workspaceId,
+      isPublished: changelogEntries.isPublished,
+    })
     .from(changelogEntries)
     .where(eq(changelogEntries.id, entryId))
     .limit(1);
@@ -88,23 +130,41 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Entry not found." }, { status: 404 });
   }
 
+  // Unpublished (draft) entries accept comments only from workspace members
+  // (the admin editor); the public never sees drafts.
+  const isMember = !!(await getWorkspaceMember(
+    entry.workspaceId,
+    session.user.id
+  ));
+  if (!entry.isPublished && !isMember) {
+    return NextResponse.json({ error: "Entry not found." }, { status: 404 });
+  }
+
   try {
     const comment = await createChangelogComment(
       entryId,
-      { body: rawBody, authorId: session.user.id },
-      entry.workspaceId
+      {
+        body: rawBody,
+        parentId: body.parentId ?? null,
+        authorId: session.user.id,
+      },
+      entry.workspaceId,
+      { allowUnpublished: isMember }
     );
 
     return NextResponse.json(
       {
         id: comment.id,
+        postId: comment.changelogEntryId,
         changelogEntryId: comment.changelogEntryId,
+        parentId: comment.parentId,
         body: comment.body,
+        isApproved: comment.isApproved,
         isDeleted: false,
         authorName: comment.authorName,
         authorAvatar: comment.authorAvatar,
         isGuest: false,
-        authorId: comment.authorId,
+        isOwn: true,
         createdAt: comment.createdAt,
       },
       { status: 201 }

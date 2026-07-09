@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ContentContainer } from "@/components/ui/page";
 import { ApiKeyDocs } from "@/components/settings/api-key-docs";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
 import { WORKSPACE_MEMBER } from "@/config/platform";
@@ -38,9 +39,9 @@ export default async function ApiKeysPage({ params }: Props) {
   const keys = await listApiKeys(workspace.id);
 
   return (
-    <div className="px-4 py-6 max-w-2xl sm:px-8">
+    <ContentContainer>
       <ApiKeysSection keys={keys} workspaceId={workspace.id} />
       <ApiKeyDocs appUrl={adminBaseUrl()} />
-    </div>
+    </ContentContainer>
   );
 }

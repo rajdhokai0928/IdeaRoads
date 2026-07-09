@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { NotificationPreferencesForm } from "@/components/profile/notification-preferences-form";
+import { ContentContainer, PageShell } from "@/components/ui/page";
 import { requireSession } from "@/lib/authz";
 import { getNotificationPreferences } from "@/lib/notifications/queries";
 import {
@@ -37,16 +38,13 @@ export default async function NotificationPreferencesPage({ params }: Props) {
   };
 
   return (
-    <div className="px-4 py-6 max-w-2xl sm:px-8">
-      <div className="mb-6">
-        <h1 className="text-base font-semibold text-foreground">
-          Notification Preferences
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Control which notifications you receive via email and in-app.
-        </p>
-      </div>
-      <NotificationPreferencesForm initialPrefs={defaults} />
-    </div>
+    <PageShell
+      description="Control which notifications you receive via email and in-app."
+      title="Notification Preferences"
+    >
+      <ContentContainer>
+        <NotificationPreferencesForm initialPrefs={defaults} />
+      </ContentContainer>
+    </PageShell>
   );
 }

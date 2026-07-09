@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChangelogAdminCard } from "@/components/changelog/changelog-admin-card";
 import { ChangelogEntryCard } from "@/components/changelog/changelog-entry-card";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { listChangelogEntries } from "@/lib/changelog/queries";
@@ -50,29 +51,26 @@ export default async function WorkspaceChangelogPage({ params }: Props) {
 
   return (
     <div className="flex flex-col">
-      {/* Page header */}
-      <div className="border-b border-border px-4 py-6 sm:px-8">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-xl font-semibold text-foreground">Changelog</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {published.length === 0 && drafts.length === 0
-                ? "No updates published yet."
-                : isAdmin
-                  ? `${published.length} published · ${drafts.length} draft${drafts.length === 1 ? "" : "s"}`
-                  : `${total} update${total === 1 ? "" : "s"} published`}
-            </p>
-          </div>
-          {isAdmin && (
-            <Button asChild className="shrink-0">
+      <PageHeader
+        actions={
+          isAdmin ? (
+            <Button asChild>
               <Link href={`/${slug}/settings/changelog/new`}>
                 <Plus data-icon="inline-start" />
                 New entry
               </Link>
             </Button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+        description={
+          published.length === 0 && drafts.length === 0
+            ? "No updates published yet."
+            : isAdmin
+              ? `${published.length} published · ${drafts.length} draft${drafts.length === 1 ? "" : "s"}`
+              : `${total} update${total === 1 ? "" : "s"} published`
+        }
+        title="Changelog"
+      />
 
       {/* Content */}
       <div className="px-4 py-6 sm:px-8">

@@ -10,9 +10,8 @@ import {
   Send,
   Trash2,
 } from "lucide-react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   deletePostAction,
@@ -21,7 +20,6 @@ import {
   pinPostAction,
   publishPostAction,
   searchMergeTargetsAction,
-  updatePostAction,
 } from "@/app/actions/posts";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -39,14 +37,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const QuillEditor = dynamic(
-  () => import("@/components/comments/quill-editor"),
-  { ssr: false }
-);
-
 interface PostActionsMenuProps {
-  initialBody: string | null;
-  initialTitle: string;
+  // Detail-page URL for this post; Edit navigates here (opening inline edit)
+  // rather than opening a modal.
+  detailHref: string;
   isDraft?: boolean;
   isPinned: boolean;
   postId: string;
@@ -66,56 +60,22 @@ interface MergeTarget {
 export function PostActionsMenu({
   postId,
   workspaceId,
-  initialTitle,
-  initialBody,
+  detailHref,
   isDraft = false,
   isPinned,
   postTitle,
 }: PostActionsMenuProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
-  const [title, setTitle] = useState(initialTitle);
-  const [body, setBody] = useState(initialBody ?? "");
-  const [error, setError] = useState<string | null>(null);
 
   // Merge dialog state
   const [mergeQuery, setMergeQuery] = useState("");
   const [mergeResults, setMergeResults] = useState<MergeTarget[]>([]);
   const [mergeSelected, setMergeSelected] = useState<MergeTarget | null>(null);
-
-  function openEdit() {
-    setTitle(initialTitle);
-    setBody(initialBody ?? "");
-    setError(null);
-    setEditOpen(true);
-  }
-
-  function handleEditSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (title.trim().length < 3) {
-      setError("Title must be at least 3 characters.");
-      return;
-    }
-    setError(null);
-    startTransition(async () => {
-      const result = await updatePostAction({
-        postId,
-        workspaceId,
-        title: title.trim(),
-        body: body.trim() || undefined,
-      });
-      if (result.success) {
-        toast.success("Feedback updated");
-        setEditOpen(false);
-        router.refresh();
-      } else {
-        setError(result.error ?? "Failed to update feedback.");
-      }
-    });
-  }
+  const [mergeSearching, setMergeSearching] = useState(false);
+  const mergeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handlePinToggle() {
     startTransition(async () => {
@@ -157,17 +117,8 @@ export function PostActionsMenu({
     });
   }
 
-  function openMerge() {
-    setMergeQuery("");
-    setMergeSelected(null);
-    setMergeResults([]);
-    setMergeOpen(true);
-    runMergeSearch("");
-  }
-
-  function runMergeSearch(q: string) {
-    setMergeQuery(q);
-    setMergeSelected(null);
+  function fetchMergeTargets(q: string) {
+    setMergeSearching(true);
     startTransition(async () => {
       const result = await searchMergeTargetsAction({
         workspaceId,
@@ -177,7 +128,36 @@ export function PostActionsMenu({
       if (result.success) {
         setMergeResults(result.data.posts);
       }
+      setMergeSearching(false);
     });
+  }
+
+  // Update the input immediately, but debounce the server search so typing
+  // doesn't fire an API/DB query on every keystroke.
+  function handleMergeSearchChange(value: string) {
+    setMergeQuery(value);
+    setMergeSelected(null);
+    setMergeSearching(true);
+    if (mergeDebounceRef.current) {
+      clearTimeout(mergeDebounceRef.current);
+    }
+    mergeDebounceRef.current = setTimeout(() => fetchMergeTargets(value), 300);
+  }
+
+  function openMerge() {
+    setMergeQuery("");
+    setMergeSelected(null);
+    setMergeResults([]);
+    setMergeOpen(true);
+    // One bounded fetch of the top candidates — never the whole workspace.
+    fetchMergeTargets("");
+  }
+
+  function handleMergeOpenChange(open: boolean) {
+    if (!open && mergeDebounceRef.current) {
+      clearTimeout(mergeDebounceRef.current);
+    }
+    setMergeOpen(open);
   }
 
   function handleMergeConfirm() {
@@ -235,7 +215,9 @@ export function PostActionsMenu({
               <DropdownMenuSeparator />
             </>
           )}
-          <DropdownMenuItem onSelect={openEdit}>
+          <DropdownMenuItem
+            onSelect={() => router.push(`${detailHref}?edit=1`)}
+          >
             <Pencil />
             Edit
           </DropdownMenuItem>
@@ -262,63 +244,8 @@ export function PostActionsMenu({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Edit */}
-      <Dialog onOpenChange={setEditOpen} open={editOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit feedback</DialogTitle>
-          </DialogHeader>
-          <form className="space-y-4" onSubmit={handleEditSubmit}>
-            <div className="space-y-1.5">
-              <label
-                className="block text-xs font-medium text-foreground"
-                htmlFor="post-actions-edit-title"
-              >
-                Title
-              </label>
-              <input
-                className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                id="post-actions-edit-title"
-                maxLength={150}
-                onChange={(e) => setTitle(e.target.value)}
-                value={title}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <span className="block text-xs font-medium text-foreground">
-                Description
-              </span>
-              <QuillEditor
-                disabled={isPending}
-                onChange={(html) => setBody(html)}
-                placeholder="Add more detail (optional)"
-                value={body}
-              />
-            </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            <DialogFooter>
-              <button
-                className="px-3 py-1.5 text-xs text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                disabled={isPending}
-                onClick={() => setEditOpen(false)}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                disabled={isPending || !title.trim()}
-                type="submit"
-              >
-                {isPending ? "Saving…" : "Save changes"}
-              </button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
       {/* Merge */}
-      <Dialog onOpenChange={setMergeOpen} open={mergeOpen}>
+      <Dialog onOpenChange={handleMergeOpenChange} open={mergeOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Merge feedback</DialogTitle>
@@ -331,17 +258,13 @@ export function PostActionsMenu({
             </p>
             <input
               className="w-full border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              onChange={(e) => runMergeSearch(e.target.value)}
+              onChange={(e) => handleMergeSearchChange(e.target.value)}
               placeholder="Search posts to merge into…"
               type="text"
               value={mergeQuery}
             />
             <div className="max-h-60 divide-y divide-border overflow-y-auto border border-border">
-              {mergeResults.length === 0 ? (
-                <p className="px-3 py-3 text-xs text-muted-foreground">
-                  No matching posts.
-                </p>
-              ) : (
+              {mergeResults.length > 0 ? (
                 mergeResults.map((r) => (
                   <button
                     className={`block w-full px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none ${
@@ -359,6 +282,10 @@ export function PostActionsMenu({
                     </span>
                   </button>
                 ))
+              ) : (
+                <p className="px-3 py-3 text-xs text-muted-foreground">
+                  {mergeSearching ? "Searching…" : "No matching posts."}
+                </p>
               )}
             </div>
           </div>

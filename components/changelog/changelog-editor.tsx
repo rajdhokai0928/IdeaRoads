@@ -1,14 +1,24 @@
 "use client";
 
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, Pencil, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import {
   createChangelogEntryAction,
+  createChangelogLabelAction,
+  deleteChangelogLabelAction,
   publishChangelogEntryAction,
   updateChangelogEntryAction,
+  updateChangelogLabelAction,
   uploadChangelogCoverImageAction,
 } from "@/app/actions/changelog";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
@@ -43,7 +53,16 @@ interface LinkedPost {
   upvotes: number;
 }
 
+interface ChangelogLabel {
+  color: string;
+  id: string;
+  name: string;
+}
+
 interface ChangelogEditorProps {
+  // Persisted custom labels for this workspace (built-ins excluded). Managed
+  // (create/rename/delete) inline from the label section below.
+  initialLabels?: ChangelogLabel[];
   initialEntry?: {
     id: string;
     title: string;
@@ -61,6 +80,7 @@ export function ChangelogEditor({
   workspaceId,
   workspaceSlug,
   initialEntry,
+  initialLabels = [],
 }: ChangelogEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -77,9 +97,108 @@ export function ChangelogEditor({
   const [coverError, setCoverError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [label, setLabel] = useState(initialEntry?.label ?? "new_feature");
+  const [newLabel, setNewLabel] = useState("");
+  // Persisted custom labels (workspace-scoped). Managed inline below.
+  const [labels, setLabels] = useState<ChangelogLabel[]>(initialLabels);
+  const [labelBusy, setLabelBusy] = useState(false);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [editingLabelName, setEditingLabelName] = useState("");
   const [linkedPosts, setLinkedPosts] = useState<LinkedPost[]>(
     initialEntry?.linkedPosts ?? []
   );
+
+  // The selected label may be a custom one whose row was deleted; surface it as
+  // a read-only chip so the current selection stays visible.
+  const orphanLabel = useMemo(() => {
+    const isBuiltin = (CHANGELOG_LABEL_VALUES as readonly string[]).includes(
+      label
+    );
+    const isCustom = labels.some((l) => l.name === label);
+    return !isBuiltin && !isCustom && label ? label : null;
+  }, [label, labels]);
+
+  // Create (or select, if it already exists) a label from the input. Matching is
+  // case-insensitive against built-in names/keys and existing custom labels, so
+  // duplicates are never created. New custom labels are persisted immediately so
+  // they survive a refresh.
+  async function addCustomLabel() {
+    const raw = newLabel.trim();
+    if (!raw || labelBusy) {
+      return;
+    }
+    const lower = raw.toLowerCase();
+    const builtinMatch = CHANGELOG_LABEL_VALUES.find(
+      (l) =>
+        l.toLowerCase() === lower ||
+        getLabelInfo(l).label.toLowerCase() === lower
+    );
+    if (builtinMatch) {
+      setLabel(builtinMatch);
+      setNewLabel("");
+      return;
+    }
+    const existing = labels.find((l) => l.name.toLowerCase() === lower);
+    if (existing) {
+      setLabel(existing.name);
+      setNewLabel("");
+      return;
+    }
+    setLabelBusy(true);
+    const res = await createChangelogLabelAction({ workspaceId, name: raw });
+    setLabelBusy(false);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    setLabels((prev) => [...prev, res.data]);
+    setLabel(res.data.name);
+    setNewLabel("");
+  }
+
+  async function renameLabel(id: string) {
+    const original = labels.find((l) => l.id === id);
+    const name = editingLabelName.trim();
+    if (!original || !name || name === original.name) {
+      setEditingLabelId(null);
+      return;
+    }
+    setLabelBusy(true);
+    const res = await updateChangelogLabelAction({
+      labelId: id,
+      workspaceId,
+      name,
+    });
+    setLabelBusy(false);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    setLabels((prev) => prev.map((l) => (l.id === id ? res.data : l)));
+    // Keep the entry's selection pointing at the renamed label.
+    if (label === original.name) {
+      setLabel(res.data.name);
+    }
+    setEditingLabelId(null);
+  }
+
+  async function removeLabel(id: string, name: string) {
+    if (labelBusy) {
+      return;
+    }
+    setLabelBusy(true);
+    const res = await deleteChangelogLabelAction({ labelId: id, workspaceId });
+    setLabelBusy(false);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    setLabels((prev) => prev.filter((l) => l.id !== id));
+    // If the deleted label was selected, fall back to the default built-in.
+    if (label === name) {
+      setLabel("new_feature");
+    }
+    toast.success("Label deleted");
+  }
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
     "idle"
   );
@@ -315,7 +434,54 @@ export function ChangelogEditor({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 sm:px-8 max-w-3xl">
+    <div className="flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-8">
+      {/* Cover image — first, so it can be chosen before the details */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+          Cover image
+          <span className="ml-1 text-muted-foreground font-normal normal-case">
+            (optional)
+          </span>
+        </label>
+        {coverImageUrl ? (
+          <div className="relative block w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
+            <img
+              alt=""
+              className="max-h-64 w-full border border-border bg-muted/30 object-contain"
+              src={coverImageUrl}
+            />
+            <button
+              aria-label="Remove cover image"
+              className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={removeCoverImage}
+              type="button"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        ) : (
+          <label
+            className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-8 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+              isUploadingCover ? "pointer-events-none opacity-50" : ""
+            }`}
+          >
+            <ImagePlus className="size-4" />
+            {isUploadingCover ? "Uploading…" : "Add a cover image"}
+            <input
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="sr-only"
+              disabled={isUploadingCover}
+              onChange={handleCoverImageChange}
+              ref={coverInputRef}
+              type="file"
+            />
+          </label>
+        )}
+        {coverError && <p className="text-xs text-destructive">{coverError}</p>}
+      </div>
+
       {/* Title */}
       <div className="space-y-1.5">
         <label
@@ -340,62 +506,29 @@ export function ChangelogEditor({
         </div>
       </div>
 
-      {/* Cover image */}
+      {/* Content — immediately after the title */}
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-          Cover image
-          <span className="ml-1 text-muted-foreground font-normal normal-case">
-            (optional)
-          </span>
+          Content
         </label>
-        {coverImageUrl ? (
-          <div className="relative inline-block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
-            <img
-              alt=""
-              className="max-h-48 w-auto border border-border object-contain"
-              src={coverImageUrl}
-            />
-            <button
-              aria-label="Remove cover image"
-              className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={removeCoverImage}
-              type="button"
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-        ) : (
-          <label
-            className={`flex w-full max-w-xs cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-4 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
-              isUploadingCover ? "pointer-events-none opacity-50" : ""
-            }`}
-          >
-            <ImagePlus className="size-4" />
-            {isUploadingCover ? "Uploading…" : "Add a cover image"}
-            <input
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              className="sr-only"
-              disabled={isUploadingCover}
-              onChange={handleCoverImageChange}
-              ref={coverInputRef}
-              type="file"
-            />
-          </label>
-        )}
-        {coverError && <p className="text-xs text-destructive">{coverError}</p>}
+        <QuillEditor
+          minHeight={240}
+          onChange={(html) => setBody(html)}
+          placeholder="What shipped in this update?"
+          value={body}
+        />
       </div>
 
-      {/* Label */}
+      {/* Label — built-in labels plus a create-your-own field */}
       <div className="space-y-1.5">
         <label
           className="text-xs font-semibold text-foreground uppercase tracking-wide"
-          htmlFor="label"
+          htmlFor="new-label"
         >
           Label
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Built-in labels — always available, not editable. */}
           {CHANGELOG_LABEL_VALUES.map((l) => {
             const info = getLabelInfo(l);
             const isActive = label === l;
@@ -423,23 +556,125 @@ export function ChangelogEditor({
               </button>
             );
           })}
+
+          {/* Custom labels — selectable, with inline rename + delete. */}
+          {labels.map((l) => {
+            const isActive = label === l.name;
+            if (editingLabelId === l.id) {
+              return (
+                <input
+                  aria-label={`Rename ${l.name}`}
+                  className="border border-ring bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  key={l.id}
+                  maxLength={40}
+                  onBlur={() => renameLabel(l.id)}
+                  onChange={(e) => setEditingLabelName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      renameLabel(l.id);
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      setEditingLabelId(null);
+                    }
+                  }}
+                  autoFocus
+                  value={editingLabelName}
+                />
+              );
+            }
+            return (
+              <span
+                className={`inline-flex items-center gap-1 border pl-3 pr-1.5 py-1.5 text-xs font-semibold transition-all ${
+                  isActive
+                    ? "border-current"
+                    : "border-border text-muted-foreground hover:border-muted-foreground/50"
+                }`}
+                key={l.id}
+                style={
+                  isActive
+                    ? {
+                        color: l.color,
+                        backgroundColor: `${l.color}12`,
+                        borderColor: `${l.color}60`,
+                      }
+                    : {}
+                }
+              >
+                <button
+                  className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setLabel(l.name)}
+                  type="button"
+                >
+                  {l.name}
+                </button>
+                <button
+                  aria-label={`Rename ${l.name}`}
+                  className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  disabled={labelBusy}
+                  onClick={() => {
+                    setEditingLabelId(l.id);
+                    setEditingLabelName(l.name);
+                  }}
+                  type="button"
+                >
+                  <Pencil className="size-3" />
+                </button>
+                <button
+                  aria-label={`Delete ${l.name}`}
+                  className="text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  disabled={labelBusy}
+                  onClick={() => removeLabel(l.id, l.name)}
+                  type="button"
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            );
+          })}
+
+          {/* The selected label whose row was deleted — read-only. */}
+          {orphanLabel && (
+            <span
+              className="px-3 py-1.5 text-xs font-semibold border border-current"
+              style={{
+                color: getLabelInfo(orphanLabel).color,
+                backgroundColor: `${getLabelInfo(orphanLabel).color}12`,
+                borderColor: `${getLabelInfo(orphanLabel).color}60`,
+              }}
+            >
+              {orphanLabel}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            className="w-full max-w-xs border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            id="new-label"
+            maxLength={40}
+            onChange={(e) => setNewLabel(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addCustomLabel();
+              }
+            }}
+            placeholder="Create a new label…"
+            type="text"
+            value={newLabel}
+          />
+          <button
+            className="shrink-0 border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            disabled={!newLabel.trim() || labelBusy}
+            onClick={addCustomLabel}
+            type="button"
+          >
+            {labelBusy ? "Saving…" : "Add"}
+          </button>
         </div>
         <div className="mt-1">
           <ChangelogLabelBadge label={label} size="md" />
         </div>
-      </div>
-
-      {/* Body */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-          Content
-        </label>
-        <QuillEditor
-          minHeight={240}
-          onChange={(html) => setBody(html)}
-          placeholder="What shipped in this update?"
-          value={body}
-        />
       </div>
 
       {/* Linked Posts */}

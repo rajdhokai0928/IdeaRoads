@@ -5,10 +5,14 @@ import CommentSection from "@/components/comments/comment-section";
 import AssigneeSelect from "@/components/posts/assignee-select";
 import CategorySelect from "@/components/posts/category-select";
 import DeletePostButton from "@/components/posts/delete-post-button";
-import EditPostButton from "@/components/posts/edit-post-button";
-import { FeedbackBody } from "@/components/posts/feedback-body";
 import MergePostButton from "@/components/posts/merge-post-button";
 import PinButton from "@/components/posts/pin-button";
+import {
+  EditablePostContent,
+  EditableTitle,
+  EditPostControls,
+  PostEditProvider,
+} from "@/components/posts/post-inline-edit";
 import PublishDraftButton from "@/components/posts/publish-draft-button";
 import StatusSelect from "@/components/posts/status-select";
 import VoterListButton from "@/components/posts/voter-list-button";
@@ -71,6 +75,7 @@ interface PostDetailContentProps {
   boardIsArchived: boolean;
   categories: Category[];
   currentUserId: string | null;
+  defaultEditing?: boolean;
   embedQuery?: string;
   isAdminOrOwner: boolean;
   isEmbed?: boolean;
@@ -106,12 +111,14 @@ export function PostDetailContent({
   mergedTarget,
   workspaceId,
   currentUserId,
+  defaultEditing = false,
 }: PostDetailContentProps) {
   const isAuthor = !!currentUserId && post.authorId === currentUserId;
+  const canEdit = isAuthor || isAdminOrOwner;
   const statusMap = new Map(workspaceStatuses.map((s) => [s.slug, s.name]));
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col">
+    <div className="max-w-3xl mx-auto flex flex-col">
       {/* Back nav — hidden in embed mode (no navigation chrome) */}
       {!isEmbed && (
         <div className="border-b border-border px-4 py-4 sm:px-8">
@@ -125,207 +132,199 @@ export function PostDetailContent({
         </div>
       )}
 
-      <div className="px-4 py-8 max-w-3xl sm:px-8">
-        {/* Draft banner — members only; the public route 404s drafts so this
+      <div className="px-4 py-8 sm:px-8">
+        <PostEditProvider
+          canEdit={canEdit}
+          defaultEditing={defaultEditing}
+          initialBody={post.body}
+          initialImageUrl={post.imageUrl}
+          initialTitle={post.title}
+          postId={post.id}
+          workspaceId={workspaceId}
+        >
+          {/* Draft banner — members only; the public route 404s drafts so this
             only ever renders in the admin feedback view. */}
-        {post.isDraft && isMember && (
-          <div className="mb-6 flex flex-col gap-3 border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-2">
-              <FilePen className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
-              <div>
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  This feedback is a draft
-                </p>
-                <p className="mt-0.5 text-xs text-amber-700/80 dark:text-amber-300/70">
-                  It isn't visible on your public portal, roadmap, changelog, or
-                  API, and no notifications have been sent. Publish it to make
-                  it visible.
-                </p>
+          {post.isDraft && isMember && (
+            <div className="mb-6 flex flex-col gap-3 border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2">
+                <FilePen className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    This feedback is a draft
+                  </p>
+                  <p className="mt-0.5 text-xs text-amber-700/80 dark:text-amber-300/70">
+                    It isn't visible on your public portal, roadmap, changelog,
+                    or API, and no notifications have been sent. Publish it to
+                    make it visible.
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0">
+                <PublishDraftButton
+                  postId={post.id}
+                  workspaceId={workspaceId}
+                />
               </div>
             </div>
-            <div className="shrink-0">
-              <PublishDraftButton postId={post.id} workspaceId={workspaceId} />
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Post header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-semibold text-foreground leading-snug">
-              {post.title}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <StatusSelect
-                canEdit={isMember}
-                currentStatus={post.status}
-                postId={post.id}
-                workspaceId={workspaceId}
-                workspaceStatuses={workspaceStatuses}
+          {/* Post header */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+            <div className="flex-1 min-w-0">
+              <EditableTitle
+                className="text-xl font-semibold text-foreground leading-snug"
+                title={post.title}
               />
-              <CategorySelect
-                canEdit={isMember}
-                categories={categories}
-                currentCategoryId={post.categoryId}
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <StatusSelect
+                  canEdit={isMember}
+                  currentStatus={post.status}
+                  isDraft={post.isDraft}
+                  postId={post.id}
+                  workspaceId={workspaceId}
+                  workspaceStatuses={workspaceStatuses}
+                />
+                <CategorySelect
+                  canEdit={isMember}
+                  categories={categories}
+                  currentCategoryId={post.categoryId}
+                  postId={post.id}
+                  workspaceId={workspaceId}
+                />
+                {isMember && (
+                  <AssigneeSelect
+                    assignees={assignees}
+                    canEdit={isAdminOrOwner}
+                    currentAssigneeId={post.assignedToId}
+                    postId={post.id}
+                    workspaceId={workspaceId}
+                  />
+                )}
+                <span className="text-xs text-muted-foreground">
+                  by {post.authorName || post.authorEmail}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {format(post.createdAt, "MMM d, yyyy")}
+                </span>
+                {post.updatedAt > post.createdAt && (
+                  <span className="text-xs text-muted-foreground/60">
+                    edited {format(post.updatedAt, "MMM d, yyyy")}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Vote button + voter list */}
+            <div className="shrink-0 flex flex-col items-center gap-2">
+              <VoteButton
+                initialCount={post.upvotes}
+                initialHasVoted={votedByUser}
+                isArchived={boardIsArchived}
+                isLocked={post.isLocked}
+                isSignedIn={isSignedIn}
                 postId={post.id}
-                workspaceId={workspaceId}
               />
               {isMember && (
-                <AssigneeSelect
-                  assignees={assignees}
-                  canEdit={isAdminOrOwner}
-                  currentAssigneeId={post.assignedToId}
+                <VoterListButton postId={post.id} voteCount={post.upvotes} />
+              )}
+            </div>
+          </div>
+
+          {/* Merged notice */}
+          {mergedTarget && (
+            <div className="mt-4 flex items-center gap-2 border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              <GitMerge className="size-4 shrink-0" />
+              <span>
+                Merged into{" "}
+                <Link
+                  className="font-medium text-foreground hover:underline"
+                  href={mergedTarget.href}
+                >
+                  {mergedTarget.title}
+                </Link>
+              </span>
+            </div>
+          )}
+
+          {/* Post body + image — read-only, or the editor + image upload when
+            editing (title stays editable in the header above). */}
+          <EditablePostContent
+            body={post.body}
+            className="text-sm text-foreground leading-relaxed"
+            imageUrl={post.imageUrl}
+          />
+
+          {/* Triage / clean-up actions (workspace members) and author delete */}
+          {(isMember || isAuthor) && (
+            <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border pt-4">
+              {isMember && (
+                <PinButton
+                  isPinned={post.isPinned}
                   postId={post.id}
                   workspaceId={workspaceId}
                 />
               )}
-              <span className="text-xs text-muted-foreground">
-                by {post.authorName ?? post.authorEmail}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {format(post.createdAt, "MMM d, yyyy")}
-              </span>
-              {post.updatedAt > post.createdAt && (
-                <span className="text-xs text-muted-foreground/60">
-                  edited {format(post.updatedAt, "MMM d, yyyy")}
-                </span>
+              {isMember && !post.mergedIntoId && (
+                <MergePostButton
+                  postId={post.id}
+                  postTitle={post.title}
+                  workspaceId={workspaceId}
+                />
               )}
+              <EditPostControls />
+              <DeletePostButton
+                boardHref={boardHref}
+                postId={post.id}
+                workspaceId={workspaceId}
+              />
             </div>
-          </div>
+          )}
 
-          {/* Vote button + voter list */}
-          <div className="shrink-0 flex flex-col items-center gap-2">
-            <VoteButton
-              initialCount={post.upvotes}
-              initialHasVoted={votedByUser}
-              isArchived={boardIsArchived}
+          {/* Status history */}
+          {statusHistory.length > 0 && (
+            <div className="mt-6 border-t border-border pt-6">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                Status history
+              </h2>
+              <ul className="space-y-2">
+                {statusHistory.map((entry) => (
+                  <li
+                    className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground"
+                    key={entry.id}
+                  >
+                    <span className="text-foreground">
+                      {entry.fromStatus
+                        ? `${statusMap.get(entry.fromStatus) ?? entry.fromStatus} → `
+                        : ""}
+                      {statusMap.get(entry.toStatus) ?? entry.toStatus}
+                    </span>
+                    <span>·</span>
+                    <time dateTime={entry.createdAt.toISOString()}>
+                      {format(entry.createdAt, "MMM d, yyyy")}
+                    </time>
+                    {isMember && entry.changedByName && (
+                      <>
+                        <span>·</span>
+                        <span>by {entry.changedByName}</span>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Comments */}
+          <div className="mt-6 border-t border-border pt-6">
+            <CommentSection
+              canModerate={isAdminOrOwner}
+              currentUserId={currentUserId}
               isLocked={post.isLocked}
               isSignedIn={isSignedIn}
               postId={post.id}
             />
-            {isMember && (
-              <VoterListButton postId={post.id} voteCount={post.upvotes} />
-            )}
           </div>
-        </div>
-
-        {/* Merged notice */}
-        {mergedTarget && (
-          <div className="mt-4 flex items-center gap-2 border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-            <GitMerge className="size-4 shrink-0" />
-            <span>
-              Merged into{" "}
-              <Link
-                className="font-medium text-foreground hover:underline"
-                href={mergedTarget.href}
-              >
-                {mergedTarget.title}
-              </Link>
-            </span>
-          </div>
-        )}
-
-        {/* Post body */}
-        {post.body && (
-          <div className="mt-6 border-t border-border pt-6">
-            <FeedbackBody
-              body={post.body}
-              className="text-sm text-foreground leading-relaxed"
-            />
-          </div>
-        )}
-
-        {/* Attached image */}
-        {post.imageUrl && (
-          <div
-            className={post.body ? "mt-4" : "mt-6 border-t border-border pt-6"}
-          >
-            {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
-            <img
-              alt=""
-              className="max-h-96 w-auto border border-border object-contain"
-              src={post.imageUrl}
-            />
-          </div>
-        )}
-
-        {/* Triage / clean-up actions (workspace members) and author delete */}
-        {(isMember || isAuthor) && (
-          <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border pt-4">
-            {isMember && (
-              <PinButton
-                isPinned={post.isPinned}
-                postId={post.id}
-                workspaceId={workspaceId}
-              />
-            )}
-            {isMember && !post.mergedIntoId && (
-              <MergePostButton
-                postId={post.id}
-                postTitle={post.title}
-                workspaceId={workspaceId}
-              />
-            )}
-            {(isAuthor || isAdminOrOwner) && (
-              <EditPostButton
-                initialBody={post.body}
-                initialTitle={post.title}
-                postId={post.id}
-                workspaceId={workspaceId}
-              />
-            )}
-            <DeletePostButton
-              boardHref={boardHref}
-              postId={post.id}
-              workspaceId={workspaceId}
-            />
-          </div>
-        )}
-
-        {/* Status history */}
-        {statusHistory.length > 0 && (
-          <div className="mt-6 border-t border-border pt-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-              Status history
-            </h2>
-            <ul className="space-y-2">
-              {statusHistory.map((entry) => (
-                <li
-                  className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground"
-                  key={entry.id}
-                >
-                  <span className="text-foreground">
-                    {entry.fromStatus
-                      ? `${statusMap.get(entry.fromStatus) ?? entry.fromStatus} → `
-                      : ""}
-                    {statusMap.get(entry.toStatus) ?? entry.toStatus}
-                  </span>
-                  <span>·</span>
-                  <time dateTime={entry.createdAt.toISOString()}>
-                    {format(entry.createdAt, "MMM d, yyyy")}
-                  </time>
-                  {isMember && entry.changedByName && (
-                    <>
-                      <span>·</span>
-                      <span>by {entry.changedByName}</span>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Comments */}
-        <div className="mt-6 border-t border-border pt-6">
-          <CommentSection
-            canModerate={isAdminOrOwner}
-            currentUserId={currentUserId}
-            isLocked={post.isLocked}
-            isSignedIn={isSignedIn}
-            postId={post.id}
-          />
-        </div>
+        </PostEditProvider>
       </div>
     </div>
   );

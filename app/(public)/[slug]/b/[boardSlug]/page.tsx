@@ -8,6 +8,7 @@ import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { CategorySidebar } from "@/components/portal/category-sidebar";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PostStatusBadge } from "@/components/posts/post-status-badge";
+import { PostsPagination } from "@/components/posts/posts-pagination";
 import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
@@ -19,7 +20,7 @@ import {
   embedWrapperProps,
   parseEmbedParams,
 } from "@/lib/embed/style";
-import { listBoardPosts } from "@/lib/posts/queries";
+import { countBoardPostsFiltered, listBoardPosts } from "@/lib/posts/queries";
 import { getActiveWorkspaceStatuses } from "@/lib/workspace-statuses/queries";
 import {
   getWorkspaceBySlug,
@@ -36,6 +37,7 @@ interface Props {
     q?: string;
     myVotes?: string;
     mine?: string;
+    page?: string;
     embed?: string;
     theme?: string;
     accentColor?: string;
@@ -61,6 +63,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
     q,
     myVotes,
     mine,
+    page,
     embed,
     theme,
     accentColor,
@@ -102,21 +105,31 @@ export default async function BoardPage({ params, searchParams }: Props) {
   const searchQuery = q ?? "";
   const myVotesActive = isSignedIn && myVotes === "true";
   const mineActive = isSignedIn && mine === "1";
+  const PAGE_SIZE = 20;
+  const currentPage = Math.max(1, Number(page ?? 1));
 
-  const [boardPosts, workspaceStatuses, categories, allBoards] =
+  // Shared filter set for the page query and its matching count.
+  // Team (Brand Admin + Team Member) sees moderation-held posts; the public
+  // sees approved feedback only.
+  const filterOpts = {
+    status: validStatus || undefined,
+    categoryId: validCategoryId || undefined,
+    search: searchQuery || undefined,
+    userId: session?.user.id,
+    myVotes: myVotesActive,
+    onlyMine: mineActive,
+    includeUnapproved: isMember,
+  };
+
+  const [boardPosts, totalCount, workspaceStatuses, categories, allBoards] =
     await Promise.all([
       listBoardPosts(board.id, {
         sort: validSort,
-        status: validStatus || undefined,
-        categoryId: validCategoryId || undefined,
-        search: searchQuery || undefined,
-        userId: session?.user.id,
-        myVotes: myVotesActive,
-        onlyMine: mineActive,
-        // Team (Brand Admin + Team Member) sees moderation-held posts; the public
-        // sees approved feedback only.
-        includeUnapproved: isMember,
+        ...filterOpts,
+        limit: PAGE_SIZE,
+        offset: (currentPage - 1) * PAGE_SIZE,
       }),
+      countBoardPostsFiltered(board.id, filterOpts),
       getActiveWorkspaceStatuses(workspace.id),
       getActiveCategoriesForWorkspace(workspace.id),
       listBoardsForWorkspace(workspace.id),
@@ -125,6 +138,46 @@ export default async function BoardPage({ params, searchParams }: Props) {
   // Build a category map for quick lookup
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
   const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
+
+  function pageHref(targetPage: number) {
+    const params = new URLSearchParams();
+    if (validSort !== "newest") {
+      params.set("sort", validSort);
+    }
+    if (validStatus) {
+      params.set("status", validStatus);
+    }
+    if (validCategoryId) {
+      params.set("category", validCategoryId);
+    }
+    if (searchQuery) {
+      params.set("q", searchQuery);
+    }
+    if (myVotesActive) {
+      params.set("myVotes", "true");
+    }
+    if (mineActive) {
+      params.set("mine", "1");
+    }
+    if (embed) {
+      params.set("embed", embed);
+    }
+    if (theme) {
+      params.set("theme", theme);
+    }
+    if (accentColor) {
+      params.set("accentColor", accentColor);
+    }
+    if (targetPage > 1) {
+      params.set("page", String(targetPage));
+    }
+    const qs = params.toString();
+    return `/${slug}/b/${boardSlug}${qs ? `?${qs}` : ""}`;
+  }
 
   const newPostHref = board.isArchived
     ? undefined
@@ -257,7 +310,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
                             workspaceStatuses={workspaceStatuses}
                           />
                           <span className="text-xs text-muted-foreground">
-                            {post.authorName ?? post.authorEmail} ·{" "}
+                            {post.authorName || post.authorEmail} ·{" "}
                             {formatDistanceToNow(post.createdAt, {
                               addSuffix: true,
                             })}
@@ -286,6 +339,21 @@ export default async function BoardPage({ params, searchParams }: Props) {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Pagination — numbered, shown only when there's more than one page */}
+            {totalPages > 1 && (
+              <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-border px-4 py-3 sm:flex-row sm:px-6">
+                <span className="text-xs text-muted-foreground">
+                  Showing {rangeStart.toLocaleString()}–
+                  {rangeEnd.toLocaleString()} of {totalCount.toLocaleString()}
+                </span>
+                <PostsPagination
+                  currentPage={currentPage}
+                  hrefForPage={pageHref}
+                  totalPages={totalPages}
+                />
               </div>
             )}
           </div>

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChangelogEditor } from "@/components/changelog/changelog-editor";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
+import { listChangelogLabels } from "@/lib/changelog/labels";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -30,6 +31,8 @@ export default async function NewChangelogEntryPage({ params }: Props) {
     notFound();
   }
 
+  const initialLabels = await listChangelogLabels(workspace.id);
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b border-border px-4 py-4 sm:px-8 flex items-center gap-3">
@@ -43,7 +46,11 @@ export default async function NewChangelogEntryPage({ params }: Props) {
         <h2 className="text-sm font-semibold text-foreground">New Entry</h2>
       </div>
       <div className="flex-1 overflow-y-auto">
-        <ChangelogEditor workspaceId={workspace.id} workspaceSlug={slug} />
+        <ChangelogEditor
+          initialLabels={initialLabels}
+          workspaceId={workspace.id}
+          workspaceSlug={slug}
+        />
       </div>
     </div>
   );

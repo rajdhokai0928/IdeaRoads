@@ -58,6 +58,8 @@ export async function listBoardPosts(
     myVotes?: boolean;
     onlyMine?: boolean;
     includeUnapproved?: boolean;
+    limit?: number;
+    offset?: number;
   } = {}
 ) {
   const {
@@ -69,6 +71,8 @@ export async function listBoardPosts(
     myVotes,
     onlyMine,
     includeUnapproved = false,
+    limit,
+    offset = 0,
   } = opts;
 
   // Merged posts are hidden from active lists (Feature 05). Drafts are never
@@ -134,7 +138,7 @@ export async function listBoardPosts(
       .where(eq(votes.userId, userId))
       .as("user_vote");
 
-    return db
+    const votedQuery = db
       .select({
         id: posts.id,
         slug: posts.slug,
@@ -154,9 +158,12 @@ export async function listBoardPosts(
       .leftJoin(userVoteAlias, eq(posts.id, userVoteAlias.postId))
       .where(and(...conditions))
       .orderBy(...orderByCols);
+    return limit === undefined
+      ? votedQuery
+      : votedQuery.limit(limit).offset(offset);
   }
 
-  return db
+  const query = db
     .select({
       id: posts.id,
       slug: posts.slug,
@@ -175,6 +182,7 @@ export async function listBoardPosts(
     .from(posts)
     .where(and(...conditions))
     .orderBy(...orderByCols);
+  return limit === undefined ? query : query.limit(limit).offset(offset);
 }
 
 export async function getPostBySlug(boardId: string, slug: string) {
@@ -203,6 +211,64 @@ export async function countBoardPosts(boardId: string): Promise<number> {
   return value;
 }
 
+/** Count posts on a board under the same filters listBoardPosts uses — for pagination. */
+export async function countBoardPostsFiltered(
+  boardId: string,
+  opts: {
+    status?: string;
+    categoryId?: string;
+    search?: string;
+    userId?: string;
+    myVotes?: boolean;
+    onlyMine?: boolean;
+    includeUnapproved?: boolean;
+  } = {}
+): Promise<number> {
+  const {
+    status,
+    categoryId,
+    search,
+    userId,
+    myVotes,
+    onlyMine,
+    includeUnapproved = false,
+  } = opts;
+
+  const conditions = [
+    eq(posts.boardId, boardId),
+    isNull(posts.mergedIntoId),
+    eq(posts.isDraft, false),
+  ];
+  if (!includeUnapproved) {
+    conditions.push(eq(posts.isApproved, true));
+  }
+  if (status) {
+    conditions.push(eq(posts.status, status));
+  }
+  if (categoryId) {
+    conditions.push(eq(posts.categoryId, categoryId));
+  }
+  if (search?.trim()) {
+    conditions.push(ilike(posts.title, `%${search.trim()}%`));
+  }
+  if (myVotes && userId) {
+    const votedPostIds = db
+      .select({ id: votes.postId })
+      .from(votes)
+      .where(eq(votes.userId, userId));
+    conditions.push(inArray(posts.id, votedPostIds));
+  }
+  if (onlyMine && userId) {
+    conditions.push(eq(posts.authorId, userId));
+  }
+
+  const [{ value }] = await db
+    .select({ value: count() })
+    .from(posts)
+    .where(and(...conditions));
+  return value;
+}
+
 export async function countWorkspacePosts(
   workspaceId: string
 ): Promise<number> {
@@ -217,7 +283,7 @@ export async function countWorkspacePosts(
 export async function listWorkspacePosts(
   workspaceId: string,
   opts: {
-    sort?: "newest" | "top" | "trending";
+    sort?: "newest" | "top";
     status?: string;
     categoryId?: string;
     boardId?: string;
@@ -276,17 +342,10 @@ export async function listWorkspacePosts(
     conditions.push(ilike(posts.title, `%${search.trim()}%`));
   }
 
-  const recentVotes = sql`(
-    select count(*) from ${votes}
-    where ${votes.postId} = ${posts.id}
-      and ${votes.createdAt} > now() - interval '7 days'
-  )`;
   const orderByCols =
     sort === "top"
       ? [desc(posts.isPinned), desc(posts.upvotes)]
-      : sort === "trending"
-        ? [desc(posts.isPinned), desc(recentVotes), desc(posts.upvotes)]
-        : [desc(posts.isPinned), desc(posts.createdAt)];
+      : [desc(posts.isPinned), desc(posts.createdAt)];
 
   const columns = {
     id: posts.id,
@@ -457,13 +516,16 @@ export async function createPost(input: {
 
 export async function updatePost(
   postId: string,
-  input: { title: string; body: string | null }
+  input: { title: string; body: string | null; imageUrl?: string | null }
 ) {
   await db
     .update(posts)
     .set({
       title: input.title.trim(),
       body: input.body,
+      // Only touch the image when the caller passes it: undefined = leave as-is,
+      // null = remove, string = replace.
+      ...(input.imageUrl === undefined ? {} : { imageUrl: input.imageUrl }),
       updatedAt: new Date(),
     })
     .where(eq(posts.id, postId));
@@ -488,6 +550,19 @@ export async function publishPost(postId: string): Promise<void> {
   await db
     .update(posts)
     .set({ isDraft: false, updatedAt: new Date() })
+    .where(eq(posts.id, postId));
+}
+
+/**
+ * Revert a published post to a draft (the inverse of publishPost). Only the
+ * isDraft publication flag flips — the post's status, votes, comments,
+ * attachments, category, and history are all left untouched — so the same row
+ * simply drops out of every public surface until it's published again.
+ */
+export async function unpublishPost(postId: string): Promise<void> {
+  await db
+    .update(posts)
+    .set({ isDraft: true, updatedAt: new Date() })
     .where(eq(posts.id, postId));
 }
 
@@ -575,7 +650,14 @@ export async function listStatusHistory(postId: string) {
 
 // ─── Merge target search ──────────────────────────────────────────────────────
 
-/** Candidate posts to merge into: same workspace, approved, published, not merged, not self. */
+/**
+ * Candidate posts to merge into: ANY post in the same workspace that isn't the
+ * source and isn't already merged into something else. Visibility (approval /
+ * draft state / board privacy) is intentionally NOT filtered here — a
+ * moderation-held, draft, or private-board post is still a valid merge target,
+ * since merging is an internal triage action. This is the ONLY place visibility
+ * is relaxed; every public-facing query keeps its own visibility filters.
+ */
 export async function searchPostsForMerge(
   workspaceId: string,
   query: string,
@@ -583,22 +665,26 @@ export async function searchPostsForMerge(
 ) {
   const conditions = [
     eq(posts.workspaceId, workspaceId),
-    eq(posts.isApproved, true),
-    eq(posts.isDraft, false),
+    // Only merge-integrity guards remain: can't merge into an already-merged
+    // post, and can't merge a post into itself.
     isNull(posts.mergedIntoId),
     sql`${posts.id} <> ${excludePostId}`,
   ];
   if (query.trim()) {
     conditions.push(ilike(posts.title, `%${query.trim()}%`));
   }
-  return db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      upvotes: posts.upvotes,
-    })
-    .from(posts)
-    .where(and(...conditions))
-    .orderBy(desc(posts.upvotes), desc(posts.createdAt))
-    .limit(10);
+  return (
+    db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        upvotes: posts.upvotes,
+      })
+      .from(posts)
+      .where(and(...conditions))
+      // Most-voted first (likeliest merge targets), capped so the picker never
+      // loads the whole workspace — the client narrows it down with search.
+      .orderBy(desc(posts.upvotes), desc(posts.createdAt))
+      .limit(20)
+  );
 }

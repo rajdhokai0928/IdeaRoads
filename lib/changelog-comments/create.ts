@@ -1,6 +1,11 @@
 import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
-import { changelogComments, changelogEntries, user } from "@/db/schema";
+import {
+  changelogComments,
+  changelogEntries,
+  user,
+  workspaces,
+} from "@/db/schema";
 import { db } from "@/lib/db";
 import { isBlocked } from "@/lib/moderation/queries";
 
@@ -20,8 +25,11 @@ export class ChangelogCommentNotFoundError extends Error {
 
 export async function createChangelogComment(
   changelogEntryId: string,
-  input: { body: string; authorId: string },
-  workspaceId: string
+  input: { body: string; authorId: string; parentId?: string | null },
+  workspaceId: string,
+  // Members may comment on unpublished (draft) entries from the admin side; the
+  // public route never sets this, so drafts stay private there.
+  opts: { allowUnpublished?: boolean } = {}
 ) {
   const entry = await db
     .select({
@@ -33,7 +41,10 @@ export async function createChangelogComment(
     .limit(1)
     .then((r) => r[0] ?? null);
 
-  if (!entry?.isPublished) {
+  if (!entry) {
+    throw new ChangelogCommentNotFoundError();
+  }
+  if (!entry.isPublished && !opts.allowUnpublished) {
     throw new ChangelogCommentNotFoundError();
   }
 
@@ -43,6 +54,45 @@ export async function createChangelogComment(
       "You are not allowed to comment in this workspace."
     );
   }
+
+  // Validate parent (one level of nesting only, same entry) — mirrors feedback.
+  const parentId = input.parentId ?? null;
+  if (parentId) {
+    const parent = await db
+      .select({
+        id: changelogComments.id,
+        parentId: changelogComments.parentId,
+        changelogEntryId: changelogComments.changelogEntryId,
+      })
+      .from(changelogComments)
+      .where(eq(changelogComments.id, parentId))
+      .limit(1)
+      .then((r) => r[0] ?? null);
+
+    if (!parent) {
+      throw new ChangelogCommentBlockedError("Parent comment not found.");
+    }
+    if (parent.parentId !== null) {
+      throw new ChangelogCommentBlockedError(
+        "Replies to replies are not allowed."
+      );
+    }
+    if (parent.changelogEntryId !== changelogEntryId) {
+      throw new ChangelogCommentBlockedError(
+        "Parent comment does not belong to this entry."
+      );
+    }
+  }
+
+  // Comment moderation parity with feedback: when the workspace enables it, new
+  // comments start unapproved and stay hidden until an admin approves them.
+  const workspace = await db
+    .select({ commentModeration: workspaces.commentModeration })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1)
+    .then((r) => r[0] ?? null);
+  const isApproved = !workspace?.commentModeration;
 
   const userRow = await db
     .select({ name: user.name, image: user.image })
@@ -55,6 +105,8 @@ export async function createChangelogComment(
   await db.insert(changelogComments).values({
     id,
     changelogEntryId,
+    parentId,
+    isApproved,
     body: input.body.trim(),
     authorId: input.authorId,
     authorName: userRow?.name ?? null,

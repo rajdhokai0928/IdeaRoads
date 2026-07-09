@@ -1,17 +1,16 @@
+import { PageShell } from "@/components/ui/page";
+
 interface Props {
   children: React.ReactNode;
 }
 
 export default function GeneralSettingsLayout({ children }: Props) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-border px-4 py-6 sm:px-8">
-        <h1 className="text-xl font-semibold text-foreground">General</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage workspace-wide settings and visibility.
-        </p>
-      </div>
-      <div className="flex-1 overflow-y-auto">{children}</div>
-    </div>
+    <PageShell
+      description="Manage workspace-wide settings and visibility."
+      title="General"
+    >
+      {children}
+    </PageShell>
   );
 }

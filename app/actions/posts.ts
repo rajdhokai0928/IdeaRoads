@@ -30,6 +30,7 @@ import {
   searchPostsForMerge,
   setPinned,
   unapprovePost,
+  unpublishPost,
   updatePost,
   updatePostCategory,
   updatePostStatus,
@@ -617,6 +618,8 @@ const updatePostSchema = z.object({
     .string()
     .max(10_000, "Description must be 10,000 characters or fewer.")
     .optional(),
+  // Omit to leave the image untouched, null to remove it, a URL to replace it.
+  imageUrl: z.url().nullish(),
 });
 
 export async function updatePostAction(input: {
@@ -624,6 +627,7 @@ export async function updatePostAction(input: {
   workspaceId: string;
   title: string;
   body?: string;
+  imageUrl?: string | null;
 }): Promise<ActionResult<undefined>> {
   const session = await requireSession();
 
@@ -663,6 +667,7 @@ export async function updatePostAction(input: {
   await updatePost(parsed.data.postId, {
     title: parsed.data.title,
     body: parsed.data.body?.trim() ? parsed.data.body : null,
+    imageUrl: parsed.data.imageUrl,
   });
 
   audit({
@@ -925,6 +930,76 @@ export async function publishPostAction(input: {
 
   // Now that it's live, refresh the admin views and every public surface it can
   // appear on so it shows up without waiting for a cache to expire.
+  const [wsRow] = await db
+    .select({ slug: workspaces.slug })
+    .from(workspaces)
+    .where(eq(workspaces.id, input.workspaceId))
+    .limit(1);
+  const [boardRow] = await db
+    .select({ slug: boards.slug })
+    .from(boards)
+    .where(eq(boards.id, post.boardId))
+    .limit(1);
+  if (wsRow?.slug) {
+    revalidatePath(`/${wsRow.slug}/feedback`);
+    revalidatePath(`/${wsRow.slug}/feedback/${post.id}`);
+    revalidatePath(`/${wsRow.slug}/roadmap`);
+    if (boardRow?.slug) {
+      revalidatePath(`/${wsRow.slug}/b/${boardRow.slug}`);
+    }
+  }
+
+  return { success: true, data: undefined };
+}
+
+// ─── Unpublish Post (revert to draft) ────────────────────────────────────────
+
+export async function unpublishPostAction(input: {
+  postId: string;
+  workspaceId: string;
+}): Promise<ActionResult<undefined>> {
+  const session = await requireSession();
+
+  // Reverting to draft is the inverse of publishing — same workspace-member
+  // (triage) capability, same permission gate as publishPostAction.
+  const actorMember = await getWorkspaceMember(
+    input.workspaceId,
+    session.user.id
+  );
+  if (!actorMember) {
+    return {
+      success: false,
+      error: "You don't have permission to move this feedback to draft.",
+    };
+  }
+
+  const post = await getPost(input.postId);
+  if (!post || post.workspaceId !== input.workspaceId) {
+    return { success: false, error: "Post not found." };
+  }
+
+  if (post.isDraft) {
+    // Already a draft — no-op so re-selecting "Draft" doesn't write or notify.
+    return { success: true, data: undefined };
+  }
+
+  await unpublishPost(input.postId);
+
+  audit({
+    workspaceId: input.workspaceId,
+    action: "post.unpublished",
+    actorId: session.user.id,
+    actorEmail: session.user.email,
+    actorName: session.user.name ?? null,
+    entityType: "post",
+    entityId: post.id,
+    entityName: post.title,
+    description: `Reverted to draft: ${post.title}`,
+    metadata: { workspaceId: input.workspaceId, boardId: post.boardId },
+  });
+
+  // Refresh the admin views and every public surface it could appear on so it
+  // drops from public immediately (the inverse of the publish revalidation).
   const [wsRow] = await db
     .select({ slug: workspaces.slug })
     .from(workspaces)

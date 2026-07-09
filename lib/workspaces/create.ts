@@ -7,6 +7,7 @@ import {
 } from "@/config/platform";
 import { boards, workspaceMembers, workspaces } from "@/db/schema";
 import { audit } from "@/lib/audit";
+import { seedDefaultCategories } from "@/lib/categories/create";
 import { db } from "@/lib/db";
 import { seedDefaultStatuses } from "@/lib/workspace-statuses/create";
 
@@ -47,6 +48,7 @@ export async function createWorkspace(
     });
 
     await seedDefaultStatuses(workspaceId, tx);
+    await seedDefaultCategories(workspaceId, tx);
   });
 
   audit({

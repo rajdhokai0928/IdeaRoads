@@ -1,8 +1,10 @@
 import { notFound, redirect } from "next/navigation";
+import { PortalHrefProvider } from "@/components/workspace/open-portal-button";
 import { WorkspaceSidebar } from "@/components/workspace/workspace-sidebar";
 import { WorkspaceSuspendedPage } from "@/components/workspace/workspace-suspended";
 import { ADMIN_ROLE, WORKSPACE_MEMBER } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
+import { getWorkspaceBoard } from "@/lib/boards/queries";
 import { getUnreadCount } from "@/lib/notifications/queries";
 import {
   getUserWorkspaces,
@@ -55,6 +57,16 @@ export default async function WorkspaceLayout({
   const userWorkspaces = await getUserWorkspaces(session.user.id);
   const unreadCount = await getUnreadCount(session.user.id);
 
+  // Resolve the workspace's public-portal entry point once, shared with every
+  // page header via context (same logic as the Dashboard button): the public
+  // roadmap if enabled, else the public board, else nothing.
+  const board = await getWorkspaceBoard(workspace.id);
+  const portalHref = workspace.roadmapPublic
+    ? `/${slug}/roadmap`
+    : board?.isPublic
+      ? `/${slug}/b/${board.slug}`
+      : null;
+
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden md:flex-row">
       <WorkspaceSidebar
@@ -71,7 +83,7 @@ export default async function WorkspaceLayout({
 
       {/* Main content */}
       <main className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background">
-        {children}
+        <PortalHrefProvider href={portalHref}>{children}</PortalHrefProvider>
       </main>
     </div>
   );

@@ -1,4 +1,3 @@
-import { Rss } from "lucide-react";
 import Link from "next/link";
 import { SquareAvatar } from "@/components/ui/square-avatar";
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ContentContainer } from "@/components/ui/page";
 import { ApiKeyDocs } from "@/components/settings/api-key-docs";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
+import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { listApiKeys } from "@/lib/api-keys/queries";
 import { requireSession } from "@/lib/authz";

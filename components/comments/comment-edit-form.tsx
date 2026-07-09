@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { truncateHtmlToText } from "@/lib/changelog/html";
-import { uploadCommentImage } from "./upload-comment-image";
 import type { CommentApi } from "./types";
+import { uploadCommentImage } from "./upload-comment-image";
 
 const QuillEditor = dynamic(() => import("./quill-editor"), { ssr: false });
 

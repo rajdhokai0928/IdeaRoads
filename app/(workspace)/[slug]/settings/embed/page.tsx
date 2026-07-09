@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ContentContainer } from "@/components/ui/page";
 import { EmbedSection } from "@/components/settings/embed-section";
+import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { DEFAULT_EMBED_CONFIG, getEmbedConfig } from "@/lib/embed/queries";

@@ -1,8 +1,8 @@
-import type { RoadmapData } from "@/lib/roadmap/queries";
+import type { RoadmapStatusColumn } from "@/lib/roadmap/queries";
 import { RoadmapColumn } from "./roadmap-column";
 
 interface RoadmapBoardProps {
-  data: RoadmapData;
+  columns: RoadmapStatusColumn[];
   isAdmin?: boolean;
   isSignedIn: boolean;
   // Fixed per-route, never per-viewer: true only on the admin-shelled
@@ -14,7 +14,7 @@ interface RoadmapBoardProps {
 }
 
 export function RoadmapBoard({
-  data,
+  columns,
   workspaceSlug,
   isSignedIn,
   isAdmin,
@@ -29,30 +29,27 @@ export function RoadmapBoard({
         </div>
       )}
 
-      {/* Three-column kanban */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <RoadmapColumn
-          isSignedIn={isSignedIn}
-          posts={data.planned}
-          status="planned"
-          useWorkspaceLinks={useWorkspaceLinks}
-          workspaceSlug={workspaceSlug}
-        />
-        <RoadmapColumn
-          isSignedIn={isSignedIn}
-          posts={data.in_progress}
-          status="in_progress"
-          useWorkspaceLinks={useWorkspaceLinks}
-          workspaceSlug={workspaceSlug}
-        />
-        <RoadmapColumn
-          isSignedIn={isSignedIn}
-          posts={data.completed}
-          status="completed"
-          useWorkspaceLinks={useWorkspaceLinks}
-          workspaceSlug={workspaceSlug}
-        />
-      </div>
+      {columns.length === 0 ? (
+        <div className="mt-4 border border-dashed border-border px-4 py-16 text-center text-sm text-muted-foreground">
+          No roadmap columns yet. Add feedback statuses to populate the roadmap.
+        </div>
+      ) : (
+        // Kanban row: columns wrap on desktop when few, scroll horizontally when
+        // many; stacks vertically on mobile. Mirrors the status set 1:1.
+        <div className="flex flex-col gap-6 md:flex-row md:flex-wrap md:overflow-x-auto md:pb-2">
+          {columns.map((col) => (
+            <RoadmapColumn
+              color={col.color}
+              isSignedIn={isSignedIn}
+              key={col.id}
+              name={col.name}
+              posts={col.posts}
+              useWorkspaceLinks={useWorkspaceLinks}
+              workspaceSlug={workspaceSlug}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

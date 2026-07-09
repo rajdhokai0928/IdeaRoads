@@ -37,6 +37,12 @@ export const workspaces = pgTable(
       onDelete: "set null",
     }),
     roadmapPublic: boolean("roadmap_public").notNull().default(false),
+    // When true (default) the roadmap columns are derived from feedback statuses
+    // and are read-only. When false the roadmap becomes independent: manual
+    // items in workspace-defined roadmap_statuses columns, drag-and-drop, etc.
+    roadmapSyncEnabled: boolean("roadmap_sync_enabled")
+      .notNull()
+      .default(true),
     changelogPublic: boolean("changelog_public").notNull().default(false),
     moderationMode: moderationMode("moderation_mode").notNull().default("off"),
     commentModeration: boolean("comment_moderation").notNull().default(false),

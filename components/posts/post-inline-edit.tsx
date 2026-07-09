@@ -35,16 +35,16 @@ const ALLOWED_IMAGE_TYPES = new Set([
 // title/description/image when you press Save.
 
 interface PostEditContextValue {
+  cancel: () => void;
   canEdit: boolean;
   currentImage: string | null;
   draftBody: string;
   draftTitle: string;
   editing: boolean;
   error: string | null;
+  handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   imageError: string | null;
   isPending: boolean;
-  cancel: () => void;
-  handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeImage: () => void;
   save: () => void;
   setDraftBody: (value: string) => void;

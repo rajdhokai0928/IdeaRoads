@@ -4,9 +4,9 @@ import { changelogLabels } from "@/db/schema";
 import { db } from "@/lib/db";
 
 export interface ChangelogLabelRow {
+  color: string;
   id: string;
   name: string;
-  color: string;
 }
 
 const DEFAULT_LABEL_COLOR = "#6b7280";

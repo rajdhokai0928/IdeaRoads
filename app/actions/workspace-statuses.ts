@@ -102,6 +102,7 @@ const updateStatusSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/)
     .optional(),
   isArchived: z.boolean().optional(),
+  showOnRoadmap: z.boolean().optional(),
 });
 
 export async function updateWorkspaceStatusAction(input: {
@@ -110,6 +111,7 @@ export async function updateWorkspaceStatusAction(input: {
   name?: string;
   color?: string;
   isArchived?: boolean;
+  showOnRoadmap?: boolean;
 }): Promise<ActionResult<undefined>> {
   const session = await requireSession();
 
@@ -139,6 +141,7 @@ export async function updateWorkspaceStatusAction(input: {
     name: parsed.data.name,
     color: parsed.data.color,
     isArchived: parsed.data.isArchived,
+    showOnRoadmap: parsed.data.showOnRoadmap,
   });
 
   return { success: true, data: undefined };

@@ -4,6 +4,7 @@ import { ImageOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { setRoadmapSyncAction } from "@/app/actions/roadmap";
 import {
   deleteWorkspaceAction,
   updateWorkspaceInfoAction,
@@ -18,6 +19,7 @@ interface GeneralSettingsFormProps {
   // Public Portal origin — where this workspace's board/roadmap/changelog live.
   portalUrl: string;
   roadmapPublic: boolean;
+  roadmapSyncEnabled: boolean;
   workspaceDescription: string;
   workspaceId: string;
   workspaceLogoUrl: string;
@@ -144,6 +146,7 @@ export function GeneralSettingsForm({
   workspaceLogoUrl,
   portalUrl,
   roadmapPublic,
+  roadmapSyncEnabled,
   changelogPublic,
   canManage,
   isOwner,
@@ -179,6 +182,25 @@ export function GeneralSettingsForm({
       }
       toast.success(
         value ? "Public roadmap enabled" : "Public roadmap disabled"
+      );
+      router.refresh();
+    });
+  }
+
+  function handleRoadmapSyncToggle(value: boolean) {
+    startTransition(async () => {
+      const result = await setRoadmapSyncAction({
+        workspaceId,
+        enabled: value,
+      });
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(
+        value
+          ? "Roadmap now syncs from feedback"
+          : "Roadmap is now managed manually"
       );
       router.refresh();
     });
@@ -380,6 +402,23 @@ export function GeneralSettingsForm({
             disabled={isPending || !canManage}
             label="Public Changelog"
             onChange={handleChangelogToggle}
+          />
+        </div>
+      </section>
+
+      {/* Roadmap */}
+      <section>
+        <SectionHeader
+          description="Choose how roadmap items are managed."
+          title="Roadmap"
+        />
+        <div className="border border-border">
+          <ToggleRow
+            checked={roadmapSyncEnabled}
+            description="On: roadmap columns are generated from your feedback statuses and stay read-only. Off: manage roadmap items and columns manually, with drag-and-drop."
+            disabled={isPending || !canManage}
+            label="Sync Roadmap from Feedback"
+            onChange={handleRoadmapSyncToggle}
           />
         </div>
       </section>

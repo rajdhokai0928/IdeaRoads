@@ -1,77 +1,62 @@
 "use client";
 
 import { useState } from "react";
-import type { RoadmapPost, RoadmapStatus } from "@/lib/roadmap/queries";
+import type { RoadmapPost } from "@/lib/roadmap/queries";
 import { RoadmapEmptyState } from "./roadmap-empty-state";
 import { RoadmapPostCard } from "./roadmap-post-card";
-
-const COLUMN_CONFIG: Record<
-  RoadmapStatus,
-  { label: string; headerBg: string; badgeBg: string; badgeText: string }
-> = {
-  planned: {
-    label: "Planned",
-    headerBg: "bg-blue-50 dark:bg-blue-950/30",
-    badgeBg: "bg-blue-100 dark:bg-blue-900/40",
-    badgeText: "text-blue-700 dark:text-blue-300",
-  },
-  in_progress: {
-    label: "In Progress",
-    headerBg: "bg-violet-50 dark:bg-violet-950/30",
-    badgeBg: "bg-violet-100 dark:bg-violet-900/40",
-    badgeText: "text-violet-700 dark:text-violet-300",
-  },
-  completed: {
-    label: "Completed",
-    headerBg: "bg-green-50 dark:bg-green-950/30",
-    badgeBg: "bg-green-100 dark:bg-green-900/40",
-    badgeText: "text-green-700 dark:text-green-300",
-  },
-};
 
 const PAGE_SIZE = 10;
 
 interface RoadmapColumnProps {
+  color: string;
   isSignedIn: boolean;
+  name: string;
   posts: RoadmapPost[];
-  status: RoadmapStatus;
   useWorkspaceLinks?: boolean;
   workspaceSlug: string;
 }
 
 export function RoadmapColumn({
-  status,
+  name,
+  color,
   posts,
   workspaceSlug,
   isSignedIn,
   useWorkspaceLinks,
 }: RoadmapColumnProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const config = COLUMN_CONFIG[status];
   const visible = posts.slice(0, visibleCount);
   const hasMore = posts.length > visibleCount;
 
   return (
-    <div className="flex flex-col min-w-0">
-      {/* Column header */}
-      <div className={`${config.headerBg} px-4 py-3 border border-border mb-3`}>
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-foreground">
-            {config.label}
-          </h2>
+    <div className="flex w-full min-w-0 flex-col md:w-80 md:shrink-0">
+      {/* Column header — accent drawn from the workspace status colour */}
+      <div
+        className="mb-3 flex items-center justify-between gap-2 border border-border px-4 py-3"
+        style={{ backgroundColor: `${color}12` }}
+      >
+        <div className="flex min-w-0 items-center gap-2">
           <span
-            className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold ${config.badgeBg} ${config.badgeText}`}
-          >
-            {posts.length}
-          </span>
+            className="inline-block size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <h2 className="truncate text-sm font-semibold text-foreground">
+            {name}
+          </h2>
         </div>
+        <span
+          className="inline-flex shrink-0 items-center px-2 py-0.5 text-xs font-semibold"
+          style={{ backgroundColor: `${color}20`, color }}
+        >
+          {posts.length}
+        </span>
       </div>
 
       {/* Post cards */}
       <div className="flex flex-col gap-2">
         {visible.length === 0 ? (
           <div className="border border-dashed border-border">
-            <RoadmapEmptyState status={status} />
+            <RoadmapEmptyState label={`Nothing in ${name} yet.`} />
           </div>
         ) : (
           <>

@@ -1,12 +1,4 @@
-import type { RoadmapStatus } from "@/lib/roadmap/queries";
-
-const MESSAGES: Record<RoadmapStatus, string> = {
-  planned: "Nothing planned yet. Submit ideas on the feedback board.",
-  in_progress: "Nothing in progress right now.",
-  completed: "Nothing shipped yet. Check back soon.",
-};
-
-export function RoadmapEmptyState({ status }: { status: RoadmapStatus }) {
+export function RoadmapEmptyState({ label }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       <div className="size-8 mb-3 text-muted-foreground/30">
@@ -23,7 +15,9 @@ export function RoadmapEmptyState({ status }: { status: RoadmapStatus }) {
           />
         </svg>
       </div>
-      <p className="text-sm text-muted-foreground">{MESSAGES[status]}</p>
+      <p className="text-sm text-muted-foreground">
+        {label ?? "Nothing here yet."}
+      </p>
     </div>
   );
 }

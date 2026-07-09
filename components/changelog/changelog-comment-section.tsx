@@ -11,10 +11,10 @@ import { listChangelogCommentsWithReplies } from "@/lib/changelog-comments/queri
 import { getReactionsForChangelogComments } from "@/lib/changelog-comments/reactions";
 
 interface ChangelogCommentSectionProps {
-  changelogEntryId: string;
   // Admins/owners: see unapproved comments + the moderation queue, and may
   // delete any comment.
   canModerate: boolean;
+  changelogEntryId: string;
   currentUserId: string | null;
   isSignedIn: boolean;
 }

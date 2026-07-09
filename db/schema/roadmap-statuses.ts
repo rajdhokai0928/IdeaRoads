@@ -1,17 +1,18 @@
 import { createId } from "@paralleldrive/cuid2";
 import {
-  boolean,
   index,
   integer,
   pgTable,
   text,
   timestamp,
-  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { workspaces } from "@/db/schema/workspaces";
 
-export const workspaceStatuses = pgTable(
-  "workspace_statuses",
+// Workspace-specific roadmap columns used only when "Sync Roadmap from Feedback"
+// is OFF (manual mode). When Sync is ON the roadmap columns are derived from the
+// feedback statuses (workspace_statuses) instead and this table is unused.
+export const roadmapStatuses = pgTable(
+  "roadmap_statuses",
   {
     id: text("id")
       .primaryKey()
@@ -20,15 +21,8 @@ export const workspaceStatuses = pgTable(
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    slug: text("slug").notNull(),
     color: text("color").notNull().default("#6b7280"),
     displayOrder: integer("display_order").notNull().default(0),
-    isDefault: boolean("is_default").notNull().default(false),
-    isArchived: boolean("is_archived").notNull().default(false),
-    // Explicit roadmap-visibility flag (Sync-ON mode). ONLY statuses with this
-    // set to true become roadmap columns. Intake/internal statuses (Open, Under
-    // Review, Closed, Draft…) stay false so they never appear on the roadmap.
-    showOnRoadmap: boolean("show_on_roadmap").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -37,12 +31,8 @@ export const workspaceStatuses = pgTable(
       .defaultNow(),
   },
   (t) => [
-    uniqueIndex("workspace_statuses_workspace_slug_unq").on(
-      t.workspaceId,
-      t.slug
-    ),
-    index("workspace_statuses_workspace_id_idx").on(t.workspaceId),
-    index("workspace_statuses_workspace_order_idx").on(
+    index("roadmap_statuses_workspace_id_idx").on(t.workspaceId),
+    index("roadmap_statuses_workspace_order_idx").on(
       t.workspaceId,
       t.displayOrder
     ),

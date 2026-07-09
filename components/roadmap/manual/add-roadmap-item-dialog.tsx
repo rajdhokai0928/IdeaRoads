@@ -1,0 +1,397 @@
+"use client";
+
+import { ImagePlus, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
+import {
+  createRoadmapItemAction,
+  getRoadmapFeedbackImportAction,
+  updateRoadmapItemAction,
+  uploadRoadmapCoverImageAction,
+} from "@/app/actions/roadmap";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FeedbackSearchPanel } from "./feedback-search-panel";
+import type { BoardItem } from "./manual-roadmap-card";
+
+// Rich-text editor is client-only (Quill touches the DOM on mount). Reuses the
+// same editor as posts/changelog so description formatting is consistent.
+const QuillEditor = dynamic(
+  () => import("@/components/comments/quill-editor"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-40 border border-input bg-muted/30 animate-pulse" />
+    ),
+  }
+);
+
+const ALLOWED_COVER_TYPES = "image/png,image/jpeg,image/webp,image/gif";
+const MAX_COVER_BYTES = 4 * 1024 * 1024;
+
+interface BoardStatus {
+  color: string;
+  id: string;
+  name: string;
+}
+
+interface AddRoadmapItemDialogProps {
+  defaultStatusId?: string;
+  item?: BoardItem | null;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+  open: boolean;
+  statuses: BoardStatus[];
+  workspaceId: string;
+}
+
+// Convert an ISO/date string to the yyyy-MM-dd a native date input expects.
+function toDateInput(iso: string | null | undefined): string {
+  if (!iso) {
+    return "";
+  }
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) {
+    return "";
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+const inputClass =
+  "w-full border border-border bg-background px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
+
+export function AddRoadmapItemDialog({
+  open,
+  onOpenChange,
+  workspaceId,
+  statuses,
+  defaultStatusId,
+  item,
+  onSaved,
+}: AddRoadmapItemDialogProps) {
+  const isEdit = !!item;
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [launchDate, setLaunchDate] = useState("");
+  const [coverImage, setCoverImage] = useState("");
+  const [statusId, setStatusId] = useState("");
+  const [feedbackId, setFeedbackId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [isImporting, startImport] = useTransition();
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverError, setCoverError] = useState<string | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  // QuillEditor only reads `value` at mount. Bumping this key remounts it so
+  // programmatic changes (open/reset and Fill from Feedback) reflect in the
+  // editor; plain typing does NOT bump it, so the editor keeps focus/caret.
+  const [editorKey, setEditorKey] = useState(0);
+
+  // Reset the form whenever the dialog opens (create) or targets a new item (edit).
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setError(null);
+    setCoverError(null);
+    if (item) {
+      setTitle(item.title);
+      setDescription(item.description ?? "");
+      setLaunchDate(toDateInput(item.launchDate));
+      setCoverImage(item.coverImage ?? "");
+      setStatusId(item.statusId);
+      setFeedbackId(item.feedbackId);
+    } else {
+      setTitle("");
+      setDescription("");
+      setLaunchDate("");
+      setCoverImage("");
+      setStatusId(defaultStatusId ?? statuses[0]?.id ?? "");
+      setFeedbackId(null);
+    }
+    setEditorKey((k) => k + 1);
+  }, [open, item, defaultStatusId, statuses]);
+
+  function handleFill(postId: string) {
+    startImport(async () => {
+      const res = await getRoadmapFeedbackImportAction({ workspaceId, postId });
+      if (!res.success) {
+        toast.error(res.error);
+        return;
+      }
+      // One-time copy — the item stays independent of later feedback edits.
+      setTitle(res.data.title);
+      setDescription(res.data.description ?? "");
+      setFeedbackId(res.data.id);
+      setEditorKey((k) => k + 1);
+      toast.success("Filled from feedback");
+    });
+  }
+
+  async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    setCoverError(null);
+    if (file.size > MAX_COVER_BYTES) {
+      setCoverError("Image must be 4MB or smaller.");
+      return;
+    }
+    setIsUploadingCover(true);
+    try {
+      const fd = new FormData();
+      fd.set("image", file);
+      fd.set("workspaceId", workspaceId);
+      const res = await uploadRoadmapCoverImageAction(fd);
+      if (!res.success) {
+        setCoverError(res.error);
+        return;
+      }
+      setCoverImage(res.data.url);
+    } finally {
+      setIsUploadingCover(false);
+      if (coverInputRef.current) {
+        coverInputRef.current.value = "";
+      }
+    }
+  }
+
+  function removeCover() {
+    setCoverImage("");
+    setCoverError(null);
+    if (coverInputRef.current) {
+      coverInputRef.current.value = "";
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const trimmed = title.trim();
+    if (!trimmed) {
+      setError("Title is required.");
+      return;
+    }
+    if (!statusId) {
+      setError("Select a column.");
+      return;
+    }
+
+    startTransition(async () => {
+      const payload = {
+        workspaceId,
+        statusId,
+        title: trimmed,
+        description: description.trim() || null,
+        launchDate: launchDate || null,
+        coverImage: coverImage.trim() || null,
+      };
+      const res = isEdit
+        ? await updateRoadmapItemAction({ ...payload, itemId: item!.id })
+        : await createRoadmapItemAction({ ...payload, feedbackId });
+      if (!res.success) {
+        setError(res.error);
+        return;
+      }
+      toast.success(isEdit ? "Item updated" : "Roadmap item added");
+      onOpenChange(false);
+      onSaved();
+    });
+  }
+
+  return (
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <DialogContent
+        className="flex max-h-[calc(100dvh-4rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
+        showCloseButton={false}
+      >
+        <div className="shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-semibold">
+            {isEdit ? "Edit Roadmap Item" : "Add Roadmap Item"}
+          </DialogTitle>
+          <DialogDescription className="mt-0.5 text-xs text-muted-foreground">
+            {isEdit
+              ? "Update this roadmap item."
+              : "Create a roadmap item, optionally filling it from existing feedback."}
+          </DialogDescription>
+        </div>
+
+        <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[1fr_20rem]">
+          {/* Left — form (scrolls on its own only if the viewport is short) */}
+          <form
+            className="min-h-0 space-y-4 overflow-y-auto p-5"
+            id="roadmap-item-form"
+            onSubmit={handleSubmit}
+          >
+            <div>
+              <label
+                className="mb-1 block text-xs font-medium text-foreground"
+                htmlFor="ri-title"
+              >
+                Title <span className="text-destructive">*</span>
+              </label>
+              <input
+                autoFocus
+                className={inputClass}
+                id="ri-title"
+                maxLength={160}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Dark mode"
+                value={title}
+              />
+            </div>
+
+            <div>
+              <span className="mb-1 block text-xs font-medium text-foreground">
+                Description
+              </span>
+              <QuillEditor
+                key={editorKey}
+                minHeight={140}
+                onChange={(html) => setDescription(html)}
+                placeholder="What is this about?"
+                value={description}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  className="mb-1 block text-xs font-medium text-foreground"
+                  htmlFor="ri-date"
+                >
+                  Launch Date
+                </label>
+                <input
+                  className={inputClass}
+                  id="ri-date"
+                  onChange={(e) => setLaunchDate(e.target.value)}
+                  type="date"
+                  value={launchDate}
+                />
+              </div>
+              <div>
+                <label
+                  className="mb-1 block text-xs font-medium text-foreground"
+                  htmlFor="ri-status"
+                >
+                  Column
+                </label>
+                <Select onValueChange={setStatusId} value={statusId}>
+                  <SelectTrigger className="w-full" id="ri-status">
+                    <SelectValue placeholder="Select a column" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="inline-block size-2 rounded-full"
+                            style={{ backgroundColor: s.color }}
+                          />
+                          {s.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <span className="mb-1 block text-xs font-medium text-foreground">
+                Cover Image{" "}
+                <span className="font-normal text-muted-foreground">
+                  (optional)
+                </span>
+              </span>
+              {coverImage ? (
+                <div className="relative block w-full">
+                  {/* biome-ignore lint/performance/noImgElement: dynamic upload URL, not known at build time for next/image */}
+                  <img
+                    alt=""
+                    className="max-h-40 w-full border border-border bg-muted/30 object-contain"
+                    src={coverImage}
+                  />
+                  <button
+                    aria-label="Remove cover image"
+                    className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={removeCover}
+                    type="button"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label
+                  className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-6 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+                    isUploadingCover ? "pointer-events-none opacity-50" : ""
+                  }`}
+                >
+                  <ImagePlus className="size-4" />
+                  {isUploadingCover ? "Uploading…" : "Upload a cover image"}
+                  <input
+                    accept={ALLOWED_COVER_TYPES}
+                    className="sr-only"
+                    disabled={isUploadingCover}
+                    onChange={handleCoverChange}
+                    ref={coverInputRef}
+                    type="file"
+                  />
+                </label>
+              )}
+              {coverError && (
+                <p className="mt-1 text-xs text-destructive">{coverError}</p>
+              )}
+            </div>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </form>
+
+          {/* Right — feedback search. Only this panel scrolls; the modal itself
+              stays fixed-height (the results list has its own overflow). */}
+          {!isEdit && (
+            <div className="flex min-h-0 h-64 flex-col overflow-hidden border-t border-border bg-muted/30 md:h-auto md:border-l md:border-t-0">
+              <FeedbackSearchPanel
+                onFill={handleFill}
+                workspaceId={workspaceId}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3">
+          <button
+            className="border border-border px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            disabled={isPending}
+            onClick={() => onOpenChange(false)}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            className="bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            disabled={isPending || isImporting || isUploadingCover}
+            form="roadmap-item-form"
+            type="submit"
+          >
+            {isPending ? "Saving…" : isEdit ? "Save Changes" : "Add Item"}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

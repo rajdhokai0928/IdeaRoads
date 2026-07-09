@@ -10,13 +10,13 @@ export interface ReactionGroup {
 // omitted, components fall back to the feedback (posts) endpoints — so existing
 // feedback call sites need no change.
 export interface CommentApi {
-  // POST here to create a top-level comment or reply — body: { body, parentId? }
-  createUrl: string;
   // Base path for a single comment; components append:
   //   `${commentBaseUrl}/${id}`           → PATCH (edit) / DELETE
   //   `${commentBaseUrl}/${id}/reactions` → POST (toggle reaction)
   //   `${commentBaseUrl}/${id}/approve`   → PATCH (approve)
   commentBaseUrl: string;
+  // POST here to create a top-level comment or reply — body: { body, parentId? }
+  createUrl: string;
 }
 
 // Default endpoints for feedback-post comments.

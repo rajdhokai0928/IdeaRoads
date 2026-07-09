@@ -542,9 +542,9 @@ body {
 }
 /* Quill list items: suppress native marker, draw our own via ::before */
 .comment-body li[data-list] {
-  list-style-type: none;
-  padding-left: 1.5em;
   position: relative;
+  padding-left: 1.5em;
+  list-style-type: none;
   counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9;
 }
 /* Quill inserts an empty <span class="ql-ui"> marker node in the editor; hide
@@ -554,9 +554,9 @@ body {
 }
 .comment-body li[data-list]::before {
   display: inline-block;
-  margin-left: -1.5em;
-  margin-right: 0.3em;
   width: 1.2em;
+  margin-right: 0.3em;
+  margin-left: -1.5em;
   text-align: right;
   white-space: nowrap;
 }
@@ -639,8 +639,8 @@ body {
    <div class="ql-code-block"> per line. Keep each line on its own row. */
 .comment-body .ql-code-block {
   font-family: ui-monospace, monospace;
-  white-space: pre-wrap;
   word-break: break-word;
+  white-space: pre-wrap;
 }
 .comment-body .ql-code-block-container > .ql-ui {
   display: none;

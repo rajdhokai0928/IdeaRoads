@@ -18,6 +18,7 @@ export async function seedDefaultStatuses(
       color: s.color,
       displayOrder: s.displayOrder,
       isDefault: s.isDefault,
+      showOnRoadmap: s.showOnRoadmap,
     }))
   );
 }

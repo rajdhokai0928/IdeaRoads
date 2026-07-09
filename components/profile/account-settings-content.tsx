@@ -1,10 +1,10 @@
 import { desc, eq } from "drizzle-orm";
 import { Download } from "lucide-react";
-import { AccountIdentityForms, DeleteAccountForm } from "./account-forms";
-import { type SessionRow, SessionsCard } from "./sessions-card";
 import { Button } from "@/components/ui/button";
 import { session as sessionTable, user } from "@/db/schema";
 import { db } from "@/lib/db";
+import { AccountIdentityForms, DeleteAccountForm } from "./account-forms";
+import { type SessionRow, SessionsCard } from "./sessions-card";
 
 export async function AccountSettingsContent({
   userId,
@@ -29,7 +29,9 @@ export async function AccountSettingsContent({
       .orderBy(desc(sessionTable.createdAt)),
   ]);
 
-  if (!freshUser) return null;
+  if (!freshUser) {
+    return null;
+  }
 
   const sessionRows: SessionRow[] = sessions.map((s) => ({
     createdAt: s.createdAt.toISOString(),

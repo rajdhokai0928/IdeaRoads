@@ -61,7 +61,6 @@ export default async function EditChangelogEntryPage({ params }: Props) {
       </div>
       <div className="flex-1 overflow-y-auto">
         <ChangelogEditor
-          initialLabels={initialLabels}
           initialEntry={{
             id: entry.id,
             title: entry.title,
@@ -71,6 +70,7 @@ export default async function EditChangelogEntryPage({ params }: Props) {
             isPublished: entry.isPublished,
             linkedPosts: entry.linkedPosts,
           }}
+          initialLabels={initialLabels}
           workspaceId={workspace.id}
           workspaceSlug={slug}
         />

@@ -6,6 +6,7 @@ import { ChangelogAdminCard } from "@/components/changelog/changelog-admin-card"
 import { ChangelogEntryCard } from "@/components/changelog/changelog-entry-card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
+import { ListSearch } from "@/components/workspace/list-search";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { listChangelogEntries } from "@/lib/changelog/queries";
@@ -16,6 +17,7 @@ import {
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -24,8 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: workspace ? `Changelog — ${workspace.name}` : "Changelog" };
 }
 
-export default async function WorkspaceChangelogPage({ params }: Props) {
+export default async function WorkspaceChangelogPage({
+  params,
+  searchParams,
+}: Props) {
   const { slug } = await params;
+  const { q } = await searchParams;
+  const searchQuery = q ?? "";
 
   const session = await requireSession();
 
@@ -44,6 +51,7 @@ export default async function WorkspaceChangelogPage({ params }: Props) {
   const { entries, total } = await listChangelogEntries(workspace.id, {
     includeDrafts: isAdmin,
     limit: 50,
+    search: searchQuery || undefined,
   });
 
   const drafts = isAdmin ? entries.filter((e) => !e.isPublished) : [];
@@ -72,6 +80,8 @@ export default async function WorkspaceChangelogPage({ params }: Props) {
         title="Changelog"
       />
 
+      <ListSearch defaultValue={searchQuery} placeholder="Search updates" />
+
       {/* Content */}
       <div className="px-4 py-6 sm:px-8">
         {/* Drafts (admin only) */}
@@ -95,21 +105,32 @@ export default async function WorkspaceChangelogPage({ params }: Props) {
 
         {/* Published entries */}
         {published.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-sm font-medium text-foreground">
-              Nothing here yet
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Check back soon for product updates and announcements.
-            </p>
-            {isAdmin && (
-              <Button asChild className="mt-4">
-                <Link href={`/${slug}/settings/changelog/new`}>
-                  Create your first entry
-                </Link>
-              </Button>
-            )}
-          </div>
+          searchQuery && drafts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <p className="text-sm font-medium text-foreground">
+                No updates match “{searchQuery}”
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Try a different search term.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <p className="text-sm font-medium text-foreground">
+                Nothing here yet
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Check back soon for product updates and announcements.
+              </p>
+              {isAdmin && (
+                <Button asChild className="mt-4">
+                  <Link href={`/${slug}/settings/changelog/new`}>
+                    Create your first entry
+                  </Link>
+                </Button>
+              )}
+            </div>
+          )
         ) : (
           <div>
             {isAdmin && drafts.length > 0 && (

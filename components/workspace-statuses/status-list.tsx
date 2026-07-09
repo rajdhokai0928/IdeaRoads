@@ -1,6 +1,13 @@
 "use client";
 
-import { Archive, Edit2, Plus, Star, Trash2 } from "lucide-react";
+import {
+  Archive,
+  Edit2,
+  Map as MapIcon,
+  Plus,
+  Star,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -36,6 +43,7 @@ interface WorkspaceStatus {
   isArchived: boolean;
   isDefault: boolean;
   name: string;
+  showOnRoadmap: boolean;
   slug: string;
 }
 
@@ -126,6 +134,26 @@ export function StatusList({
         form.mode === "create" ? "Status created" : "Status updated"
       );
       closeForm();
+      router.refresh();
+    });
+  }
+
+  function handleToggleRoadmap(s: WorkspaceStatus) {
+    startTransition(async () => {
+      const result = await updateWorkspaceStatusAction({
+        statusId: s.id,
+        workspaceId,
+        showOnRoadmap: !s.showOnRoadmap,
+      });
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(
+        s.showOnRoadmap
+          ? `"${s.name}" hidden from the roadmap`
+          : `"${s.name}" now shows on the roadmap`
+      );
       router.refresh();
     });
   }
@@ -333,7 +361,28 @@ export function StatusList({
                   )}
 
                   {canManage && (
-                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                    <button
+                      aria-pressed={s.showOnRoadmap}
+                      className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 text-2xs font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        s.showOnRoadmap
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                      disabled={isPending}
+                      onClick={() => handleToggleRoadmap(s)}
+                      title="Show this status as a column on the roadmap (Sync from Feedback mode)"
+                      type="button"
+                    >
+                      <MapIcon className="size-2.5" />
+                      Roadmap
+                      <span className="opacity-70">
+                        {s.showOnRoadmap ? "On" : "Off"}
+                      </span>
+                    </button>
+                  )}
+
+                  {canManage && (
+                    <div className="flex items-center gap-1 shrink-0">
                       {!s.isDefault && (
                         <button
                           className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { DOCS_URL, LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
+import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 
 const LINKS = [
   {

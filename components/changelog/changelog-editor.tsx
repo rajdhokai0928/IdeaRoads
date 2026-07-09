@@ -60,9 +60,6 @@ interface ChangelogLabel {
 }
 
 interface ChangelogEditorProps {
-  // Persisted custom labels for this workspace (built-ins excluded). Managed
-  // (create/rename/delete) inline from the label section below.
-  initialLabels?: ChangelogLabel[];
   initialEntry?: {
     id: string;
     title: string;
@@ -72,6 +69,9 @@ interface ChangelogEditorProps {
     isPublished: boolean;
     linkedPosts: LinkedPost[];
   };
+  // Persisted custom labels for this workspace (built-ins excluded). Managed
+  // (create/rename/delete) inline from the label section below.
+  initialLabels?: ChangelogLabel[];
   workspaceId: string;
   workspaceSlug: string;
 }
@@ -564,6 +564,7 @@ export function ChangelogEditor({
               return (
                 <input
                   aria-label={`Rename ${l.name}`}
+                  autoFocus
                   className="border border-ring bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   key={l.id}
                   maxLength={40}
@@ -578,7 +579,6 @@ export function ChangelogEditor({
                       setEditingLabelId(null);
                     }
                   }}
-                  autoFocus
                   value={editingLabelName}
                 />
               );

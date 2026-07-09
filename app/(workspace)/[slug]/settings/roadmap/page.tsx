@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import {
+  type BoardStatus,
+  ManualRoadmapBoard,
+} from "@/components/roadmap/manual/manual-roadmap-board";
+import type { BoardItem } from "@/components/roadmap/manual/manual-roadmap-card";
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
+import { RoadmapSyncToggle } from "@/components/roadmap/roadmap-sync-toggle";
 import { PageHeader } from "@/components/ui/page";
+import { ListSearch } from "@/components/workspace/list-search";
+import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
-import { listPostsForRoadmap } from "@/lib/roadmap/queries";
+import { getDerivedRoadmap } from "@/lib/roadmap/derived";
+import { getManualRoadmap } from "@/lib/roadmap/manual";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -11,6 +20,7 @@ import {
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -19,8 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: workspace ? `Roadmap — ${workspace.name}` : "Roadmap" };
 }
 
-export default async function WorkspaceRoadmapPage({ params }: Props) {
+export default async function WorkspaceRoadmapPage({
+  params,
+  searchParams,
+}: Props) {
   const { slug } = await params;
+  const { q } = await searchParams;
+  const searchQuery = q ?? "";
   const session = await requireSession();
 
   const workspace = await getWorkspaceBySlug(slug);
@@ -32,30 +47,86 @@ export default async function WorkspaceRoadmapPage({ params }: Props) {
   if (!member) {
     notFound();
   }
+  const isAdmin = member.role !== WORKSPACE_MEMBER;
 
-  const roadmapData = await listPostsForRoadmap(workspace.id, {
+  // ── Sync OFF: independent, manually managed roadmap ──────────────────────
+  if (!workspace.roadmapSyncEnabled) {
+    const { columns } = await getManualRoadmap(workspace.id);
+    const statuses: BoardStatus[] = columns.map((c) => ({
+      id: c.id,
+      name: c.name,
+      color: c.color,
+      itemCount: c.items.length,
+    }));
+    const items: BoardItem[] = columns.flatMap((c) =>
+      c.items.map((i) => ({
+        id: i.id,
+        statusId: i.statusId,
+        title: i.title,
+        description: i.description,
+        launchDate: i.launchDate ? i.launchDate.toISOString() : null,
+        coverImage: i.coverImage,
+        voteCount: i.voteCount,
+        commentCount: i.commentCount,
+        feedbackId: i.feedbackId,
+      }))
+    );
+    const totalItems = items.length;
+
+    return (
+      <div className="flex flex-col">
+        <PageHeader
+          actions={
+            isAdmin ? (
+              <RoadmapSyncToggle enabled={false} workspaceId={workspace.id} />
+            ) : undefined
+          }
+          description={
+            totalItems === 0
+              ? "No items on the roadmap yet."
+              : `${totalItems} item${totalItems === 1 ? "" : "s"} across all columns`
+          }
+          title="Roadmap"
+        />
+        <ManualRoadmapBoard
+          canManage={isAdmin}
+          items={items}
+          statuses={statuses}
+          workspaceId={workspace.id}
+        />
+      </div>
+    );
+  }
+
+  // ── Sync ON: derived from feedback statuses, read-only ───────────────────
+  const columns = await getDerivedRoadmap(workspace.id, {
     isAdmin: true,
     userId: session.user.id,
+    search: searchQuery || undefined,
   });
-
-  const totalPosts =
-    roadmapData.planned.length +
-    roadmapData.in_progress.length +
-    roadmapData.completed.length;
+  const totalPosts = columns.reduce((n, c) => n + c.posts.length, 0);
 
   return (
     <div className="flex flex-col">
       <PageHeader
+        actions={
+          isAdmin ? (
+            <RoadmapSyncToggle enabled={true} workspaceId={workspace.id} />
+          ) : undefined
+        }
         description={
           totalPosts === 0
-            ? "No items on the roadmap yet."
+            ? searchQuery
+              ? `No roadmap items match “${searchQuery}”.`
+              : "No items on the roadmap yet."
             : `${totalPosts} item${totalPosts === 1 ? "" : "s"} across all columns`
         }
         title="Roadmap"
       />
+      <ListSearch defaultValue={searchQuery} placeholder="Search roadmap" />
       <div className="flex-1">
         <RoadmapBoard
-          data={roadmapData}
+          columns={columns}
           isAdmin={true}
           isSignedIn={true}
           useWorkspaceLinks={true}

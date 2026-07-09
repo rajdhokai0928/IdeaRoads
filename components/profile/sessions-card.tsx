@@ -19,7 +19,9 @@ export interface SessionRow {
 }
 
 function DeviceIcon({ userAgent }: { userAgent: string | null }) {
-  if (!userAgent) return <Monitor className="size-4 text-muted-foreground" />;
+  if (!userAgent) {
+    return <Monitor className="size-4 text-muted-foreground" />;
+  }
   if (/iPhone|iPad|Android/i.test(userAgent)) {
     return /iPad/i.test(userAgent) ? (
       <Tablet className="size-4 text-muted-foreground" />
@@ -57,7 +59,9 @@ function describeUserAgent(userAgent: string) {
 }
 
 function truncateIp(ip: string) {
-  if (ip.length <= 20) return ip;
+  if (ip.length <= 20) {
+    return ip;
+  }
   return `${ip.slice(0, 18)}…`;
 }
 

@@ -2,12 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { NavFeaturesDropdown } from "@/components/marketing/nav-features-dropdown";
 import { Button } from "@/components/ui/button";
-import {
-  DOCS_URL,
-  GITHUB_REPO_URL,
-  LOGO_PATH,
-  PRODUCT_NAME,
-} from "@/config/platform";
+import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 
 export function Nav() {
   return (

@@ -4,8 +4,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
-import { uploadCommentImage } from "./upload-comment-image";
 import { type CommentApi, postsCommentApi, type ReplyData } from "./types";
+import { uploadCommentImage } from "./upload-comment-image";
 
 const QuillEditor = dynamic(() => import("./quill-editor"), { ssr: false });
 

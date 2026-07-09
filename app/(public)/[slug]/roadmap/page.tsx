@@ -3,14 +3,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import {
+  type BoardStatus,
+  ManualRoadmapBoard,
+} from "@/components/roadmap/manual/manual-roadmap-board";
+import type { BoardItem } from "@/components/roadmap/manual/manual-roadmap-card";
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import { getDerivedRoadmap } from "@/lib/roadmap/derived";
+import { getManualRoadmap } from "@/lib/roadmap/manual";
 import type { RoadmapSort } from "@/lib/roadmap/queries";
-import { listPostsForRoadmap } from "@/lib/roadmap/queries";
 import {
   getWorkspaceBySlug,
   getWorkspaceMember,
@@ -57,29 +63,53 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
     notFound();
   }
 
+  const syncEnabled = workspace.roadmapSyncEnabled;
   const validCategoryId = category ?? "";
   const searchQuery = q ?? "";
   const validSort: RoadmapSort =
     sort === "latest_status_change" ? "latest_status_change" : "votes";
 
-  const [roadmapData, allBoards, categories] = await Promise.all([
-    listPostsForRoadmap(workspace.id, {
-      isAdmin,
-      userId: session?.user.id,
-      categoryId: validCategoryId || undefined,
-      search: searchQuery || undefined,
-      sort: validSort,
-    }),
+  const [derivedColumns, manual, allBoards, categories] = await Promise.all([
+    syncEnabled
+      ? getDerivedRoadmap(workspace.id, {
+          isAdmin,
+          userId: session?.user.id,
+          categoryId: validCategoryId || undefined,
+          search: searchQuery || undefined,
+          sort: validSort,
+        })
+      : Promise.resolve([]),
+    syncEnabled ? Promise.resolve(null) : getManualRoadmap(workspace.id),
     listBoardsForWorkspace(workspace.id),
     getActiveCategoriesForWorkspace(workspace.id),
   ]);
+
   const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
   const activeBoards = allBoards.filter((b) => !b.isArchived);
 
-  const totalPosts =
-    roadmapData.planned.length +
-    roadmapData.in_progress.length +
-    roadmapData.completed.length;
+  const manualStatuses: BoardStatus[] = (manual?.columns ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    color: c.color,
+    itemCount: c.items.length,
+  }));
+  const manualItems: BoardItem[] = (manual?.columns ?? []).flatMap((c) =>
+    c.items.map((i) => ({
+      id: i.id,
+      statusId: i.statusId,
+      title: i.title,
+      description: i.description,
+      launchDate: i.launchDate ? i.launchDate.toISOString() : null,
+      coverImage: i.coverImage,
+      voteCount: i.voteCount,
+      commentCount: i.commentCount,
+      feedbackId: i.feedbackId,
+    }))
+  );
+
+  const totalPosts = syncEnabled
+    ? derivedColumns.reduce((n, c) => n + c.posts.length, 0)
+    : manualItems.length;
 
   // The public portal never redirects into the workspace app — everyone here
   // (including signed-in members browsing the public roadmap) goes through
@@ -130,21 +160,34 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
           )}
         </div>
 
-        <RoadmapFilters
-          activeCategoryId={validCategoryId}
-          activeSearch={searchQuery}
-          activeSort={validSort}
-          categories={categories}
-        />
-
-        <div className="flex-1">
-          <RoadmapBoard
-            data={roadmapData}
-            isAdmin={isAdmin}
-            isSignedIn={isSignedIn}
-            workspaceSlug={slug}
-          />
-        </div>
+        {syncEnabled ? (
+          <>
+            <RoadmapFilters
+              activeCategoryId={validCategoryId}
+              activeSearch={searchQuery}
+              activeSort={validSort}
+              categories={categories}
+            />
+            <div className="flex-1">
+              <RoadmapBoard
+                columns={derivedColumns}
+                isAdmin={isAdmin}
+                isSignedIn={isSignedIn}
+                workspaceSlug={slug}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="flex-1">
+            {/* Manual roadmap is read-only on the public portal. */}
+            <ManualRoadmapBoard
+              canManage={false}
+              items={manualItems}
+              statuses={manualStatuses}
+              workspaceId={workspace.id}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

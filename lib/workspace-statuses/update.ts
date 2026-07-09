@@ -10,6 +10,7 @@ export async function updateWorkspaceStatus(
     displayOrder?: number;
     isDefault?: boolean;
     isArchived?: boolean;
+    showOnRoadmap?: boolean;
   }
 ) {
   await db

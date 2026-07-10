@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -97,7 +98,7 @@ export function AuditLogTable({
           }}
           value={filterEntityType || "all"}
         >
-          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+          <SelectTrigger size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -123,7 +124,7 @@ export function AuditLogTable({
           )}
           <input
             aria-label="Search audit log"
-            className="h-8 border border-border bg-background px-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9 rounded-ir-input border border-ir-border bg-ir-surface px-3 text-sm text-ir-heading placeholder:text-ir-muted focus-visible:ring-2 focus-visible:ring-ir-primary/20 focus-visible:outline-none"
             defaultValue={filterActor ?? ""}
             name="actor"
             placeholder="Search by actor, action, or entity…"
@@ -132,50 +133,47 @@ export function AuditLogTable({
         </form>
 
         {(filterAction || filterActor || filterEntityType) && (
-          <Link
-            className="h-8 inline-flex items-center px-3 border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
-            href={`/${workspaceSlug}/settings/audit-log`}
-          >
-            Clear filters
-          </Link>
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/${workspaceSlug}/settings/audit-log`}>
+              Clear filters
+            </Link>
+          </Button>
         )}
 
-        <span className="ml-auto h-8 flex items-center text-xs text-muted-foreground">
+        <span className="ml-auto flex h-9 items-center text-xs text-ir-muted">
           {total} event{total === 1 ? "" : "s"}
         </span>
       </div>
 
       {/* Table */}
       {logs.length === 0 ? (
-        <div className="border border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            No audit log entries found.
-          </p>
+        <div className="rounded-ir-card border border-dashed border-ir-border p-8 text-center">
+          <p className="text-sm text-ir-muted">No audit log entries found.</p>
         </div>
       ) : (
-        <div className="border border-border divide-y divide-border">
+        <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
           {logs.map((log) => (
             <div
-              className="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[1fr_auto] sm:gap-4"
+              className="grid grid-cols-1 gap-1 p-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:grid-cols-[1fr_auto] sm:gap-4"
               key={log.id}
             >
               <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs text-foreground bg-muted px-1.5 py-0.5 rounded-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-ir-xs bg-ir-muted-surface px-1.5 py-0.5 font-mono text-xs text-ir-heading">
                     {log.action}
                   </span>
                   {log.entityName && (
-                    <span className="text-sm text-foreground truncate">
+                    <span className="truncate text-sm text-ir-heading">
                       {log.entityName}
                     </span>
                   )}
                 </div>
                 {log.description && (
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                  <p className="mt-0.5 line-clamp-2 text-xs text-ir-muted">
                     {log.description}
                   </p>
                 )}
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-ir-muted">
                   {log.actorName ?? log.actorEmail ?? "System"}
                   {log.entityType && (
                     <span className="ml-2 opacity-60">· {log.entityType}</span>
@@ -183,7 +181,7 @@ export function AuditLogTable({
                 </p>
               </div>
               <div className="shrink-0 sm:text-right">
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                <p className="text-xs whitespace-nowrap text-ir-muted">
                   {fmt.format(new Date(log.createdAt))}
                 </p>
               </div>
@@ -195,33 +193,27 @@ export function AuditLogTable({
       {/* Pagination */}
       {(prevUrl || nextUrl) && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-ir-muted">
             Page {page} · {Math.min(page * limit, total)} of {total}
           </span>
           <div className="flex gap-2">
             {prevUrl ? (
-              <Link
-                className="px-3.5 py-1.5 text-sm border border-border hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                href={prevUrl}
-              >
-                Previous
-              </Link>
+              <Button asChild size="sm" variant="outline">
+                <Link href={prevUrl}>Previous</Link>
+              </Button>
             ) : (
-              <span className="px-3.5 py-1.5 text-sm border border-border opacity-40 cursor-not-allowed">
+              <Button disabled size="sm" variant="outline">
                 Previous
-              </span>
+              </Button>
             )}
             {nextUrl ? (
-              <Link
-                className="px-3.5 py-1.5 text-sm border border-border hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                href={nextUrl}
-              >
-                Next
-              </Link>
+              <Button asChild size="sm" variant="outline">
+                <Link href={nextUrl}>Next</Link>
+              </Button>
             ) : (
-              <span className="px-3.5 py-1.5 text-sm border border-border opacity-40 cursor-not-allowed">
+              <Button disabled size="sm" variant="outline">
                 Next
-              </span>
+              </Button>
             )}
           </div>
         </div>

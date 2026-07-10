@@ -15,11 +15,10 @@ export function ChangelogLabelBadge({
 
   return (
     <span
-      className={`inline-flex items-center font-semibold tracking-wide ${padding}`}
+      className={`inline-flex items-center rounded-ir-sm font-semibold tracking-wide ${padding}`}
       style={{
         backgroundColor: `${color}18`,
         color,
-        borderRadius: 2,
       }}
     >
       {displayLabel}

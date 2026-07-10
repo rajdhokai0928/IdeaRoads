@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import { ArrowLeftIcon, ImageIcon, XIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { createPostAction, uploadPostImageAction } from "@/app/actions/posts";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -147,19 +148,19 @@ export default function NewPostForm({
     <div className="flex flex-col">
       {/* Back nav — hidden in embed mode (no navigation chrome) */}
       {!isEmbed && (
-        <div className="border-b border-border px-8 py-4">
+        <div className="border-b border-ir-border px-8 py-4">
           <Link
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             href={boardHref}
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeftIcon className="size-4" />
             {boardName}
           </Link>
         </div>
       )}
 
-      <div className="px-8 py-8 max-w-5xl mx-auto w-full">
-        <h1 className="text-xl font-semibold text-foreground mb-6">
+      <div className="mx-auto w-full max-w-5xl px-8 py-8">
+        <h1 className="mb-6 text-xl font-semibold text-ir-heading">
           Submit feedback
         </h1>
 
@@ -167,14 +168,14 @@ export default function NewPostForm({
           {/* Title */}
           <div>
             <label
-              className="block text-sm font-medium text-foreground mb-1.5"
+              className="mb-1.5 block text-sm font-medium text-ir-heading"
               htmlFor="post-title"
             >
-              Title <span className="text-destructive">*</span>
+              Title <span className="text-ir-danger">*</span>
             </label>
             <input
-              className={`w-full px-3 py-2.5 text-sm bg-background border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 ${
-                titleError ? "border-destructive" : "border-input"
+              className={`w-full rounded-ir-input border bg-ir-surface px-3 py-2.5 text-sm text-ir-body placeholder:text-ir-muted focus:outline-none focus:ring-2 focus:ring-ir-primary/40 disabled:opacity-50 ${
+                titleError ? "border-ir-danger" : "border-ir-border"
               }`}
               disabled={isPending}
               id="post-title"
@@ -190,13 +191,13 @@ export default function NewPostForm({
               type="text"
               value={title}
             />
-            <div className="flex items-start justify-between mt-1">
+            <div className="mt-1 flex items-start justify-between">
               {titleError ? (
-                <p className="text-xs text-destructive">{titleError}</p>
+                <p className="text-xs text-ir-danger">{titleError}</p>
               ) : (
                 <span />
               )}
-              <span className="text-xs text-muted-foreground shrink-0 ml-2">
+              <span className="ml-2 shrink-0 text-xs text-ir-muted">
                 {title.length}/150
               </span>
             </div>
@@ -204,9 +205,9 @@ export default function NewPostForm({
 
           {/* Body */}
           <div>
-            <span className="block text-sm font-medium text-foreground mb-1.5">
+            <span className="mb-1.5 block text-sm font-medium text-ir-heading">
               Description{" "}
-              <span className="text-muted-foreground font-normal text-xs">
+              <span className="text-xs font-normal text-ir-muted">
                 (optional)
               </span>
             </span>
@@ -223,11 +224,11 @@ export default function NewPostForm({
           {categories.length > 0 && (
             <div>
               <label
-                className="block text-sm font-medium text-foreground mb-1.5"
+                className="mb-1.5 block text-sm font-medium text-ir-heading"
                 htmlFor="post-category"
               >
                 Category{" "}
-                <span className="text-muted-foreground font-normal text-xs">
+                <span className="text-xs font-normal text-ir-muted">
                   (optional)
                 </span>
               </label>
@@ -253,9 +254,9 @@ export default function NewPostForm({
 
           {/* Image (optional) */}
           <div>
-            <span className="block text-sm font-medium text-foreground mb-1.5">
+            <span className="mb-1.5 block text-sm font-medium text-ir-heading">
               Image{" "}
-              <span className="text-muted-foreground font-normal text-xs">
+              <span className="text-xs font-normal text-ir-muted">
                 (optional)
               </span>
             </span>
@@ -264,26 +265,26 @@ export default function NewPostForm({
                 {/* biome-ignore lint/performance/noImgElement: local blob: preview URL, next/image can't optimize it anyway */}
                 <img
                   alt=""
-                  className="max-h-48 w-auto border border-input object-contain"
+                  className="max-h-48 w-auto rounded-ir-sm border border-ir-border object-contain"
                   src={imagePreviewUrl}
                 />
                 <button
                   aria-label="Remove image"
-                  className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-ir-full border border-ir-border bg-ir-surface text-ir-danger shadow-ir-sm transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   disabled={isPending}
                   onClick={removeImage}
                   type="button"
                 >
-                  <X className="size-3.5" />
+                  <XIcon className="size-3.5" />
                 </button>
               </div>
             ) : (
               <label
-                className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-4 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+                className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-ir-input border border-dashed border-ir-border px-3 py-4 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-heading ${
                   isPending ? "pointer-events-none opacity-50" : ""
                 }`}
               >
-                <ImagePlus className="size-4" />
+                <ImageIcon className="size-4" />
                 Add an image
                 <input
                   accept="image/png,image/jpeg,image/webp,image/gif"
@@ -296,29 +297,28 @@ export default function NewPostForm({
               </label>
             )}
             {imageError && (
-              <p className="mt-1 text-xs text-destructive">{imageError}</p>
+              <p className="mt-1 text-xs text-ir-danger">{imageError}</p>
             )}
           </div>
 
           {generalError && (
-            <p className="text-sm text-destructive">{generalError}</p>
+            <p className="text-sm text-ir-danger">{generalError}</p>
           )}
 
           {/* Actions — pinned to the bottom-right of the form */}
-          <div className="flex items-center justify-end gap-3 border-t border-border pt-5">
+          <div className="flex items-center justify-end gap-3 border-t border-ir-border pt-5">
             <Link
-              className="px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="rounded-ir-sm px-3 py-2.5 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               href={boardHref}
             >
               Cancel
             </Link>
-            <button
-              className="px-5 py-2.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            <Button
               disabled={isPending || title.trim().length < 3}
               type="submit"
             >
               {isPending ? "Submitting…" : "Submit feedback"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

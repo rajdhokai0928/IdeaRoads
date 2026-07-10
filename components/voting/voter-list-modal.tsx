@@ -1,8 +1,16 @@
 "use client";
 
+import { UserCircleIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
-import { UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Voter {
   email: string | null;
@@ -64,54 +72,36 @@ export default function VoterListModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-black/40"
-        onClick={onClose}
-      />
+    <Dialog onOpenChange={(open) => !open && onClose()} open>
+      <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Voters</DialogTitle>
+          <DialogDescription>
+            {total} {total === 1 ? "person" : "people"} voted on this post
+          </DialogDescription>
+        </DialogHeader>
 
-      <div className="relative z-10 w-full max-w-md bg-background border border-border shadow-lg mx-4 flex flex-col max-h-[80vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">Voters</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {total} {total === 1 ? "person" : "people"} voted on this post
-            </p>
-          </div>
-          <button
-            aria-label="Close"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            onClick={onClose}
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="overflow-y-auto flex-1">
+        <div className="-mx-6 min-h-0 flex-1 overflow-y-auto border-t border-ir-border">
           {isLoading && voters.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-ir-muted">Loading…</p>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-sm text-ir-danger">{error}</p>
             </div>
           ) : voters.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">No voters yet.</p>
+              <p className="text-sm text-ir-muted">No voters yet.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-ir-border">
               {voters.map((voter) => (
                 <li
-                  className="flex items-center gap-3 px-5 py-3"
+                  className="flex items-center gap-3 px-6 py-3"
                   key={voter.id}
                 >
-                  {/* Avatar */}
-                  <div className="size-7 shrink-0 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                  <div className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ir-muted-surface">
                     {voter.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -120,26 +110,24 @@ export default function VoterListModal({
                         src={voter.image}
                       />
                     ) : (
-                      <UserRound className="size-3.5 text-muted-foreground" />
+                      <UserCircleIcon className="size-3.5 text-ir-muted" />
                     )}
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm text-foreground truncate">
+                      <span className="truncate text-sm text-ir-heading">
                         {voter.name ?? voter.email ?? "Unknown"}
                       </span>
                     </div>
                     {voter.name && voter.email && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="truncate text-xs text-ir-muted">
                         {voter.email}
                       </p>
                     )}
                   </div>
 
-                  {/* Time */}
-                  <span className="text-xs text-muted-foreground shrink-0">
+                  <span className="shrink-0 text-xs text-ir-muted">
                     {formatDistanceToNow(new Date(voter.votedAt), {
                       addSuffix: true,
                     })}
@@ -150,18 +138,20 @@ export default function VoterListModal({
           )}
 
           {hasMore && (
-            <div className="px-5 py-3 border-t border-border">
-              <button
-                className="w-full py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            <div className="border-t border-ir-border px-6 py-3">
+              <Button
+                className="w-full"
                 disabled={isLoading}
                 onClick={loadMore}
+                size="sm"
+                variant="ghost"
               >
                 {isLoading ? "Loading…" : "Load more"}
-              </button>
+              </Button>
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

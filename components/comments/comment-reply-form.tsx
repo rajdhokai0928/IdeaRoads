@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { type CommentApi, postsCommentApi, type ReplyData } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
 
@@ -120,16 +121,16 @@ export default function CommentReplyForm({
 
   if (!isSignedIn) {
     return (
-      <p className="mt-3 ml-10 text-sm text-muted-foreground py-2">
+      <p className="mt-3 ml-10 py-2 text-sm text-ir-muted">
         <Link
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-ir-primary hover:underline"
           href={`/signin?next=${encodeURIComponent(pathname)}`}
         >
           Sign in
         </Link>{" "}
         to reply.{" "}
         <button
-          className="text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
           onClick={onCancel}
           type="button"
         >
@@ -153,27 +154,28 @@ export default function CommentReplyForm({
         value={html}
       />
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-ir-danger">{error}</p>}
       {pendingMessage && (
-        <p className="text-xs text-warning">{pendingMessage}</p>
+        <p className="text-xs text-ir-warning">{pendingMessage}</p>
       )}
 
-      <div className="flex items-center gap-2 justify-end">
-        <button
-          className="px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      <div className="flex items-center justify-end gap-2">
+        <Button
           disabled={isPending}
           onClick={onCancel}
+          size="sm"
           type="button"
+          variant="ghost"
         >
           Cancel
-        </button>
-        <button
-          className="px-3 py-1 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        </Button>
+        <Button
           disabled={isPending || uploading || !text.trim()}
+          size="sm"
           type="submit"
         >
           {isPending ? "Posting…" : "Reply"}
-        </button>
+        </Button>
       </div>
     </form>
   );

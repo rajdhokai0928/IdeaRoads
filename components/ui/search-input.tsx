@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import {
   InputGroup,
@@ -53,7 +53,7 @@ export function SearchInput({
   return (
     <InputGroup className={className}>
       <InputGroupAddon>
-        <Search className="text-muted-foreground" />
+        <MagnifyingGlassIcon className="ml-2 text-ir-muted" />
       </InputGroupAddon>
       <InputGroupInput
         aria-label={ariaLabel ?? placeholder}
@@ -69,7 +69,7 @@ export function SearchInput({
             onClick={() => update("", true)}
             size="icon-xs"
           >
-            <X />
+            <XIcon />
           </InputGroupButton>
         </InputGroupAddon>
       )}

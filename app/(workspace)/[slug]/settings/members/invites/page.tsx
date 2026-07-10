@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PageBody } from "@/components/ui/page";
 import { WORKSPACE_MEMBER, WORKSPACE_OWNER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { adminBaseUrl } from "@/lib/urls";
@@ -49,17 +50,14 @@ export default async function InvitesPage({ params }: Props) {
   const appUrl = adminBaseUrl();
 
   return (
-    <div className="px-4 py-6 space-y-10 sm:px-8">
+    <PageBody className="space-y-10">
       {canManage && (
-        <div className="space-y-6 border-b border-border pb-10">
+        <div className="space-y-6 border-b border-ir-border pb-10">
           <InviteForm
             canInviteAdmin={canManageAdmin}
             workspaceId={workspace.id}
           />
           <div>
-            {/* <h2 className="mb-4 text-sm font-semibold uppercase tracking-eyebrow text-muted-foreground">
-              Shareable invite link
-            </h2> */}
             <InviteLinksList
               appUrl={appUrl}
               canManage={canManage}
@@ -82,6 +80,6 @@ export default async function InvitesPage({ params }: Props) {
         invites={pendingInvites}
         workspaceId={workspace.id}
       />
-    </div>
+    </PageBody>
   );
 }

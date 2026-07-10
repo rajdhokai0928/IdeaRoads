@@ -14,7 +14,7 @@ export function SettingsTabs({ slug }: { slug: string }) {
   ];
 
   return (
-    <div className="flex gap-0 border-b border-border px-4 sm:px-8">
+    <div className="flex gap-1 border-b border-ir-border px-4 sm:px-8">
       {tabs.map((tab) => {
         const isActive =
           tab.href === invitesHref
@@ -22,10 +22,10 @@ export function SettingsTabs({ slug }: { slug: string }) {
             : pathname === membersHref || !pathname.startsWith(invitesHref);
         return (
           <Link
-            className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors duration-150 ${
+            className={`-mb-px rounded-t-ir-sm border-b-2 px-4 py-2.5 text-sm font-medium transition-colors duration-150 ease-ir-standard ${
               isActive
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "border-ir-primary text-ir-primary"
+                : "border-transparent text-ir-muted hover:text-ir-heading"
             }`}
             href={tab.href}
             key={tab.href}

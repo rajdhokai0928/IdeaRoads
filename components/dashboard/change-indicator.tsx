@@ -1,4 +1,7 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
+import {
+  TrendDownIcon as TrendDown,
+  TrendUpIcon as TrendUp,
+} from "@phosphor-icons/react/dist/ssr";
 
 export function ChangeIndicator({
   current,
@@ -13,22 +16,22 @@ export function ChangeIndicator({
 
   if (previous === 0) {
     return current === 0 ? (
-      <span className="text-xs text-muted-foreground">—</span>
+      <span className="text-xs text-ir-muted">—</span>
     ) : (
-      <span className="text-xs font-medium text-success">New</span>
+      <span className="text-xs font-medium text-ir-success">New</span>
     );
   }
 
   const pct = Math.round(((current - previous) / previous) * 100);
   if (pct === 0) {
-    return <span className="text-xs text-muted-foreground">0%</span>;
+    return <span className="text-xs text-ir-muted">0%</span>;
   }
 
   const isUp = pct > 0;
-  const Icon = isUp ? TrendingUp : TrendingDown;
+  const Icon = isUp ? TrendUp : TrendDown;
   return (
     <span
-      className={`flex items-center gap-1 text-xs font-medium ${isUp ? "text-success" : "text-destructive"}`}
+      className={`flex items-center gap-1 text-xs font-medium ${isUp ? "text-ir-success" : "text-ir-danger"}`}
     >
       <Icon className="size-3" />
       {isUp ? "+" : ""}

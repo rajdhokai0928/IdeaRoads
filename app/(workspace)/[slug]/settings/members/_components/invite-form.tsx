@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { SpinnerIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { inviteMemberAction } from "@/app/actions/members";
@@ -60,17 +60,17 @@ export function InviteForm({ workspaceId, canInviteAdmin }: InviteFormProps) {
 
   return (
     <div>
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-eyebrow text-muted-foreground">
+      <h2 className="mb-4 text-sm font-semibold tracking-eyebrow text-ir-muted uppercase">
         Invite a Team Member
       </h2>
       <form className="space-y-4" onSubmit={onSubmit}>
         {generalError && (
-          <p className="bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p className="rounded-ir-sm bg-ir-danger/10 px-3 py-2 text-sm text-ir-danger">
             {generalError}
           </p>
         )}
         {success && (
-          <p className="bg-muted px-3 py-2 text-sm text-foreground">
+          <p className="rounded-ir-sm bg-ir-success/10 px-3 py-2 text-sm text-ir-success">
             Invitation sent.
           </p>
         )}
@@ -88,7 +88,7 @@ export function InviteForm({ workspaceId, canInviteAdmin }: InviteFormProps) {
               value={email}
             />
             {emailError && (
-              <p className="text-xs text-destructive">{emailError}</p>
+              <p className="text-xs text-ir-danger">{emailError}</p>
             )}
           </div>
           {canInviteAdmin && (
@@ -109,7 +109,7 @@ export function InviteForm({ workspaceId, canInviteAdmin }: InviteFormProps) {
           <Button disabled={submitting || !email.trim()} type="submit">
             {submitting ? (
               <span className="flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin" />
+                <SpinnerIcon className="size-4 animate-spin" />
                 Sending…
               </span>
             ) : (

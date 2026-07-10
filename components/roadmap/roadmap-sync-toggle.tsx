@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { setRoadmapSyncAction } from "@/app/actions/roadmap";
+import { Switch } from "@/components/ui/switch";
 
 interface RoadmapSyncToggleProps {
   enabled: boolean;
@@ -44,28 +45,18 @@ export function RoadmapSyncToggle({
 
   return (
     <div className="flex items-center gap-2.5">
-      <span className="text-xs font-medium text-muted-foreground">
+      <span className="text-sm font-medium text-ir-muted">
         Sync from Feedback
       </span>
-      <button
-        aria-checked={enabled}
+      <Switch
         aria-label="Sync roadmap from feedback"
-        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-          enabled ? "bg-primary" : "bg-muted"
-        }`}
+        checked={enabled}
         disabled={isPending}
-        onClick={() => toggle(!enabled)}
-        role="switch"
-        type="button"
-      >
-        <span
-          className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            enabled ? "translate-x-4" : "translate-x-0"
-          }`}
-        />
-      </button>
+        onCheckedChange={toggle}
+        size="default"
+      />
       <span
-        className={`text-xs font-semibold ${enabled ? "text-primary" : "text-muted-foreground"}`}
+        className={`text-xs font-semibold ${enabled ? "text-ir-primary" : "text-ir-muted"}`}
       >
         {enabled ? "On" : "Off"}
       </span>

@@ -1,7 +1,7 @@
 "use client";
 
+import { CheckIcon, TrashIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
-import { Check, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -70,51 +70,55 @@ function PendingCommentRow({
 
   return (
     <>
-      <div className="flex gap-3 py-3 border-b border-border last:border-0">
-        <div className="flex size-7 shrink-0 items-center justify-center bg-muted text-muted-foreground text-xs font-semibold">
+      <div className="flex gap-3 border-b border-ir-border py-3 last:border-0">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ir-muted-surface text-xs font-semibold text-ir-muted">
           {(comment.authorName ?? "?").charAt(0).toUpperCase()}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-xs font-medium text-foreground">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-xs font-medium text-ir-heading">
               {comment.authorName ?? "Anonymous"}
             </span>
             {comment.isGuest && (
-              <span className="text-2xs uppercase tracking-wide text-muted-foreground/60 border border-border px-1">
+              <span className="rounded-ir-full border border-ir-border px-1.5 text-2xs tracking-wide text-ir-muted uppercase">
                 Guest
               </span>
             )}
             {comment.parentId && (
-              <span className="text-2xs uppercase tracking-wide text-muted-foreground/60 border border-border px-1">
+              <span className="rounded-ir-full border border-ir-border px-1.5 text-2xs tracking-wide text-ir-muted uppercase">
                 Reply
               </span>
             )}
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-ir-muted">
               {formatDistanceToNow(new Date(comment.createdAt), {
                 addSuffix: true,
               })}
             </span>
           </div>
-          <p className="mt-1 text-sm text-foreground leading-relaxed whitespace-pre-wrap wrap-break-word">
+          <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-ir-body wrap-break-word">
             {commentPreviewText(comment.body, 5000)}
           </p>
         </div>
-        <div className="shrink-0 flex items-start gap-2 pt-0.5">
+        <div className="flex shrink-0 items-start gap-2 pt-0.5">
           <button
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none disabled:opacity-50"
+            aria-label="Approve comment"
+            className="rounded-ir-sm p-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none disabled:opacity-50"
             disabled={isApproving || isDeleting}
             onClick={handleApprove}
             title="Approve"
+            type="button"
           >
-            <Check className="size-4 text-success" />
+            <CheckIcon className="size-4 text-ir-success" />
           </button>
           <button
-            className="text-xs text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none disabled:opacity-50"
+            aria-label="Delete comment"
+            className="rounded-ir-sm p-1 text-xs text-ir-danger transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none disabled:opacity-50"
             disabled={isApproving || isDeleting}
             onClick={() => setShowDeleteDialog(true)}
             title="Delete"
+            type="button"
           >
-            <Trash2 className="size-4" />
+            <TrashIcon className="size-4" />
           </button>
         </div>
       </div>
@@ -154,8 +158,8 @@ export default function CommentModerationQueue({
   }
 
   return (
-    <div className="mt-8 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-3">
+    <div className="mt-8 rounded-ir-card border border-ir-warning/30 bg-ir-warning/10 p-4">
+      <h3 className="mb-3 text-xs font-semibold tracking-wide text-ir-warning uppercase">
         Pending Approval ({pending.length})
       </h3>
       <div>

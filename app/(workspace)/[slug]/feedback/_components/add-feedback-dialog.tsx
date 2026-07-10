@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Plus, X } from "lucide-react";
+import { ImageIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -192,7 +192,7 @@ export function AddFeedbackDialog({
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
         <Button type="button">
-          <Plus data-icon="inline-start" />
+          <PlusIcon data-icon="inline-start" />
           Add Feedback
         </Button>
       </DialogTrigger>
@@ -207,14 +207,14 @@ export function AddFeedbackDialog({
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label
-              className="mb-1.5 block text-sm font-medium text-foreground"
+              className="mb-1.5 block text-sm font-medium text-ir-heading"
               htmlFor="feedback-title"
             >
-              Title <span className="text-destructive">*</span>
+              Title <span className="text-ir-danger">*</span>
             </label>
             <input
-              className={`w-full border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 ${
-                titleError ? "border-destructive" : "border-input"
+              className={`w-full rounded-ir-input border bg-ir-surface px-3 py-2 text-sm text-ir-body placeholder:text-ir-muted focus:outline-none focus:ring-2 focus:ring-ir-primary/40 disabled:opacity-50 ${
+                titleError ? "border-ir-danger" : "border-ir-border"
               }`}
               disabled={isPending}
               id="feedback-title"
@@ -230,14 +230,14 @@ export function AddFeedbackDialog({
               value={title}
             />
             {titleError && (
-              <p className="mt-1 text-xs text-destructive">{titleError}</p>
+              <p className="mt-1 text-xs text-ir-danger">{titleError}</p>
             )}
           </div>
 
           <div>
-            <span className="mb-1.5 block text-sm font-medium text-foreground">
+            <span className="mb-1.5 block text-sm font-medium text-ir-heading">
               Description{" "}
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="text-xs font-normal text-ir-muted">
                 (optional)
               </span>
             </span>
@@ -252,7 +252,7 @@ export function AddFeedbackDialog({
           {workspaceStatuses.length > 0 && (
             <div>
               <label
-                className="mb-1.5 block text-sm font-medium text-foreground"
+                className="mb-1.5 block text-sm font-medium text-ir-heading"
                 htmlFor="feedback-status"
               >
                 Status
@@ -278,11 +278,11 @@ export function AddFeedbackDialog({
 
           <div>
             <label
-              className="mb-1.5 block text-sm font-medium text-foreground"
+              className="mb-1.5 block text-sm font-medium text-ir-heading"
               htmlFor="feedback-category"
             >
               Category{" "}
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="text-xs font-normal text-ir-muted">
                 (optional)
               </span>
             </label>
@@ -306,12 +306,12 @@ export function AddFeedbackDialog({
               </Select>
             ) : (
               <p
-                className="border border-dashed border-input px-3 py-2 text-sm text-muted-foreground"
+                className="rounded-ir-input border border-dashed border-ir-border px-3 py-2 text-sm text-ir-muted"
                 id="feedback-category"
               >
                 No categories yet —{" "}
                 <Link
-                  className="font-medium text-primary hover:underline"
+                  className="font-medium text-ir-primary hover:underline"
                   href={`/${workspaceSlug}/settings/categories`}
                   target="_blank"
                 >
@@ -323,9 +323,9 @@ export function AddFeedbackDialog({
           </div>
 
           <div>
-            <span className="mb-1.5 block text-sm font-medium text-foreground">
+            <span className="mb-1.5 block text-sm font-medium text-ir-heading">
               Image{" "}
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="text-xs font-normal text-ir-muted">
                 (optional)
               </span>
             </span>
@@ -335,26 +335,26 @@ export function AddFeedbackDialog({
                 {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
                 <img
                   alt=""
-                  className="max-h-40 w-auto border border-input object-contain"
+                  className="max-h-40 w-auto rounded-ir-md border border-ir-border object-contain"
                   src={imagePreviewUrl}
                 />
                 <button
                   aria-label="Remove image"
-                  className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-ir-full border border-ir-border bg-ir-surface text-ir-danger shadow-ir-xs transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   disabled={isPending}
                   onClick={removeImage}
                   type="button"
                 >
-                  <X className="size-3.5" />
+                  <XIcon className="size-3.5" />
                 </button>
               </div>
             ) : (
               <label
-                className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-3 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+                className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-ir-input border border-dashed border-ir-border px-3 py-3 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-heading ${
                   isPending ? "pointer-events-none opacity-50" : ""
                 }`}
               >
-                <ImagePlus className="size-4" />
+                <ImageIcon className="size-4" />
                 Add an image
                 <input
                   accept="image/png,image/jpeg,image/webp,image/gif"
@@ -367,7 +367,7 @@ export function AddFeedbackDialog({
               </label>
             )}
             {imageError && (
-              <p className="mt-1 text-xs text-destructive">{imageError}</p>
+              <p className="mt-1 text-xs text-ir-danger">{imageError}</p>
             )}
           </div>
 

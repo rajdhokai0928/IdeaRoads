@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { searchPostsForChangelogAction } from "@/app/actions/changelog";
 
@@ -93,18 +93,17 @@ export function LinkedPostsSelector({
         <div className="flex flex-wrap gap-1.5">
           {selectedPosts.map((post) => (
             <span
-              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-muted text-foreground border border-border"
+              className="inline-flex items-center gap-1.5 rounded-ir-sm border border-ir-border bg-ir-muted-surface px-2 py-1 text-xs font-medium text-ir-heading"
               key={post.id}
-              style={{ borderRadius: 2 }}
             >
-              <span className="truncate max-w-50">{post.title}</span>
+              <span className="max-w-50 truncate">{post.title}</span>
               <button
                 aria-label={`Remove ${post.title}`}
-                className="text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none"
+                className="text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none"
                 onClick={() => removePost(post.id)}
                 type="button"
               >
-                <X className="size-3" />
+                <XIcon className="size-3" />
               </button>
             </span>
           ))}
@@ -115,9 +114,9 @@ export function LinkedPostsSelector({
       {selectedPosts.length < 20 && (
         <div className="relative" ref={containerRef}>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-ir-muted" />
             <input
-              className="w-full border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-ir-input border border-ir-border bg-ir-surface py-2 pr-3 pl-9 text-sm text-ir-body placeholder:text-ir-muted focus:ring-2 focus:ring-ir-primary/40 focus:outline-none"
               onChange={(e) => {
                 setQuery(e.target.value);
                 setIsOpen(true);
@@ -131,23 +130,23 @@ export function LinkedPostsSelector({
 
           {/* Dropdown */}
           {isOpen && results.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full bg-background border border-border shadow-md max-h-52 overflow-y-auto">
+            <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-ir-md border border-ir-border bg-ir-surface shadow-ir-lg">
               {results.map((post) => (
                 <button
-                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors focus-visible:outline-none focus-visible:bg-muted"
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:bg-ir-muted-surface focus-visible:outline-none"
                   key={post.id}
                   onClick={() => addPost(post)}
                   type="button"
                 >
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-sm font-medium text-foreground truncate">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-ir-heading">
                       {post.title}
                     </span>
-                    <span className="block text-xs text-muted-foreground truncate">
+                    <span className="block truncate text-xs text-ir-muted">
                       {post.boardName}
                     </span>
                   </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
+                  <span className="shrink-0 text-xs text-ir-muted">
                     ↑ {post.upvotes}
                   </span>
                 </button>
@@ -156,17 +155,15 @@ export function LinkedPostsSelector({
           )}
 
           {isOpen && query && results.length === 0 && (
-            <div className="absolute z-20 mt-1 w-full bg-background border border-border shadow-md">
-              <p className="px-3 py-3 text-sm text-muted-foreground">
-                No posts found.
-              </p>
+            <div className="absolute z-20 mt-1 w-full rounded-ir-md border border-ir-border bg-ir-surface shadow-ir-lg">
+              <p className="px-3 py-3 text-sm text-ir-muted">No posts found.</p>
             </div>
           )}
         </div>
       )}
 
       {selectedPosts.length >= 20 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ir-muted">
           Maximum 20 linked posts reached.
         </p>
       )}

@@ -1,4 +1,4 @@
-import { ChevronUp } from "lucide-react";
+import { CaretUpIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -69,54 +69,55 @@ const FEATURE_LIST = [
 
 function RoadmapMockup() {
   return (
-    <div aria-hidden="true" className="border border-border bg-card">
+    <div
+      aria-hidden="true"
+      className="overflow-hidden rounded-ir-lg border border-ir-border bg-ir-surface shadow-ir-sm"
+    >
       {/* Browser chrome */}
-      <div className="flex items-center gap-3 border-b border-border bg-muted px-4 py-2.5">
+      <div className="flex items-center gap-3 border-b border-ir-border bg-ir-muted-surface px-4 py-2.5">
         <div className="flex shrink-0 gap-1.5">
-          <span className="block size-2 bg-border" />
-          <span className="block size-2 bg-border" />
-          <span className="block size-2 bg-border" />
+          <span className="block size-2 rounded-ir-full bg-ir-border" />
+          <span className="block size-2 rounded-ir-full bg-ir-border" />
+          <span className="block size-2 rounded-ir-full bg-ir-border" />
         </div>
-        <div className="min-w-0 flex-1 border border-border bg-background px-3 py-0.5 text-center">
-          <span className="font-mono text-2xs text-muted-foreground">
+        <div className="min-w-0 flex-1 border border-ir-border bg-ir-background px-3 py-0.5 text-center">
+          <span className="font-mono text-2xs text-ir-muted">
             acme.idearoads.com/roadmap
           </span>
         </div>
       </div>
 
       {/* Roadmap header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="text-sm font-semibold text-foreground">
+      <div className="flex items-center justify-between border-b border-ir-border px-4 py-3">
+        <span className="text-sm font-semibold text-ir-heading">
           Public Roadmap
         </span>
-        <span className="text-2xs font-semibold uppercase tracking-ui text-muted-foreground">
+        <span className="text-2xs font-semibold uppercase tracking-ui text-ir-muted">
           Acme Corp
         </span>
       </div>
 
       {/* Columns */}
-      <div className="grid grid-cols-3 divide-x divide-border">
+      <div className="grid grid-cols-3 divide-x divide-ir-border">
         {ROADMAP_COLUMNS.map(({ label, count, cards }) => (
           <div key={label}>
-            <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
-              <span className="text-2xs font-semibold uppercase tracking-ui text-foreground">
+            <div className="flex items-center justify-between border-b border-ir-border px-3 py-2.5">
+              <span className="text-2xs font-semibold uppercase tracking-ui text-ir-heading">
                 {label}
               </span>
-              <span className="font-mono text-2xs text-muted-foreground">
-                {count}
-              </span>
+              <span className="font-mono text-2xs text-ir-muted">{count}</span>
             </div>
             <div className="space-y-2 p-2">
               {cards.map(({ title, votes }) => (
                 <div
-                  className="border border-border bg-background p-2.5"
+                  className="rounded-ir-sm border border-ir-border bg-ir-background p-2.5"
                   key={title}
                 >
-                  <p className="text-xs font-medium leading-4 text-foreground">
+                  <p className="text-xs font-medium leading-4 text-ir-heading">
                     {title}
                   </p>
-                  <div className="mt-1.5 flex items-center gap-1 text-muted-foreground">
-                    <ChevronUp aria-hidden="true" className="size-3" />
+                  <div className="mt-1.5 flex items-center gap-1 text-ir-muted">
+                    <CaretUpIcon aria-hidden="true" className="size-3" />
                     <span className="font-mono text-2xs">{votes}</span>
                   </div>
                 </div>
@@ -133,16 +134,16 @@ export default function RoadmapPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-background">
+      <section className="bg-ir-background">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
-          <p className="font-bold text-xs uppercase tracking-eyebrow text-success">
+          <p className="font-bold text-xs uppercase tracking-eyebrow text-ir-success">
             Public Roadmap
           </p>
-          <h1 className="mt-4 font-black text-5xl tracking-normal text-foreground sm:text-6xl">
+          <h1 className="mt-4 font-black text-5xl tracking-normal text-ir-heading sm:text-6xl">
             Your roadmap
             <br className="hidden sm:block" /> updates itself.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-ir-muted">
             Change a post status and it moves on your public roadmap instantly.
             No Notion doc to maintain. No manual sync between tools.
           </p>
@@ -158,17 +159,15 @@ export default function RoadmapPage() {
       </section>
 
       {/* 3 benefit pillars */}
-      <section className="border-y border-border bg-muted">
+      <section className="border-y border-ir-border bg-ir-muted-surface">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
-          <div className="grid gap-px bg-border sm:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-ir-lg bg-ir-border sm:grid-cols-3">
             {BENEFITS.map(({ heading, body }) => (
-              <div className="bg-muted p-8" key={heading}>
-                <h3 className="font-bold text-base text-foreground">
+              <div className="bg-ir-muted-surface p-8" key={heading}>
+                <h3 className="font-bold text-base text-ir-heading">
                   {heading}
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {body}
-                </p>
+                <p className="mt-2 text-sm leading-6 text-ir-muted">{body}</p>
               </div>
             ))}
           </div>
@@ -176,26 +175,26 @@ export default function RoadmapPage() {
       </section>
 
       {/* Mockup + feature list */}
-      <section className="bg-background">
+      <section className="bg-ir-background">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
           <div className="grid gap-12 lg:grid-cols-[7fr_5fr] lg:items-start lg:gap-16">
             <RoadmapMockup />
             <div>
-              <p className="font-bold text-xs uppercase tracking-eyebrow text-muted-foreground">
+              <p className="font-bold text-xs uppercase tracking-eyebrow text-ir-muted">
                 What&apos;s Included
               </p>
-              <h2 className="mt-4 font-bold text-2xl text-foreground">
+              <h2 className="mt-4 font-bold text-2xl text-ir-heading">
                 A roadmap your users can follow and your team can trust.
               </h2>
               <ul className="mt-8 space-y-2.5">
                 {FEATURE_LIST.map((item) => (
                   <li
-                    className="flex items-start gap-2.5 text-sm text-foreground"
+                    className="flex items-start gap-2.5 text-sm text-ir-heading"
                     key={item}
                   >
                     <span
                       aria-hidden="true"
-                      className="mt-0.5 shrink-0 font-mono text-success"
+                      className="mt-0.5 shrink-0 font-mono text-ir-success"
                     >
                       ✓
                     </span>
@@ -209,12 +208,12 @@ export default function RoadmapPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-border bg-muted">
+      <section className="border-t border-ir-border bg-ir-muted-surface">
         <div className="mx-auto max-w-6xl px-4 py-24 text-center sm:px-8">
-          <h2 className="font-black text-3xl text-foreground sm:text-4xl">
+          <h2 className="font-black text-3xl text-ir-heading sm:text-4xl">
             Give your users a roadmap they can trust.
           </h2>
-          <p className="mt-3 text-lg text-muted-foreground">
+          <p className="mt-3 text-lg text-ir-muted">
             No credit card required. Up and running in minutes.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

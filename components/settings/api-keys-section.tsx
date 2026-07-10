@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -7,7 +8,9 @@ import {
   generateApiKeyAction,
   revokeApiKeyAction,
 } from "@/app/actions/api-keys";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
 
 interface ApiKey {
   createdAt: Date;
@@ -33,24 +36,30 @@ function NewKeyDisplay({ rawKey }: { rawKey: string }) {
   }
 
   return (
-    <div className="mt-4 border border-border bg-muted/50 p-4">
-      <p className="text-sm font-medium text-foreground mb-1">
+    <div className="mt-4 rounded-ir-card border border-ir-border bg-ir-muted-surface p-4">
+      <p className="mb-1 text-sm font-medium text-ir-heading">
         Your new API key — copy it now
       </p>
-      <p className="text-xs text-muted-foreground mb-3">
+      <p className="mb-3 text-xs text-ir-muted">
         This key will not be shown again. Store it securely.
       </p>
       <div className="flex items-center gap-2">
-        <code className="flex-1 text-xs text-foreground break-all bg-background border border-border px-2.5 py-2">
+        <code className="flex-1 rounded-ir-sm border border-ir-border bg-ir-surface px-2.5 py-2 text-xs break-all text-ir-heading">
           {rawKey}
         </code>
-        <button
-          className="shrink-0 px-3 py-2 text-xs font-medium border border-border hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          onClick={copy}
-          type="button"
-        >
-          {copied ? "Copied!" : "Copy"}
-        </button>
+        <Button onClick={copy} size="sm" type="button" variant="outline">
+          {copied ? (
+            <>
+              <CheckIcon className="text-ir-success" data-icon="inline-start" />
+              Copied
+            </>
+          ) : (
+            <>
+              <CopyIcon data-icon="inline-start" />
+              Copy
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
@@ -117,19 +126,24 @@ export function ApiKeysSection({ workspaceId, keys }: Props) {
       {/* Create form */}
       <div className="mb-6">
         <div className="mb-4">
-          <h2 className="text-sm font-semibold text-foreground">Create key</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Keys are prefixed with <code className="text-xs">ir_live_</code> and
-            grant workspace-level access.
+          <h2 className="text-sm font-semibold text-ir-heading">Create key</h2>
+          <p className="mt-0.5 text-xs text-ir-muted">
+            Keys are prefixed with{" "}
+            <code className="rounded-ir-xs bg-ir-muted-surface px-1 py-0.5 text-xs">
+              ir_live_
+            </code>{" "}
+            and grant workspace-level access.
           </p>
         </div>
 
-        <form className="border border-border p-4" onSubmit={handleGenerate}>
+        <form
+          className="rounded-ir-card border border-ir-border bg-ir-surface p-4 shadow-ir-xs"
+          onSubmit={handleGenerate}
+        >
           <div className="flex gap-2">
             <div className="flex-1">
-              <input
+              <Input
                 aria-label="Key name"
-                className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                 disabled={isPending}
                 maxLength={64}
                 onChange={(e) => setName(e.target.value)}
@@ -138,16 +152,12 @@ export function ApiKeysSection({ workspaceId, keys }: Props) {
                 value={name}
               />
               {nameError && (
-                <p className="mt-1 text-xs text-destructive">{nameError}</p>
+                <p className="mt-1 text-xs text-ir-danger">{nameError}</p>
               )}
             </div>
-            <button
-              className="shrink-0 px-3.5 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isPending || !name.trim()}
-              type="submit"
-            >
+            <Button disabled={isPending || !name.trim()} type="submit">
               {isPending ? "Creating…" : "Create key"}
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -157,44 +167,44 @@ export function ApiKeysSection({ workspaceId, keys }: Props) {
       {/* Keys list */}
       <div>
         <div className="mb-4">
-          <h2 className="text-sm font-semibold text-foreground">Active keys</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <h2 className="text-sm font-semibold text-ir-heading">Active keys</h2>
+          <p className="mt-0.5 text-xs text-ir-muted">
             {keys.length} key{keys.length === 1 ? "" : "s"} total
           </p>
         </div>
 
         {keys.length === 0 ? (
-          <div className="border border-border p-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              No API keys created yet.
-            </p>
+          <div className="rounded-ir-card border border-dashed border-ir-border p-8 text-center">
+            <p className="text-sm text-ir-muted">No API keys created yet.</p>
           </div>
         ) : (
-          <div className="border border-border divide-y divide-border">
+          <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
             {keys.map((key) => (
               <div
-                className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4"
+                className="flex flex-col gap-2 p-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
                 key={key.id}
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-ir-heading">
                     {key.name}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="mt-0.5 text-xs text-ir-muted">
                     Created {fmt.format(new Date(key.createdAt))}
                     {key.lastUsedAt
                       ? ` · Last used ${fmt.format(new Date(key.lastUsedAt))}`
                       : " · Never used"}
                   </p>
                 </div>
-                <button
-                  className="shrink-0 px-2.5 py-1 text-xs text-destructive border border-destructive/30 hover:bg-destructive hover:text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                <Button
+                  className="shrink-0"
                   disabled={isPending}
                   onClick={() => setRevokeTarget(key)}
+                  size="sm"
                   type="button"
+                  variant="destructive"
                 >
                   Revoke
-                </button>
+                </Button>
               </div>
             ))}
           </div>

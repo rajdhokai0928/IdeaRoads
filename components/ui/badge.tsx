@@ -5,17 +5,21 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-none border-0 bg-transparent px-0 py-0 text-xs font-semibold tracking-ui whitespace-nowrap uppercase transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-0 has-data-[icon=inline-start]:pl-0 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-ir-full border border-transparent px-2 py-0.5 text-xs font-semibold tracking-ui whitespace-nowrap uppercase transition-colors duration-150 ease-ir-standard focus-visible:border-ir-primary focus-visible:ring-[3px] focus-visible:ring-ir-primary/30 has-data-[icon=inline-end]:pr-0 has-data-[icon=inline-start]:pl-0 aria-invalid:border-ir-danger aria-invalid:ring-ir-danger/20 dark:aria-invalid:ring-ir-danger/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
-        default: "text-foreground [a]:hover:text-foreground/70",
-        secondary: "text-muted-foreground [a]:hover:text-foreground",
+        default:
+          "bg-ir-primary-light/25 text-ir-primary [a]:hover:bg-ir-primary-light/40",
+        secondary:
+          "bg-ir-muted-surface text-ir-body [a]:hover:bg-ir-border/60",
         destructive:
-          "text-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:text-destructive/70",
-        outline: "text-foreground [a]:hover:text-foreground/70",
-        ghost: "text-muted-foreground hover:text-foreground",
-        link: "text-foreground underline-offset-4 hover:underline",
+          "bg-ir-danger/10 text-ir-danger focus-visible:ring-ir-danger/20 dark:focus-visible:ring-ir-danger/40 [a]:hover:bg-ir-danger/20",
+        outline:
+          "border-ir-border bg-transparent text-ir-body [a]:hover:bg-ir-muted-surface",
+        ghost:
+          "border-transparent bg-transparent px-0 text-ir-muted hover:text-ir-heading",
+        link: "border-transparent bg-transparent px-0 text-ir-body underline-offset-4 hover:underline",
       },
     },
     defaultVariants: {

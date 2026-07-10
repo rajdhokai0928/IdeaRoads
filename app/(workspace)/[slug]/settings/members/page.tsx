@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PageBody } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { listMembers } from "@/lib/workspaces/members";
@@ -36,8 +37,8 @@ export default async function MembersPage({ params }: Props) {
   const members = await listMembers(workspace.id);
 
   return (
-    <div className="px-4 py-6 sm:px-8">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+    <PageBody>
+      <p className="mb-4 text-xs font-semibold tracking-eyebrow text-ir-muted uppercase">
         {members.length} {members.length === 1 ? "member" : "members"}
       </p>
       <MembersTable
@@ -47,6 +48,6 @@ export default async function MembersPage({ params }: Props) {
         members={members}
         workspaceId={workspace.id}
       />
-    </div>
+    </PageBody>
   );
 }

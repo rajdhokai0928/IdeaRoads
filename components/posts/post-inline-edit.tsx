@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Pencil, X } from "lucide-react";
+import { ImageIcon, PencilIcon, XIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { updatePostAction, uploadPostImageAction } from "@/app/actions/posts";
 import { FeedbackBody } from "@/components/posts/feedback-body";
+import { Button } from "@/components/ui/button";
 
 const QuillEditor = dynamic(
   () => import("@/components/comments/quill-editor"),
@@ -235,7 +236,7 @@ export function EditableTitle({
   return (
     <input
       aria-label="Feedback title"
-      className="w-full border border-input bg-background px-3 py-2 text-lg font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+      className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-lg font-semibold text-ir-heading focus:outline-none focus:ring-2 focus:ring-ir-primary/40 disabled:opacity-50"
       disabled={isPending}
       maxLength={150}
       onChange={(e) => setDraftTitle(e.target.value)}
@@ -274,16 +275,18 @@ export function EditablePostContent({
     return (
       <>
         {body && (
-          <div className="mt-6 border-t border-border pt-6">
+          <div className="mt-6 border-t border-ir-border pt-6">
             <FeedbackBody body={body} className={className} />
           </div>
         )}
         {imageUrl && (
-          <div className={body ? "mt-4" : "mt-6 border-t border-border pt-6"}>
+          <div
+            className={body ? "mt-4" : "mt-6 border-t border-ir-border pt-6"}
+          >
             {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
             <img
               alt=""
-              className="max-h-96 w-auto border border-border object-contain"
+              className="max-h-96 w-auto rounded-ir-md border border-ir-border object-contain"
               src={imageUrl}
             />
           </div>
@@ -293,10 +296,10 @@ export function EditablePostContent({
   }
 
   return (
-    <div className="mt-6 space-y-4 border-t border-border pt-6">
+    <div className="mt-6 space-y-4 border-t border-ir-border pt-6">
       {/* Description */}
       <div className="space-y-1.5">
-        <span className="block text-xs font-medium text-foreground">
+        <span className="block text-xs font-medium text-ir-heading">
           Description
         </span>
         <QuillEditor
@@ -309,35 +312,34 @@ export function EditablePostContent({
 
       {/* Image */}
       <div className="space-y-1.5">
-        <span className="block text-xs font-medium text-foreground">
-          Image{" "}
-          <span className="font-normal text-muted-foreground">(optional)</span>
+        <span className="block text-xs font-medium text-ir-heading">
+          Image <span className="font-normal text-ir-muted">(optional)</span>
         </span>
         {currentImage ? (
           <div className="relative inline-block">
             {/* biome-ignore lint/performance/noImgElement: dynamic upload / blob preview URL */}
             <img
               alt=""
-              className="max-h-48 w-auto border border-input object-contain"
+              className="max-h-48 w-auto rounded-ir-md border border-ir-border object-contain"
               src={currentImage}
             />
             <button
               aria-label="Remove image"
-              className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-ir-full border border-ir-border bg-ir-surface text-ir-danger shadow-ir-xs transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
               disabled={isPending}
               onClick={removeImage}
               type="button"
             >
-              <X className="size-3.5" />
+              <XIcon className="size-3.5" />
             </button>
           </div>
         ) : (
           <label
-            className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-4 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+            className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-ir-input border border-dashed border-ir-border px-3 py-4 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-heading ${
               isPending ? "pointer-events-none opacity-50" : ""
             }`}
           >
-            <ImagePlus className="size-4" />
+            <ImageIcon className="size-4" />
             Add an image
             <input
               accept="image/png,image/jpeg,image/webp,image/gif"
@@ -348,28 +350,22 @@ export function EditablePostContent({
             />
           </label>
         )}
-        {imageError && <p className="text-xs text-destructive">{imageError}</p>}
+        {imageError && <p className="text-xs text-ir-danger">{imageError}</p>}
       </div>
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-ir-danger">{error}</p>}
 
       <div className="flex items-center justify-end gap-2">
-        <button
-          className="px-3 py-1.5 text-xs text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-          disabled={isPending}
-          onClick={cancel}
-          type="button"
-        >
+        <Button disabled={isPending} onClick={cancel} size="sm" variant="ghost">
           Cancel
-        </button>
-        <button
-          className="bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        </Button>
+        <Button
           disabled={isPending || draftTitle.trim().length < 3}
           onClick={save}
-          type="button"
+          size="sm"
         >
           {isPending ? "Saving…" : "Save changes"}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -385,11 +381,11 @@ export function EditPostControls() {
 
   return (
     <button
-      className="flex items-center gap-1.5 text-xs text-primary transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+      className="flex items-center gap-1.5 text-xs text-ir-primary transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
       onClick={startEdit}
       type="button"
     >
-      <Pencil className="size-3.5" />
+      <PencilIcon className="size-3.5" />
       Edit
     </button>
   );

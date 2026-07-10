@@ -18,7 +18,10 @@ export default async function AdminLayout({
         image={session.user.image ?? null}
         workspaceSlug={workspace?.slug}
       />
-      <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-8">
+      <main
+        className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-8"
+        id="main-content"
+      >
         {children}
       </main>
     </div>

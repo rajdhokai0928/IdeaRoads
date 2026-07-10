@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -41,20 +41,21 @@ export default async function EditChangelogEntryPage({ params }: Props) {
   const initialLabels = await listChangelogLabels(workspace.id);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-border px-4 py-4 sm:px-8 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+    <div className="flex h-full flex-col">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-ir-border px-4 py-4 sm:px-8">
         <Link
-          className="flex cursor-pointer items-center justify-center text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Back to Changelog"
+          className="flex cursor-pointer items-center justify-center rounded-ir-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
           href={`/${slug}/settings/changelog`}
           title="Back to Changelog"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeftIcon className="size-4" />
         </Link>
-        <h2 className="text-sm font-semibold text-foreground">
+        <h2 className="text-sm font-semibold text-ir-heading">
           {entry.isPublished ? "Edit Published Entry" : "Edit Draft"}
         </h2>
         {entry.isPublished && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-ir-muted">
             Changes are immediately live
           </span>
         )}
@@ -75,7 +76,7 @@ export default async function EditChangelogEntryPage({ params }: Props) {
           workspaceSlug={slug}
         />
         <div className="w-full max-w-3xl px-4 pb-10 sm:px-8">
-          <div className="pt-8 border-t border-border">
+          <div className="border-t border-ir-border pt-8">
             <ChangelogCommentSection
               canModerate={true}
               changelogEntryId={entry.id}

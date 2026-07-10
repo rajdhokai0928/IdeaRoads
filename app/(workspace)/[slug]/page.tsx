@@ -1,11 +1,17 @@
+import {
+  PlusIcon as Plus,
+  UsersThreeIcon as UsersThree,
+} from "@phosphor-icons/react/dist/ssr";
 import { count, eq } from "drizzle-orm";
-import { Plus, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BreakdownCard } from "@/components/dashboard/breakdown-card";
 import { LiveStreamCard } from "@/components/dashboard/live-stream-card";
+import { QuickActions } from "@/components/dashboard/quick-actions";
+import { RoadmapPreviewCard } from "@/components/dashboard/roadmap-preview-card";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { WorkspaceOverviewCard } from "@/components/dashboard/workspace-overview-card";
 import { PostsTable } from "@/components/posts/posts-table";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
@@ -148,7 +154,24 @@ export default async function WorkspaceDashboardPage({
         title={workspace.name}
       />
 
-      <div className="px-4 py-8 space-y-8 sm:px-8">
+      <div className="space-y-8 px-4 py-8 sm:px-8">
+        {/* Workspace Overview */}
+        <WorkspaceOverviewCard
+          boardIsPublic={board?.isPublic ?? null}
+          createdAt={workspace.createdAt}
+          description={workspace.description}
+          logoUrl={workspace.logoUrl}
+          memberCount={memberCount}
+          name={workspace.name}
+        />
+
+        {/* Quick Actions */}
+        <QuickActions
+          addFeedbackHref={addFeedbackHref}
+          isAdminOrOwner={isAdminOrOwner}
+          workspaceSlug={slug}
+        />
+
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard
@@ -178,7 +201,7 @@ export default async function WorkspaceDashboardPage({
             periodLabel={periodLabel}
             previousValue={previousUnderReviewPosts}
             value={underReviewPosts}
-            valueClassName="text-purple-600 dark:text-purple-400"
+            valueClassName="text-ir-primary"
           />
           <StatCard
             href={`/${slug}/feedback?status=planned`}
@@ -186,7 +209,7 @@ export default async function WorkspaceDashboardPage({
             periodLabel={periodLabel}
             previousValue={previousPlannedPosts}
             value={plannedPosts}
-            valueClassName="text-violet-600 dark:text-violet-400"
+            valueClassName="text-ir-primary"
           />
           <StatCard
             href={`/${slug}/feedback?status=in_progress`}
@@ -194,7 +217,7 @@ export default async function WorkspaceDashboardPage({
             periodLabel={periodLabel}
             previousValue={previousInProgressPosts}
             value={inProgressPosts}
-            valueClassName="text-amber-600 dark:text-amber-400"
+            valueClassName="text-ir-warning"
           />
           <StatCard
             href={`/${slug}/feedback?status=completed`}
@@ -202,7 +225,7 @@ export default async function WorkspaceDashboardPage({
             periodLabel={periodLabel}
             previousValue={previousCompletedPosts}
             value={completedPosts}
-            valueClassName="text-success"
+            valueClassName="text-ir-success"
           />
           <StatCard
             href={`/${slug}/feedback?status=closed`}
@@ -210,7 +233,7 @@ export default async function WorkspaceDashboardPage({
             periodLabel={periodLabel}
             previousValue={previousClosedPosts}
             value={closedPosts}
-            valueClassName="text-muted-foreground"
+            valueClassName="text-ir-muted"
           />
         </div>
 
@@ -224,14 +247,20 @@ export default async function WorkspaceDashboardPage({
           />
         </div>
 
+        {/* Roadmap Preview */}
+        <RoadmapPreviewCard
+          roadmapPublic={workspace.roadmapPublic}
+          workspaceSlug={slug}
+        />
+
         {/* Newest Feedback */}
-        <div className="border border-border">
-          <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold text-foreground">
+        <div className="rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
+          <div className="flex items-center justify-between gap-4 border-b border-ir-border px-5 py-4">
+            <h2 className="text-sm font-semibold text-ir-heading">
               Newest Feedback
             </h2>
             <Link
-              className="px-3 py-1.5 text-xs font-medium border border-border hover:bg-muted transition-colors duration-150"
+              className="rounded-ir-sm border border-ir-border px-3 py-1.5 text-xs font-medium text-ir-body transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface"
               href={`/${slug}/feedback`}
             >
               View All
@@ -251,16 +280,16 @@ export default async function WorkspaceDashboardPage({
 
         {/* Getting started */}
         {memberCount === 1 && (
-          <div className="border border-border bg-muted/30 px-6 py-5">
+          <div className="rounded-ir-card border border-ir-border bg-ir-muted-surface px-6 py-5">
             <div className="flex items-start gap-4">
-              <div className="flex size-9 shrink-0 items-center justify-center bg-background border border-border">
-                <Users className="size-4 text-muted-foreground" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-ir-sm border border-ir-border bg-ir-surface">
+                <UsersThree className="size-4 text-ir-muted" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-ir-heading">
                   Invite your team
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-ir-muted">
                   Team members can review feedback and keep your users updated.
                 </p>
               </div>

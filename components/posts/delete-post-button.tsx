@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -38,12 +38,12 @@ export default function DeletePostButton({
   return (
     <>
       <button
-        className="flex items-center gap-1.5 text-xs text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        className="flex items-center gap-1.5 text-xs text-ir-danger transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
         disabled={isPending}
         onClick={() => setShowDialog(true)}
         type="button"
       >
-        <Trash2 className="size-3.5" />
+        <TrashIcon className="size-3.5" />
         {isPending ? "Deleting…" : "Delete Feedback"}
       </button>
 

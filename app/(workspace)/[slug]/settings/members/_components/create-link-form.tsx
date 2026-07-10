@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Loader2 } from "lucide-react";
+import { CheckIcon, CopyIcon, SpinnerIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { createInviteLinkAction } from "@/app/actions/members";
@@ -70,12 +70,12 @@ export function CreateLinkForm({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-foreground">
+      <h3 className="text-sm font-medium text-ir-heading">
         Generate invite link
       </h3>
       <form className="flex flex-wrap gap-3" onSubmit={onSubmit}>
         {error && (
-          <p className="w-full bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p className="w-full rounded-ir-sm bg-ir-danger/10 px-3 py-2 text-sm text-ir-danger">
             {error}
           </p>
         )}
@@ -106,7 +106,7 @@ export function CreateLinkForm({
         <Button disabled={submitting} type="submit">
           {submitting ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="size-4 animate-spin" />
+              <SpinnerIcon className="size-4 animate-spin" />
               Generating…
             </span>
           ) : (
@@ -115,8 +115,8 @@ export function CreateLinkForm({
         </Button>
       </form>
       {createdUrl && (
-        <div className="flex items-center gap-2 border border-border bg-muted/40 px-4 py-3">
-          <p className="flex-1 min-w-0 truncate font-mono text-xs text-foreground">
+        <div className="flex items-center gap-2 rounded-ir-sm border border-ir-border bg-ir-muted-surface px-4 py-3">
+          <p className="min-w-0 flex-1 truncate font-mono text-xs text-ir-heading">
             {createdUrl}
           </p>
           <Button
@@ -127,12 +127,12 @@ export function CreateLinkForm({
           >
             {copied ? (
               <span className="flex items-center gap-1.5">
-                <Check className="size-3.5 text-success" />
+                <CheckIcon className="size-3.5 text-ir-success" />
                 Copied
               </span>
             ) : (
               <span className="flex items-center gap-1.5">
-                <Copy className="size-3.5" />
+                <CopyIcon className="size-3.5" />
                 Copy
               </span>
             )}

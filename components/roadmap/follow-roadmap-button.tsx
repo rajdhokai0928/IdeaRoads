@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, BellRing } from "lucide-react";
+import { BellIcon, BellRingingIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -49,19 +49,19 @@ export function FollowRoadmapButton({
 
   return (
     <button
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${
+      className={`inline-flex items-center gap-1.5 rounded-ir-button border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50 ${
         following
-          ? "border-border bg-muted text-foreground"
-          : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+          ? "border-ir-border bg-ir-muted-surface text-ir-heading"
+          : "border-ir-border text-ir-muted hover:bg-ir-muted-surface hover:text-ir-heading"
       }`}
       disabled={isPending}
       onClick={handleClick}
       type="button"
     >
       {following ? (
-        <BellRing className="size-4" />
+        <BellRingingIcon className="size-4" />
       ) : (
-        <Bell className="size-4" />
+        <BellIcon className="size-4" />
       )}
       {following ? "Following" : "Follow"}
     </button>

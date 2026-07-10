@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, TriangleAlert, UserRound } from "lucide-react";
+import { SpinnerIcon, UserIcon, WarningIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import {
   useActionState,
@@ -38,14 +38,14 @@ const ALLOWED_AVATAR_TYPES = new Set([
 function ActionMessage({ state }: { state: ActionState }) {
   if (state.error) {
     return (
-      <p className="bg-destructive/10 p-3 text-destructive text-sm">
+      <p className="rounded-ir-sm bg-ir-danger/10 p-3 text-sm text-ir-danger">
         {state.error}
       </p>
     );
   }
   if (state.success) {
     return (
-      <p className="bg-success-subtle p-3 text-success-foreground text-sm">
+      <p className="rounded-ir-sm bg-ir-success/10 p-3 text-sm text-ir-success">
         {state.success}
       </p>
     );
@@ -123,8 +123,8 @@ function AvatarUploadRow({
     <div className="px-5 py-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
         <div className="w-full pt-0.5 sm:w-40 sm:shrink-0">
-          <p className="text-sm font-medium text-foreground">Profile picture</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="text-sm font-medium text-ir-heading">Profile picture</p>
+          <p className="mt-0.5 text-xs text-ir-muted">
             PNG, JPEG, WEBP, or GIF. Max 4MB.
           </p>
         </div>
@@ -134,12 +134,12 @@ function AvatarUploadRow({
               <Avatar size="lg">
                 {previewUrl && <AvatarImage alt={name} src={previewUrl} />}
                 <AvatarFallback>
-                  {initials || <UserRound className="size-4" />}
+                  {initials || <UserIcon className="size-4" />}
                 </AvatarFallback>
               </Avatar>
               {pending && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70">
-                  <Loader2 className="size-4 animate-spin text-foreground" />
+                <div className="absolute inset-0 flex items-center justify-center rounded-ir-full bg-ir-surface/70">
+                  <SpinnerIcon className="size-4 animate-spin text-ir-heading" />
                 </div>
               )}
             </div>
@@ -209,7 +209,7 @@ export function AccountIdentityForms({
   }, [nameState.success, nameState.name, router]);
 
   return (
-    <div className="border border-border divide-y divide-border">
+    <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
       {/* Profile picture */}
       <AvatarUploadRow image={image} name={avatarName} />
 
@@ -217,8 +217,8 @@ export function AccountIdentityForms({
       <div className="px-5 py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
           <div className="w-full pt-0.5 sm:w-40 sm:shrink-0">
-            <p className="text-sm font-medium text-foreground">Display name</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-sm font-medium text-ir-heading">Display name</p>
+            <p className="mt-0.5 text-xs text-ir-muted">
               Shown in audit logs and admin views.
             </p>
           </div>
@@ -243,8 +243,8 @@ export function AccountIdentityForms({
       <div className="px-5 py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
           <div className="w-full pt-0.5 sm:w-40 sm:shrink-0">
-            <p className="text-sm font-medium text-foreground">Email address</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-sm font-medium text-ir-heading">Email address</p>
+            <p className="mt-0.5 text-xs text-ir-muted">
               Used for magic-link sign-in. Changing it requires confirming a
               link sent to the new address.
             </p>
@@ -278,22 +278,22 @@ export function DeleteAccountForm({ email }: { email: string }) {
   return (
     <section>
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-foreground">Danger zone</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <h2 className="text-sm font-semibold text-ir-heading">Danger zone</h2>
+        <p className="mt-0.5 text-xs text-ir-muted">
           Irreversible and destructive actions.
         </p>
       </div>
 
-      <div className="border border-destructive/30 p-5">
-        <div className="flex items-start gap-3 mb-5">
-          <div className="flex size-8 shrink-0 items-center justify-center bg-destructive/10">
-            <TriangleAlert className="size-4 text-destructive" />
+      <div className="rounded-ir-card border border-ir-danger/30 bg-ir-danger/5 p-5">
+        <div className="mb-5 flex items-start gap-3">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-ir-sm bg-ir-danger/10">
+            <WarningIcon className="size-4 text-ir-danger" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-semibold text-ir-heading">
               Delete your account
             </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-xs leading-relaxed text-ir-muted">
               This permanently deletes your profile, all active sessions, and
               linked authentication accounts. Audit records are kept for
               operator history. This action cannot be undone.
@@ -304,10 +304,10 @@ export function DeleteAccountForm({ email }: { email: string }) {
         <form action={action} className="space-y-3">
           <div>
             <label
-              className="mb-1.5 block text-xs font-medium text-foreground"
+              className="mb-1.5 block text-xs font-medium text-ir-heading"
               htmlFor="confirmEmail"
             >
-              Type <span className="font-mono text-foreground/70">{email}</span>{" "}
+              Type <span className="font-mono text-ir-heading/70">{email}</span>{" "}
               to confirm
             </label>
             <Input
@@ -319,11 +319,10 @@ export function DeleteAccountForm({ email }: { email: string }) {
           </div>
           <ActionMessage state={state} />
           <Button
-            className="border-destructive/40 text-destructive hover:bg-destructive hover:text-white"
             disabled={pending}
             size="sm"
             type="submit"
-            variant="outline"
+            variant="destructive"
           >
             {pending ? "Deleting…" : "Delete my account"}
           </Button>

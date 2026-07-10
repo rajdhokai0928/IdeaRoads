@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, X } from "lucide-react";
+import { SpinnerIcon, XIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -59,25 +59,23 @@ export function InviteLinksList({
   return (
     <>
       <div>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-eyebrow text-muted-foreground">
+        <h2 className="mb-4 text-sm font-semibold tracking-eyebrow text-ir-muted uppercase">
           Invite links{links.length > 0 ? ` (${links.length} active)` : ""}
         </h2>
         {links.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No active invite links.
-          </p>
+          <p className="text-sm text-ir-muted">No active invite links.</p>
         ) : (
-          <div className="space-y-px bg-border">
+          <div className="space-y-px overflow-hidden rounded-ir-card bg-ir-border">
             {links.map((link) => (
               <div
-                className="flex flex-col gap-2 bg-background px-6 py-4 sm:flex-row sm:items-center sm:gap-4"
+                className="flex flex-col gap-2 bg-ir-surface px-6 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
                 key={link.id}
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-ir-heading">
                     {link.label ?? "Invite link"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-ir-muted">
                     {workspaceRoleLabel(link.role)}
                     {link.maxUses === null
                       ? ` · ${link.useCount} uses`
@@ -89,16 +87,16 @@ export function InviteLinksList({
                 </div>
                 {canManage && (
                   <Button
-                    className="text-destructive hover:opacity-70 shrink-0"
+                    className="shrink-0 text-ir-danger hover:opacity-70"
                     disabled={revoking === link.id}
                     onClick={() => setPendingRevoke(link)}
                     size="sm"
                     variant="ghost"
                   >
                     {revoking === link.id ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <SpinnerIcon className="size-4 animate-spin" />
                     ) : (
-                      <X className="size-4" />
+                      <XIcon className="size-4" />
                     )}
                     <span className="ml-1.5">Deactivate</span>
                   </Button>

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { type CommentApi, type CommentData, postsCommentApi } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
 
@@ -118,7 +119,7 @@ export default function CommentForm({
 
   if (isLocked) {
     return (
-      <p className="text-xs text-muted-foreground py-2">
+      <p className="py-2 text-xs text-ir-muted">
         Comments are closed on this post.
       </p>
     );
@@ -126,9 +127,9 @@ export default function CommentForm({
 
   if (!isSignedIn) {
     return (
-      <p className="text-sm text-muted-foreground py-2">
+      <p className="py-2 text-sm text-ir-muted">
         <Link
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-ir-primary hover:underline"
           href={`/signin?next=${encodeURIComponent(pathname)}`}
         >
           Sign in
@@ -152,24 +153,24 @@ export default function CommentForm({
         value={html}
       />
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-ir-danger">{error}</p>}
       {pendingMessage && (
-        <p className="text-xs text-warning">{pendingMessage}</p>
+        <p className="text-xs text-ir-warning">{pendingMessage}</p>
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-ir-muted">
           {text.length > 0
             ? `${(MAX - text.length).toLocaleString()} characters remaining`
             : ""}
         </span>
-        <button
-          className="px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        <Button
           disabled={isPending || uploading || !text.trim()}
+          size="sm"
           type="submit"
         >
           {isPending ? "Posting…" : "Post comment"}
-        </button>
+        </Button>
       </div>
     </form>
   );

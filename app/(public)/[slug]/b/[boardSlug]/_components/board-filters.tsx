@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
 import { SearchInput } from "@/components/ui/search-input";
@@ -72,7 +72,7 @@ export default function BoardFilters({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-4">
+    <div className="flex flex-wrap items-center gap-2.5 border-b border-ir-border px-4 py-4">
       {/* Search */}
       <SearchInput
         className="h-9 min-w-50 flex-1"
@@ -85,16 +85,16 @@ export default function BoardFilters({
       <div className="flex flex-wrap items-center gap-2.5">
         {showMyVotes && (
           <button
-            className={`flex h-9 items-center gap-1.5 border px-3 text-sm font-medium transition-colors cursor-pointer duration-150 focus-visible:outline-none ${
+            className={`flex h-9 cursor-pointer items-center gap-1.5 rounded-ir-input border px-3 text-sm font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none ${
               myVotesActive
-                ? "border-primary/40 bg-primary/5 text-primary"
-                : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
+                ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
+                : "border-ir-border text-ir-muted hover:border-ir-primary/30 hover:text-ir-heading"
             }`}
             onClick={toggleMyVotes}
             type="button"
           >
             My Votes
-            {myVotesActive && <X className="size-3" />}
+            {myVotesActive && <XIcon className="size-3" />}
           </button>
         )}
 
@@ -102,7 +102,7 @@ export default function BoardFilters({
           onValueChange={(v) => updateParam({ status: v === "all" ? null : v })}
           value={activeStatus || "all"}
         >
-          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+          <SelectTrigger size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -119,7 +119,7 @@ export default function BoardFilters({
           onValueChange={(v) => updateParam({ sort: v })}
           value={activeSort}
         >
-          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+          <SelectTrigger size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

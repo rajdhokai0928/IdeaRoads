@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, BellOff } from "lucide-react";
+import { BellIcon, BellSlashIcon } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateNotificationPreferencesAction } from "@/app/actions/notifications";
+import { Button } from "@/components/ui/button";
 
 interface SubscribeToggleProps {
   initialSubscribed: boolean;
@@ -35,23 +36,18 @@ export function SubscribeToggle({ initialSubscribed }: SubscribeToggleProps) {
   }
 
   return (
-    <button
-      className="flex items-center gap-1.5 border border-border px-3.5 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-muted disabled:opacity-50"
-      disabled={isPending}
-      onClick={toggle}
-      type="button"
-    >
+    <Button disabled={isPending} onClick={toggle} size="sm" variant="outline">
       {subscribed ? (
         <>
-          <BellOff className="size-4" />
+          <BellSlashIcon data-icon="inline-start" />
           Unsubscribe from Updates
         </>
       ) : (
         <>
-          <Bell className="size-4" />
+          <BellIcon data-icon="inline-start" />
           Subscribe to Updates
         </>
       )}
-    </button>
+    </Button>
   );
 }

@@ -81,7 +81,7 @@ export default async function PublicChangelogIndexPage({
   const isSignedIn = !!session;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-ir-background">
       <PortalHeader
         active="changelog"
         boards={publicBoards}
@@ -101,9 +101,12 @@ export default async function PublicChangelogIndexPage({
       <PoweredByBadge />
 
       {/* Content */}
-      <div className="max-w-3xl mx-auto px-6 pt-10 pb-20">
-        <h1 className="text-2xl font-bold text-foreground">Changelog</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <main
+        className="mx-auto max-w-3xl px-4 pt-10 pb-20 sm:px-8"
+        id="main-content"
+      >
+        <h1 className="text-xl font-semibold text-ir-heading">Changelog</h1>
+        <p className="mt-1 text-sm text-ir-muted">
           The latest updates and improvements to {workspace.name}.
         </p>
 
@@ -120,64 +123,69 @@ export default async function PublicChangelogIndexPage({
         </div>
 
         {entries.length === 0 ? (
-          <div className="mt-12 border border-border p-10 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-12 rounded-ir-card border border-ir-border bg-ir-surface p-10 text-center">
+            <p className="text-sm text-ir-muted">
               {activeLabel || searchQuery
                 ? "No changelog items match your filters."
                 : "No updates published yet. Check back soon."}
             </p>
           </div>
         ) : (
-          <div className="mt-8 divide-y divide-border border-t border-border">
+          <div className="relative mt-10 space-y-10 border-l border-ir-border pl-8">
             {entries.map((entry) => (
-              <article className="py-8" key={entry.id}>
-                {entry.coverImageUrl && (
-                  <Link
-                    className="block mb-4"
-                    href={`/${slug}/changelog/${entry.id}`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
-                    <img
-                      alt=""
-                      className="max-h-64 w-full border border-border object-cover"
-                      src={entry.coverImageUrl}
-                    />
-                  </Link>
-                )}
+              <article className="relative" key={entry.id}>
+                <span className="absolute top-1.5 -left-8 size-2 shrink-0 -translate-x-1/2 rounded-ir-full bg-ir-primary ring-4 ring-ir-background" />
+
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                  <ChangelogLabelBadge label={entry.label} />
                   {entry.publishedAt && (
                     <time
-                      className="text-xs text-muted-foreground"
+                      className="text-xs font-semibold tracking-wide text-ir-muted uppercase"
                       dateTime={new Date(entry.publishedAt).toISOString()}
                     >
                       {format(new Date(entry.publishedAt), "MMMM d, yyyy")}
                     </time>
                   )}
+                  <ChangelogLabelBadge label={entry.label} />
                 </div>
-                <h2 className="mt-3 text-lg font-semibold text-foreground">
+
+                <div className="mt-3 rounded-ir-card border border-ir-border bg-ir-surface p-5 shadow-ir-xs transition-shadow duration-150 ease-ir-standard hover:shadow-ir-sm">
+                  {entry.coverImageUrl && (
+                    <Link
+                      className="mb-4 block"
+                      href={`/${slug}/changelog/${entry.id}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
+                      <img
+                        alt=""
+                        className="max-h-64 w-full rounded-ir-sm border border-ir-border object-cover"
+                        src={entry.coverImageUrl}
+                      />
+                    </Link>
+                  )}
+                  <h2 className="text-lg font-semibold text-ir-heading">
+                    <Link
+                      className="transition-colors duration-150 ease-ir-standard hover:text-ir-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                      href={`/${slug}/changelog/${entry.id}`}
+                    >
+                      {entry.title}
+                    </Link>
+                  </h2>
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ir-muted">
+                    {truncateHtmlToText(entry.body, 240)}
+                  </p>
                   <Link
-                    className="hover:text-foreground/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="mt-3 inline-block text-sm font-medium text-ir-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                     href={`/${slug}/changelog/${entry.id}`}
                   >
-                    {entry.title}
+                    Read more →
                   </Link>
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                  {truncateHtmlToText(entry.body, 240)}
-                </p>
-                <Link
-                  className="mt-3 inline-block text-sm font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  href={`/${slug}/changelog/${entry.id}`}
-                >
-                  Read more →
-                </Link>
+                </div>
               </article>
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

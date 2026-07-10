@@ -1,11 +1,14 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell } from "@phosphor-icons/react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface NotificationBellProps {
+  indicatorId?: string;
   initialCount?: number;
   workspaceSlug: string;
 }
@@ -13,7 +16,9 @@ interface NotificationBellProps {
 export function NotificationBell({
   workspaceSlug,
   initialCount = 0,
+  indicatorId,
 }: NotificationBellProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [unreadCount, setUnreadCount] = useState(initialCount);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pathname = usePathname();
@@ -52,20 +57,45 @@ export function NotificationBell({
 
   return (
     <Link
-      className={`flex cursor-pointer items-center gap-2 border-l-2 px-2 py-1.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={cn(
+        "group relative flex cursor-pointer items-center gap-2.5 rounded-ir-sm px-3 py-2 text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
         isActive
-          ? "border-sidebar-foreground bg-sidebar-accent font-medium text-sidebar-foreground"
-          : "border-transparent text-sidebar-foreground/70 hover:border-sidebar-foreground/20 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-      }`}
+          ? "bg-ir-primary/15 font-medium text-ir-primary-light"
+          : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      )}
       href={`/${workspaceSlug}/notifications`}
     >
+      {isActive && indicatorId && (
+        <motion.span
+          className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-ir-primary"
+          layoutId={indicatorId}
+          transition={
+            shouldReduceMotion
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 500, damping: 40 }
+          }
+        />
+      )}
       <span className="relative shrink-0">
-        <Bell className="size-4" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center bg-destructive text-white text-2xs font-bold leading-none px-0.5">
-            {displayCount}
-          </span>
-        )}
+        <Bell className="size-4" weight={isActive ? "fill" : "regular"} />
+        <AnimatePresence>
+          {unreadCount > 0 && (
+            <motion.span
+              animate={{ scale: 1, opacity: 1 }}
+              className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-ir-full bg-ir-danger px-0.5 text-2xs leading-none font-bold text-white"
+              exit={shouldReduceMotion ? undefined : { scale: 0, opacity: 0 }}
+              initial={shouldReduceMotion ? false : { scale: 0, opacity: 0 }}
+              key={displayCount}
+              transition={
+                shouldReduceMotion
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 500, damping: 25 }
+              }
+            >
+              {displayCount}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </span>
       <span className="truncate">Notifications</span>
     </Link>

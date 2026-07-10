@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, MoreHorizontal } from "lucide-react";
+import { DotsThreeIcon, SpinnerIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -60,9 +60,9 @@ interface PendingConfirm {
 }
 
 const ROLE_BADGE: Record<string, string> = {
-  owner: "bg-foreground text-background",
-  admin: "bg-muted text-foreground",
-  member: "bg-muted text-muted-foreground",
+  owner: "bg-ir-primary text-ir-primary-foreground",
+  admin: "bg-ir-primary-light/15 text-ir-primary",
+  member: "bg-ir-muted-surface text-ir-muted",
 };
 
 export function MembersTable({
@@ -123,7 +123,7 @@ export function MembersTable({
 
   return (
     <>
-      <div className="space-y-px bg-border">
+      <div className="space-y-px overflow-hidden rounded-ir-card bg-ir-border">
         {members.map((member) => {
           const isSelf = member.userId === actorUserId;
           const isOwner = member.role === WORKSPACE_OWNER;
@@ -144,39 +144,39 @@ export function MembersTable({
 
           return (
             <div
-              className="flex flex-col gap-2 bg-background px-6 py-4 sm:flex-row sm:items-center sm:gap-4"
+              className="flex flex-col gap-2 bg-ir-surface px-6 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
               key={member.id}
             >
-              <div className="flex flex-1 items-center gap-4 min-w-0">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
                 <SquareAvatar
                   alt={member.user.name ?? member.user.email}
-                  className="size-9 bg-muted text-sm font-semibold text-muted-foreground uppercase"
+                  className="size-9 bg-ir-muted-surface text-sm font-semibold text-ir-muted uppercase"
                   fallback={(member.user.name || member.user.email).charAt(0)}
                   imageUrl={member.user.image}
                 />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   {member.user.name && (
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="truncate text-sm font-medium text-ir-heading">
                       {member.user.name}
                       {isSelf && (
-                        <span className="ml-1.5 text-xs text-muted-foreground font-normal">
+                        <span className="ml-1.5 text-xs font-normal text-ir-muted">
                           (you)
                         </span>
                       )}
                     </p>
                   )}
                   <p
-                    className={`truncate text-sm ${member.user.name ? "text-muted-foreground" : "font-medium text-foreground"}`}
+                    className={`truncate text-sm ${member.user.name ? "text-ir-muted" : "font-medium text-ir-heading"}`}
                   >
                     {member.user.email}
                     {!member.user.name && isSelf && (
-                      <span className="ml-1.5 text-xs text-muted-foreground font-normal">
+                      <span className="ml-1.5 text-xs font-normal text-ir-muted">
                         (you)
                       </span>
                     )}
                   </p>
                   {errors[member.id] && (
-                    <p className="mt-0.5 text-xs text-destructive">
+                    <p className="mt-0.5 text-xs text-ir-danger">
                       {errors[member.id]}
                     </p>
                   )}
@@ -184,7 +184,7 @@ export function MembersTable({
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <span
-                  className={`shrink-0 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${ROLE_BADGE[member.role]}`}
+                  className={`shrink-0 rounded-ir-sm px-2 py-0.5 text-xs font-semibold tracking-wider uppercase ${ROLE_BADGE[member.role]}`}
                 >
                   {workspaceRoleLabel(member.role)}
                 </span>
@@ -192,15 +192,16 @@ export function MembersTable({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        className="size-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                        aria-label={`Actions for ${member.user.name ?? member.user.email}`}
+                        className="size-8 cursor-pointer p-0 text-ir-muted hover:text-ir-heading"
                         disabled={loadingId === member.id}
                         size="sm"
                         variant="ghost"
                       >
                         {loadingId === member.id ? (
-                          <Loader2 className="size-4 animate-spin" />
+                          <SpinnerIcon className="size-4 animate-spin" />
                         ) : (
-                          <MoreHorizontal className="size-4" />
+                          <DotsThreeIcon className="size-5" weight="bold" />
                         )}
                       </Button>
                     </DropdownMenuTrigger>
@@ -268,7 +269,7 @@ export function MembersTable({
                       )}
                       {canRemove && (
                         <DropdownMenuItem
-                          className="text-destructive focus:text-destructive cursor-pointer"
+                          className="cursor-pointer text-ir-danger focus:text-ir-danger"
                           onClick={() =>
                             setPendingConfirm({
                               title: "Remove Member",

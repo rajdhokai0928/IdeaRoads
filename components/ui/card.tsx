@@ -1,20 +1,47 @@
+"use client"
+
 import * as React from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
+
+const MotionDiv = motion.create("div")
+
+// motion.create()'s props conflict with the native HTML drag-event handlers
+// (onDrag/onDragStart/etc. have incompatible signatures) — Card never
+// exposes native drag, so those keys are dropped from the prop surface.
+type NativeDivProps = Omit<
+  React.ComponentProps<"div">,
+  | "onDrag"
+  | "onDragEnd"
+  | "onDragEnter"
+  | "onDragExit"
+  | "onDragLeave"
+  | "onDragOver"
+  | "onDragStart"
+  | "onDrop"
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onAnimationIteration"
+>
 
 function Card({
   className,
   size = "default",
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: NativeDivProps & { size?: "default" | "sm" }) {
+  const shouldReduceMotion = useReducedMotion()
+
   return (
-    <div
+    <MotionDiv
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden bg-card py-(--card-spacing) text-sm text-card-foreground border border-border [--card-spacing:--spacing(6)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface py-(--card-spacing) text-sm text-ir-body shadow-ir-xs transition-shadow duration-150 ease-ir-standard hover:shadow-ir-sm [--card-spacing:--spacing(6)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-ir-card *:[img:last-child]:rounded-b-ir-card",
         className
       )}
+      transition={{ duration: 0.15, ease: "easeOut" }}
+      whileHover={shouldReduceMotion ? undefined : { y: -2 }}
       {...props}
     />
   )
@@ -38,7 +65,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "font-heading text-lg font-semibold tracking-ui uppercase",
+        "font-heading text-lg font-semibold tracking-ui text-ir-heading uppercase",
         className
       )}
       {...props}
@@ -50,7 +77,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-sm leading-relaxed text-muted-foreground", className)}
+      className={cn("text-sm leading-relaxed text-ir-muted", className)}
       {...props}
     />
   )

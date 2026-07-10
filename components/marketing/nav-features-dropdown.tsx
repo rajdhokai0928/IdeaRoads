@@ -1,24 +1,29 @@
 "use client";
 
-import { BarChart3, BookOpen, ChevronDown, LayoutGrid } from "lucide-react";
+import {
+  BookOpenIcon,
+  CaretDownIcon,
+  ChartBarIcon,
+  SquaresFourIcon,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 
 const FEATURE_LINKS = [
   {
-    icon: LayoutGrid,
+    icon: SquaresFourIcon,
     label: "Feedback Boards",
     tagline: "One place for every feature request",
     href: "/features/feedback-boards",
   },
   {
-    icon: BarChart3,
+    icon: ChartBarIcon,
     label: "Public Roadmap",
     tagline: "Your roadmap updates itself",
     href: "/features/roadmap",
   },
   {
-    icon: BookOpen,
+    icon: BookOpenIcon,
     label: "Changelog",
     tagline: "Every voter hears from you automatically",
     href: "/features/changelog",
@@ -38,7 +43,7 @@ export function NavFeaturesDropdown() {
       <button
         aria-expanded={open}
         aria-haspopup="true"
-        className="flex items-center gap-1 px-3 py-2 text-xs font-semibold uppercase tracking-ui text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+        className="flex items-center gap-1 rounded-ir-sm px-3 py-2 text-xs font-semibold tracking-ui text-ir-muted uppercase transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             setOpen(false);
@@ -50,35 +55,32 @@ export function NavFeaturesDropdown() {
         type="button"
       >
         Features
-        <ChevronDown
+        <CaretDownIcon
           aria-hidden="true"
-          className={`size-3.5 transition-transform duration-150 ${open ? "-rotate-180" : ""}`}
+          className={`size-3.5 transition-transform duration-150 ease-ir-standard ${open ? "-rotate-180" : ""}`}
         />
       </button>
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-px w-72 border border-border bg-background">
+        <div className="absolute top-full left-0 z-50 mt-2 w-72 rounded-ir-md border border-ir-border bg-ir-surface shadow-ir-lg">
           {/* Feature links */}
-          <div>
+          <div className="p-1.5">
             {FEATURE_LINKS.map(({ icon: Icon, label, tagline, href }) => (
               <Link
-                className="flex items-start gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-muted"
+                className="flex items-start gap-3 rounded-ir-sm px-3 py-3 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface"
                 href={href}
                 key={label}
                 onClick={() => setOpen(false)}
               >
-                <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center border border-border bg-muted">
-                  <Icon
-                    aria-hidden="true"
-                    className="size-3.5 text-foreground"
-                  />
+                <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-ir-sm bg-ir-primary-light/15 text-ir-primary">
+                  <Icon aria-hidden="true" className="size-3.5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold text-ir-heading">
                     {label}
                   </p>
-                  <p className="mt-0.5 text-xs leading-4 text-muted-foreground">
+                  <p className="mt-0.5 text-xs leading-4 text-ir-muted">
                     {tagline}
                   </p>
                 </div>
@@ -87,9 +89,9 @@ export function NavFeaturesDropdown() {
           </div>
 
           {/* Footer link */}
-          <div className="border-t border-border px-4 py-3">
+          <div className="border-t border-ir-border px-4 py-3">
             <Link
-              className="text-xs font-semibold uppercase tracking-ui text-muted-foreground transition-colors duration-150 hover:text-foreground"
+              className="text-xs font-semibold tracking-ui text-ir-muted uppercase transition-colors duration-150 ease-ir-standard hover:text-ir-heading"
               href="/features"
               onClick={() => setOpen(false)}
             >

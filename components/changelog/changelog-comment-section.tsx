@@ -1,4 +1,4 @@
-import { MessageSquare } from "lucide-react";
+import { ChatCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import CommentModerationQueue from "@/components/comments/comment-moderation-queue";
 import CommentThread from "@/components/comments/comment-thread";
 import type {
@@ -84,8 +84,8 @@ export async function ChangelogCommentSection({
 
   return (
     <div>
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-6">
-        <MessageSquare className="size-4 text-muted-foreground" />
+      <h2 className="mb-6 flex items-center gap-2 text-sm font-semibold text-ir-heading">
+        <ChatCircleIcon className="size-4 text-ir-muted" />
         {approvedCount === 0
           ? "Comments"
           : `${approvedCount} ${approvedCount === 1 ? "comment" : "comments"}`}

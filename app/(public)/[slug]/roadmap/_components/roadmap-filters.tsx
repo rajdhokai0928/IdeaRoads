@@ -62,7 +62,7 @@ export function RoadmapFilters({
   const activeCategories = categories.filter((c) => !c.isArchived);
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-4 sm:px-8">
+    <div className="flex flex-wrap items-center gap-2.5 border-ir-border px-4 py-4 sm:px-8">
       {/* Search */}
       <SearchInput
         className="h-9 min-w-50 flex-1"
@@ -79,7 +79,7 @@ export function RoadmapFilters({
             }
             value={activeCategoryId || "all"}
           >
-            <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+            <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -97,7 +97,7 @@ export function RoadmapFilters({
           onValueChange={(v) => updateParam({ sort: v })}
           value={activeSort}
         >
-          <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+          <SelectTrigger size="sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

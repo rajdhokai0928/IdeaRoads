@@ -1,22 +1,23 @@
 "use client";
 
 import {
-  CircleDot,
-  Code2,
-  Inbox,
+  CircleDashed,
+  Code,
   Key,
-  LayoutDashboard,
-  Map as MapIcon,
+  List,
+  MapTrifold,
   Megaphone,
-  Menu,
   Shield,
+  SquaresFour,
   Tag,
+  Tray,
   Users,
-  Webhook,
-} from "lucide-react";
+  WebhooksLogo,
+} from "@phosphor-icons/react";
+import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type ComponentType, useEffect, useState } from "react";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
   Sheet,
@@ -29,6 +30,7 @@ import {
 import { AccountMenu } from "@/components/workspace/account-menu";
 import { WorkspaceSwitcher } from "@/components/workspace/workspace-switcher";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface WorkspaceOption {
   logoUrl: string | null;
@@ -48,6 +50,55 @@ interface WorkspaceSidebarProps {
   workspaces: WorkspaceOption[];
 }
 
+// Shared active-indicator layoutId — a single bar smoothly slides between
+// whichever nav row (including the NotificationBell row) is currently active.
+const NAV_INDICATOR_ID = "workspace-nav-active-indicator";
+
+function NavLink({
+  href,
+  exact = false,
+  icon: Icon,
+  children,
+}: {
+  href: string;
+  exact?: boolean;
+  icon: ComponentType<{ className?: string; weight?: "regular" | "fill" }>;
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const shouldReduceMotion = useReducedMotion();
+  const isActive = exact ? pathname === href : pathname.startsWith(href);
+
+  return (
+    <Link
+      className={cn(
+        "group relative flex cursor-pointer items-center gap-2.5 rounded-ir-sm px-3 py-2 text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+        isActive
+          ? "bg-ir-primary/15 font-medium text-ir-primary-light"
+          : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      )}
+      href={href}
+    >
+      {isActive && (
+        <motion.span
+          className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-ir-primary"
+          layoutId={NAV_INDICATOR_ID}
+          transition={
+            shouldReduceMotion
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 500, damping: 40 }
+          }
+        />
+      )}
+      <Icon
+        className="size-4 shrink-0"
+        weight={isActive ? "fill" : "regular"}
+      />
+      <span className="truncate">{children}</span>
+    </Link>
+  );
+}
+
 export function WorkspaceSidebar({
   email,
   initialUnreadCount = 0,
@@ -61,6 +112,7 @@ export function WorkspaceSidebar({
 }: WorkspaceSidebarProps) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const shouldReduceMotion = useReducedMotion();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Close the mobile drawer whenever the route changes (link clicks navigate
@@ -69,15 +121,6 @@ export function WorkspaceSidebar({
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
-
-  const link = (href: string, exact = false) => {
-    const isActive = exact ? pathname === href : pathname.startsWith(href);
-    return `flex cursor-pointer items-center gap-2 border-l-2 px-2 py-1.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-      isActive
-        ? "border-sidebar-foreground bg-sidebar-accent font-medium text-sidebar-foreground"
-        : "border-transparent text-sidebar-foreground/70 hover:border-sidebar-foreground/20 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-    }`;
-  };
 
   const sidebarContent = (
     <>
@@ -90,119 +133,101 @@ export function WorkspaceSidebar({
       />
 
       {/* Navigation */}
-      <nav className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-2">
-        {/* Dashboard + Notifications inbox */}
-        <div className="space-y-0.5">
-          <Link
-            className={link(`/${workspaceSlug}`, true)}
-            href={`/${workspaceSlug}`}
-          >
-            <LayoutDashboard className="size-4 shrink-0" />
-            <span className="truncate">Dashboard</span>
-          </Link>
-          <NotificationBell
-            initialCount={initialUnreadCount}
-            workspaceSlug={workspaceSlug}
-          />
-        </div>
-
-        {/* Feedback */}
-        <div className="mt-4 space-y-0.5">
-          <p className="px-2 pb-1 pt-2 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
-            Feedback
-          </p>
-          <Link
-            className={link(`/${workspaceSlug}/feedback`)}
-            href={`/${workspaceSlug}/feedback`}
-          >
-            <Inbox className="size-4 shrink-0" />
-            <span className="truncate">All Feedback</span>
-          </Link>
-        </div>
-
-        {/* Publish */}
-        <div className="mt-4 space-y-0.5">
-          <p className="px-2 pb-1 pt-2 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
-            Publish
-          </p>
-          <Link
-            className={link(`/${workspaceSlug}/settings/roadmap`)}
-            href={`/${workspaceSlug}/settings/roadmap`}
-          >
-            <MapIcon className="size-4 shrink-0" />
-            <span className="truncate">Roadmap</span>
-          </Link>
-          <Link
-            className={link(`/${workspaceSlug}/settings/changelog`)}
-            href={`/${workspaceSlug}/settings/changelog`}
-          >
-            <Megaphone className="size-4 shrink-0" />
-            <span className="truncate">Changelog</span>
-          </Link>
-        </div>
-
-        {/* Settings */}
-        {isAdminOrOwner && (
-          <div className="mt-2 space-y-0.5 border-t border-sidebar-border">
-            <p className="px-2 pb-1 pt-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
-              Settings
-            </p>
-            <Link
-              className={link(`/${workspaceSlug}/settings/members`)}
-              href={`/${workspaceSlug}/settings/members`}
-            >
-              <Users className="size-4 shrink-0" />
-              <span className="truncate">Members</span>
-            </Link>
-            <Link
-              className={link(`/${workspaceSlug}/settings/categories`)}
-              href={`/${workspaceSlug}/settings/categories`}
-            >
-              <Tag className="size-4 shrink-0" />
-              <span className="truncate">Categories</span>
-            </Link>
-            <Link
-              className={link(`/${workspaceSlug}/settings/statuses`)}
-              href={`/${workspaceSlug}/settings/statuses`}
-            >
-              <CircleDot className="size-4 shrink-0" />
-              <span className="truncate">Statuses</span>
-            </Link>
-            <Link
-              className={link(`/${workspaceSlug}/settings/api-keys`)}
-              href={`/${workspaceSlug}/settings/api-keys`}
-            >
-              <Key className="size-4 shrink-0" />
-              <span className="truncate">API Keys</span>
-            </Link>
-            <Link
-              className={link(`/${workspaceSlug}/settings/webhooks`)}
-              href={`/${workspaceSlug}/settings/webhooks`}
-            >
-              <Webhook className="size-4 shrink-0" />
-              <span className="truncate">Webhooks</span>
-            </Link>
-            <Link
-              className={link(`/${workspaceSlug}/settings/embed`)}
-              href={`/${workspaceSlug}/settings/embed`}
-            >
-              <Code2 className="size-4 shrink-0" />
-              <span className="truncate">Embed</span>
-            </Link>
+      <LayoutGroup id="workspace-nav">
+        <nav className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-2.5">
+          {/* Dashboard + Notifications inbox */}
+          <div className="space-y-0.5">
+            <NavLink exact href={`/${workspaceSlug}`} icon={SquaresFour}>
+              Dashboard
+            </NavLink>
+            <NotificationBell
+              indicatorId={NAV_INDICATOR_ID}
+              initialCount={initialUnreadCount}
+              workspaceSlug={workspaceSlug}
+            />
           </div>
-        )}
-      </nav>
+
+          {/* Feedback */}
+          <div className="mt-5 space-y-0.5">
+            <p className="px-3 pt-2 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
+              Feedback
+            </p>
+            <NavLink href={`/${workspaceSlug}/feedback`} icon={Tray}>
+              All Feedback
+            </NavLink>
+          </div>
+
+          {/* Publish */}
+          <div className="mt-5 space-y-0.5">
+            <p className="px-3 pt-2 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
+              Publish
+            </p>
+            <NavLink
+              href={`/${workspaceSlug}/settings/roadmap`}
+              icon={MapTrifold}
+            >
+              Roadmap
+            </NavLink>
+            <NavLink
+              href={`/${workspaceSlug}/settings/changelog`}
+              icon={Megaphone}
+            >
+              Changelog
+            </NavLink>
+          </div>
+
+          {/* Settings */}
+          {isAdminOrOwner && (
+            <div className="mt-3 space-y-0.5 border-t border-sidebar-border pt-3">
+              <p className="px-3 pt-1 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
+                Settings
+              </p>
+              <NavLink href={`/${workspaceSlug}/settings/members`} icon={Users}>
+                Members
+              </NavLink>
+              <NavLink
+                href={`/${workspaceSlug}/settings/categories`}
+                icon={Tag}
+              >
+                Categories
+              </NavLink>
+              <NavLink
+                href={`/${workspaceSlug}/settings/statuses`}
+                icon={CircleDashed}
+              >
+                Statuses
+              </NavLink>
+              <NavLink href={`/${workspaceSlug}/settings/api-keys`} icon={Key}>
+                API Keys
+              </NavLink>
+              <NavLink
+                href={`/${workspaceSlug}/settings/webhooks`}
+                icon={WebhooksLogo}
+              >
+                Webhooks
+              </NavLink>
+              <NavLink href={`/${workspaceSlug}/settings/embed`} icon={Code}>
+                Embed
+              </NavLink>
+            </div>
+          )}
+        </nav>
+      </LayoutGroup>
 
       {/* Orbit Admin quick link (admins only) */}
       {isOrbitAdmin && (
-        <div className="border-t border-sidebar-border px-2 py-1.5">
-          <Link
-            className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            href="/orbit"
+        <div className="border-t border-sidebar-border px-2.5 py-2">
+          <motion.div
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
           >
-            <Shield className="size-3.5 shrink-0" />
-            <span>Orbit Admin</span>
-          </Link>
+            <Link
+              className="flex cursor-pointer items-center gap-2.5 rounded-ir-sm px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+              href="/orbit"
+            >
+              <Shield className="size-3.5 shrink-0" />
+              <span>Orbit Admin</span>
+            </Link>
+          </motion.div>
         </div>
       )}
 
@@ -224,13 +249,14 @@ export function WorkspaceSidebar({
       <Sheet onOpenChange={setMobileOpen} open={mobileOpen}>
         <div className="flex h-14 shrink-0 items-center gap-3 border-b border-sidebar-border bg-sidebar px-4">
           <SheetTrigger asChild>
-            <button
+            <motion.button
               aria-label="Open navigation"
-              className="flex cursor-pointer items-center justify-center text-sidebar-foreground/70 transition-colors duration-150 hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex cursor-pointer items-center justify-center rounded-ir-sm p-1 text-sidebar-foreground/70 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               type="button"
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
             >
-              <Menu className="size-5" />
-            </button>
+              <List className="size-5" />
+            </motion.button>
           </SheetTrigger>
           <span
             className="flex-1 truncate text-sm font-semibold text-sidebar-foreground"
@@ -256,7 +282,7 @@ export function WorkspaceSidebar({
   }
 
   return (
-    <aside className="flex h-screen w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className="flex h-screen w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:w-60">
       {sidebarContent}
     </aside>
   );

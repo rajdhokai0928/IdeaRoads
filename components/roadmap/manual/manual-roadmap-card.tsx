@@ -1,13 +1,13 @@
 "use client";
 
-import { format } from "date-fns";
 import {
-  CalendarDays,
-  GripVertical,
-  MessageSquare,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+  CalendarBlankIcon,
+  ChatCircleIcon,
+  DotsSixVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
+import { format } from "date-fns";
 
 export interface BoardItem {
   commentCount: number;
@@ -27,6 +27,7 @@ interface ManualRoadmapCardProps {
   item: BoardItem;
   onDelete?: (item: BoardItem) => void;
   onEdit?: (item: BoardItem) => void;
+  onView?: (item: BoardItem) => void;
 }
 
 function formatLaunch(iso: string | null): string | null {
@@ -56,6 +57,7 @@ export function ManualRoadmapCard({
   canManage,
   onEdit,
   onDelete,
+  onView,
   dragging,
 }: ManualRoadmapCardProps) {
   const launch = formatLaunch(item.launchDate);
@@ -63,8 +65,8 @@ export function ManualRoadmapCard({
 
   return (
     <div
-      className={`group relative border border-border bg-background transition-all duration-150 hover:border-border/80 hover:shadow-sm ${
-        dragging ? "opacity-50 ring-2 ring-ring" : ""
+      className={`group relative rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs transition-all duration-150 ease-ir-standard hover:border-ir-primary/30 hover:shadow-ir-sm ${
+        dragging ? "opacity-50 ring-2 ring-ir-primary" : ""
       }`}
     >
       {item.coverImage && (
@@ -73,7 +75,7 @@ export function ManualRoadmapCard({
         // biome-ignore lint/performance/noImgElement: external user-supplied URL
         <img
           alt=""
-          className="h-28 w-full border-b border-border object-cover"
+          className="h-28 w-full rounded-t-ir-card border-b border-ir-border object-cover"
           src={item.coverImage}
         />
       )}
@@ -81,37 +83,45 @@ export function ManualRoadmapCard({
       <div className="p-3.5">
         <div className="flex items-start gap-2">
           {canManage && (
-            <GripVertical
+            <DotsSixVerticalIcon
               aria-hidden
-              className="mt-0.5 size-4 shrink-0 cursor-grab text-muted-foreground/40 group-hover:text-muted-foreground/70"
+              className="mt-0.5 size-4 shrink-0 cursor-grab text-ir-muted/50 group-hover:text-ir-muted"
             />
           )}
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium leading-snug text-foreground">
+            {/* The whole card opens the read-only detail view — same pattern
+                as the derived-mode card's stretched title link, just backed
+                by a dialog instead of navigation (manual items have no
+                detail route). */}
+            <button
+              className="text-left text-sm leading-snug font-medium text-ir-heading after:absolute after:inset-0 after:content-[''] hover:text-ir-primary hover:underline focus-visible:underline focus-visible:outline-none"
+              onClick={() => onView?.(item)}
+              type="button"
+            >
               {item.title}
-            </p>
+            </button>
             {descPreview && (
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ir-muted">
                 {descPreview}
               </p>
             )}
 
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
               {launch && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <CalendarDays className="size-3" />
+                <span className="inline-flex items-center gap-1 rounded-ir-full bg-ir-primary-light/15 px-1.5 py-0.5 text-[11px] font-medium text-ir-primary">
+                  <CalendarBlankIcon className="size-3" />
                   {launch}
                 </span>
               )}
               {item.voteCount > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 text-[11px] text-ir-muted">
                   <span aria-hidden>▲</span>
                   {item.voteCount}
                 </span>
               )}
               {item.commentCount > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <MessageSquare className="size-3" />
+                <span className="flex items-center gap-1 text-[11px] text-ir-muted">
+                  <ChatCircleIcon className="size-3" />
                   {item.commentCount}
                 </span>
               )}
@@ -119,25 +129,25 @@ export function ManualRoadmapCard({
           </div>
 
           {canManage && (onEdit || onDelete) && (
-            <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+            <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
               {onEdit && (
                 <button
                   aria-label="Edit item"
-                  className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-ir-sm p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={() => onEdit(item)}
                   type="button"
                 >
-                  <Pencil className="size-3.5" />
+                  <PencilIcon className="size-3.5" />
                 </button>
               )}
               {onDelete && (
                 <button
                   aria-label="Delete item"
-                  className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-ir-sm p-1.5 text-ir-danger transition-colors duration-150 ease-ir-standard hover:bg-ir-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={() => onDelete(item)}
                   type="button"
                 >
-                  <Trash2 className="size-3.5" />
+                  <TrashIcon className="size-3.5" />
                 </button>
               )}
             </div>

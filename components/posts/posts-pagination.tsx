@@ -93,7 +93,7 @@ export function PostsPagination({
             {item === "dots" ? (
               <span
                 aria-hidden
-                className="flex size-9 items-center justify-center text-muted-foreground"
+                className="flex size-9 items-center justify-center text-ir-muted"
               >
                 <DotsThreeIcon />
                 <span className="sr-only">More pages</span>

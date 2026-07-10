@@ -24,23 +24,23 @@ export function ChangelogEntryCard({
   const href = `/${workspaceSlug}/changelog/${entry.id}`;
 
   return (
-    <article className="py-8 border-b border-border last:border-0">
+    <article className="border-b border-ir-border py-8 last:border-0">
       {entry.coverImageUrl && (
-        <Link className="block mb-4" href={href}>
+        <Link className="mb-4 block" href={href}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
           <img
             alt=""
-            className="max-h-64 w-full border border-border object-cover"
+            className="max-h-64 w-full rounded-ir-sm border border-ir-border object-cover"
             src={entry.coverImageUrl}
           />
         </Link>
       )}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3">
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <ChangelogLabelBadge label={entry.label} />
         {entry.publishedAt && (
           <time
-            className="text-xs text-muted-foreground"
+            className="text-xs text-ir-muted"
             dateTime={entry.publishedAt.toISOString()}
           >
             {format(entry.publishedAt, "MMM d, yyyy")}
@@ -48,9 +48,9 @@ export function ChangelogEntryCard({
         )}
       </div>
 
-      <h2 className="text-lg font-semibold text-foreground leading-snug">
+      <h2 className="text-lg font-semibold leading-snug text-ir-heading">
         <Link
-          className="hover:text-foreground/70 transition-colors"
+          className="transition-colors duration-150 ease-ir-standard hover:text-ir-primary"
           href={href}
         >
           {entry.title}
@@ -58,20 +58,20 @@ export function ChangelogEntryCard({
       </h2>
 
       {excerpt && (
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed line-clamp-3">
+        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ir-muted">
           {excerpt}
         </p>
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <Link
-          className="text-xs font-medium text-foreground hover:text-foreground/70 transition-colors"
+          className="text-xs font-medium text-ir-primary transition-colors duration-150 ease-ir-standard hover:text-ir-primary-hover"
           href={href}
         >
           Read more →
         </Link>
         {entry.linkedPostCount > 0 && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-ir-muted">
             {entry.linkedPostCount} linked post
             {entry.linkedPostCount === 1 ? "" : "s"}
           </span>

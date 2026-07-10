@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { createContext, type ReactNode, useContext } from "react";
 
 // The current workspace's public-portal URL, resolved once in the workspace
@@ -39,12 +39,12 @@ export function OpenPortalButton() {
   return (
     <a
       aria-label="Open Public Portal"
-      className="flex items-center gap-1.5 border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-3.5"
+      className="flex items-center gap-1.5 rounded-ir-button border border-ir-border px-3 py-2 text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 sm:px-3.5"
       href={href}
       rel="noopener noreferrer"
       target="_blank"
     >
-      <ExternalLink className="size-4 shrink-0" />
+      <ArrowSquareOutIcon className="size-4 shrink-0" />
       <span className="hidden sm:inline">Open Public Portal</span>
     </a>
   );

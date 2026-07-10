@@ -1,5 +1,9 @@
+import {
+  ArrowLeftIcon,
+  GitMergeIcon,
+  NotePencilIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { format } from "date-fns";
-import { ArrowLeft, FilePen, GitMerge } from "lucide-react";
 import Link from "next/link";
 import CommentSection from "@/components/comments/comment-section";
 import AssigneeSelect from "@/components/posts/assignee-select";
@@ -118,15 +122,15 @@ export function PostDetailContent({
   const statusMap = new Map(workspaceStatuses.map((s) => [s.slug, s.name]));
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col">
+    <div className="mx-auto flex max-w-3xl flex-col">
       {/* Back nav — hidden in embed mode (no navigation chrome) */}
       {!isEmbed && (
-        <div className="border-b border-border px-4 py-4 sm:px-8">
+        <div className="border-b border-ir-border px-4 py-4 sm:px-8">
           <Link
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             href={boardHref}
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeftIcon className="size-4" />
             {backLabel}
           </Link>
         </div>
@@ -145,14 +149,14 @@ export function PostDetailContent({
           {/* Draft banner — members only; the public route 404s drafts so this
             only ever renders in the admin feedback view. */}
           {post.isDraft && isMember && (
-            <div className="mb-6 flex flex-col gap-3 border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-6 flex flex-col gap-3 rounded-ir-card border border-ir-warning/30 bg-ir-warning/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-2">
-                <FilePen className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
+                <NotePencilIcon className="mt-0.5 size-4 shrink-0 text-ir-warning" />
                 <div>
-                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  <p className="text-sm font-medium text-ir-heading">
                     This feedback is a draft
                   </p>
-                  <p className="mt-0.5 text-xs text-amber-700/80 dark:text-amber-300/70">
+                  <p className="mt-0.5 text-xs text-ir-muted">
                     It isn't visible on your public portal, roadmap, changelog,
                     or API, and no notifications have been sent. Publish it to
                     make it visible.
@@ -170,9 +174,9 @@ export function PostDetailContent({
 
           {/* Post header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <EditableTitle
-                className="text-xl font-semibold text-foreground leading-snug"
+                className="text-xl font-semibold leading-snug text-ir-heading"
                 title={post.title}
               />
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -200,14 +204,14 @@ export function PostDetailContent({
                     workspaceId={workspaceId}
                   />
                 )}
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-ir-muted">
                   by {post.authorName || post.authorEmail}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-ir-muted">
                   {format(post.createdAt, "MMM d, yyyy")}
                 </span>
                 {post.updatedAt > post.createdAt && (
-                  <span className="text-xs text-muted-foreground/60">
+                  <span className="text-xs text-ir-muted/60">
                     edited {format(post.updatedAt, "MMM d, yyyy")}
                   </span>
                 )}
@@ -215,7 +219,7 @@ export function PostDetailContent({
             </div>
 
             {/* Vote button + voter list */}
-            <div className="shrink-0 flex flex-col items-center gap-2">
+            <div className="flex shrink-0 flex-col items-center gap-2">
               <VoteButton
                 initialCount={post.upvotes}
                 initialHasVoted={votedByUser}
@@ -232,12 +236,12 @@ export function PostDetailContent({
 
           {/* Merged notice */}
           {mergedTarget && (
-            <div className="mt-4 flex items-center gap-2 border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-              <GitMerge className="size-4 shrink-0" />
+            <div className="mt-4 flex items-center gap-2 rounded-ir-card border border-ir-border bg-ir-muted-surface px-3 py-2 text-sm text-ir-muted">
+              <GitMergeIcon className="size-4 shrink-0" />
               <span>
                 Merged into{" "}
                 <Link
-                  className="font-medium text-foreground hover:underline"
+                  className="font-medium text-ir-heading hover:underline"
                   href={mergedTarget.href}
                 >
                   {mergedTarget.title}
@@ -250,13 +254,13 @@ export function PostDetailContent({
             editing (title stays editable in the header above). */}
           <EditablePostContent
             body={post.body}
-            className="text-sm text-foreground leading-relaxed"
+            className="text-sm leading-relaxed text-ir-body"
             imageUrl={post.imageUrl}
           />
 
           {/* Triage / clean-up actions (workspace members) and author delete */}
           {(isMember || isAuthor) && (
-            <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border pt-4">
+            <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-ir-border pt-4">
               {isMember && (
                 <PinButton
                   isPinned={post.isPinned}
@@ -282,17 +286,17 @@ export function PostDetailContent({
 
           {/* Status history */}
           {statusHistory.length > 0 && (
-            <div className="mt-6 border-t border-border pt-6">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+            <div className="mt-6 border-t border-ir-border pt-6">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ir-muted">
                 Status history
               </h2>
               <ul className="space-y-2">
                 {statusHistory.map((entry) => (
                   <li
-                    className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground"
+                    className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ir-muted"
                     key={entry.id}
                   >
-                    <span className="text-foreground">
+                    <span className="text-ir-heading">
                       {entry.fromStatus
                         ? `${statusMap.get(entry.fromStatus) ?? entry.fromStatus} → `
                         : ""}
@@ -315,7 +319,7 @@ export function PostDetailContent({
           )}
 
           {/* Comments */}
-          <div className="mt-6 border-t border-border pt-6">
+          <div className="mt-6 border-t border-ir-border pt-6">
             <CommentSection
               canModerate={isAdminOrOwner}
               currentUserId={currentUserId}

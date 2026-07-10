@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 
 export function Hero() {
   return (
-    <section className="bg-background">
+    <section className="bg-ir-background">
       <div className="mx-auto max-w-6xl px-4 py-24 sm:px-8 sm:py-32">
         <div className="grid gap-12 lg:grid-cols-[5fr_7fr] lg:items-center lg:gap-16">
           <div>
-            <h1 className="font-black text-5xl tracking-normal text-foreground sm:text-6xl lg:text-7xl">
+            <h1 className="text-5xl font-black tracking-normal text-ir-heading sm:text-6xl lg:text-7xl">
               Ship what your users actually want.
             </h1>
 
-            <p className="mt-6 text-lg leading-8 text-muted-foreground">
+            <p className="mt-6 text-lg leading-8 text-ir-muted">
               Collect feedback, let users vote on priorities, publish a public
               roadmap, and automatically notify every voter the moment you ship.
             </p>
@@ -26,7 +26,7 @@ export function Hero() {
               </Button>
             </div>
 
-            <p className="mt-6 text-sm text-muted-foreground">
+            <p className="mt-6 text-sm text-ir-muted">
               No credit card required. Self-hosted or managed.
             </p>
           </div>

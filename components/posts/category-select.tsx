@@ -63,7 +63,7 @@ export default function CategorySelect({
       value={currentCategoryId ?? "none"}
     >
       <SelectTrigger
-        className="h-auto gap-1.5 rounded-xs border-0 bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+        className="h-auto gap-1.5 rounded-ir-full border-0 bg-ir-muted-surface px-2.5 py-1 text-xs font-medium text-ir-heading"
         size="sm"
       >
         <SelectValue />

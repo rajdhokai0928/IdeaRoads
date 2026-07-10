@@ -161,6 +161,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
 
       <PostsTable
         categories={categories}
+        enableBulkActions
         isAdminOrOwner={isAdminOrOwner}
         isMember={true}
         isSignedIn={true}
@@ -171,8 +172,8 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
       />
 
       {totalPages > 1 && (
-        <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-border px-4 py-3 sm:flex-row sm:px-8">
-          <span className="text-xs text-muted-foreground">
+        <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-ir-border px-4 py-3 sm:flex-row sm:px-8">
+          <span className="text-xs text-ir-muted">
             Showing {rangeStart.toLocaleString()}–{rangeEnd.toLocaleString()} of{" "}
             {totalCount.toLocaleString()}
           </span>

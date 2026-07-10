@@ -6,10 +6,10 @@ import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 
 export function Nav() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-ir-border bg-ir-surface/90 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-8">
         <Link
-          className="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex items-center rounded-ir-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
           href="/"
         >
           <Image
@@ -29,7 +29,7 @@ export function Nav() {
           <NavFeaturesDropdown />
 
           <Link
-            className="rounded-none px-3 py-2 text-xs font-semibold uppercase tracking-ui text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+            className="rounded-ir-sm px-3 py-2 text-xs font-semibold tracking-ui text-ir-muted uppercase transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading"
             href="/demo"
           >
             Demo

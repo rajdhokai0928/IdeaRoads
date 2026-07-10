@@ -1,9 +1,10 @@
 "use client";
 
+import { PushPinIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
-import { Pin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { RowCheckbox } from "@/components/posts/bulk-selection-context";
 import CategorySelect from "@/components/posts/category-select";
 import { PostActionsMenu } from "@/components/posts/post-actions-menu";
 import type { PostsTableRow } from "@/components/posts/posts-table";
@@ -33,6 +34,7 @@ interface PostRowProps {
   isMember: boolean;
   isSignedIn: boolean;
   post: PostsTableRow;
+  selectable?: boolean;
   showBoardColumn: boolean;
   workspaceId: string;
   workspaceStatuses: WorkspaceStatus[];
@@ -52,15 +54,26 @@ export function PostRow({
   isAdminOrOwner,
   isMember,
   workspaceId,
+  selectable = false,
   showBoardColumn,
 }: PostRowProps) {
   const router = useRouter();
 
   return (
     <tr
-      className="cursor-pointer transition-colors duration-150 hover:bg-muted/40"
+      className="cursor-pointer transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface"
       onClick={() => router.push(href)}
     >
+      {selectable && (
+        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the checkbox inside, not a new interaction
+        // biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable
+        <td
+          className="px-4 py-3 align-top"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <RowCheckbox id={post.id} label={post.title} />
+        </td>
+      )}
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the interactive control inside, not a new interaction */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
       <td className="px-4 py-3 align-top" onClick={(e) => e.stopPropagation()}>
@@ -75,42 +88,42 @@ export function PostRow({
         <div className="flex items-center gap-2">
           {post.isPinned && (
             <span
-              className="inline-flex shrink-0 items-center text-muted-foreground"
+              className="inline-flex shrink-0 items-center text-ir-primary"
               title="Pinned"
             >
-              <Pin className="size-3.5" />
+              <PushPinIcon className="size-3.5" weight="fill" />
               <span className="sr-only">Pinned</span>
             </span>
           )}
           <Link
-            className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
+            className="font-medium text-ir-heading transition-colors duration-150 ease-ir-standard hover:text-ir-primary hover:underline focus-visible:outline-none focus-visible:underline"
             href={href}
           >
             {post.title}
           </Link>
           {post.isDraft && (
-            <span className="inline-flex shrink-0 items-center px-2 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            <span className="inline-flex shrink-0 items-center rounded-ir-full bg-ir-warning/10 px-2 py-0.5 text-[11px] font-medium text-ir-warning">
               Draft
             </span>
           )}
         </div>
         {showBoardColumn && (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          <p className="mt-0.5 truncate text-xs text-ir-muted">
             {post.boardName}
           </p>
         )}
       </td>
       <td className="hidden max-w-72 px-4 py-3 align-top lg:table-cell">
-        <p className="line-clamp-2 text-xs text-muted-foreground">
+        <p className="line-clamp-2 text-xs text-ir-muted">
           {post.body ? truncateHtmlToText(post.body, 200) : "—"}
         </p>
       </td>
       <td className="hidden max-w-32 px-4 py-3 align-top sm:table-cell">
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="truncate text-xs text-ir-muted">
           {post.authorName || post.authorEmail}
         </p>
       </td>
-      <td className="hidden whitespace-nowrap px-4 py-3 align-top text-xs text-muted-foreground sm:table-cell">
+      <td className="hidden whitespace-nowrap px-4 py-3 align-top text-xs text-ir-muted sm:table-cell">
         {formatDistanceToNow(post.createdAt, { addSuffix: true })}
       </td>
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the selects inside, not a new interaction */}

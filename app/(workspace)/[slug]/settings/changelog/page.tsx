@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -64,7 +64,7 @@ export default async function WorkspaceChangelogPage({
           isAdmin ? (
             <Button asChild>
               <Link href={`/${slug}/settings/changelog/new`}>
-                <Plus data-icon="inline-start" />
+                <PlusIcon data-icon="inline-start" />
                 New entry
               </Link>
             </Button>
@@ -87,7 +87,7 @@ export default async function WorkspaceChangelogPage({
         {/* Drafts (admin only) */}
         {isAdmin && drafts.length > 0 && (
           <div className="mb-8">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ir-muted">
               Drafts ({drafts.length})
             </h2>
             <div className="space-y-3">
@@ -107,19 +107,19 @@ export default async function WorkspaceChangelogPage({
         {published.length === 0 ? (
           searchQuery && drafts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-sm font-medium text-ir-heading">
                 No updates match “{searchQuery}”
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-ir-muted">
                 Try a different search term.
               </p>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-sm font-medium text-ir-heading">
                 Nothing here yet
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-ir-muted">
                 Check back soon for product updates and announcements.
               </p>
               {isAdmin && (
@@ -134,7 +134,7 @@ export default async function WorkspaceChangelogPage({
         ) : (
           <div>
             {isAdmin && drafts.length > 0 && (
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ir-muted">
                 Published ({published.length})
               </h2>
             )}

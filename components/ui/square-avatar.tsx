@@ -23,7 +23,7 @@ export function SquareAvatar({
   return (
     <div
       className={cn(
-        "flex size-7 shrink-0 items-center justify-center overflow-hidden bg-sidebar-accent text-xs font-semibold text-sidebar-foreground",
+        "flex size-7 shrink-0 items-center justify-center overflow-hidden bg-ir-muted-surface text-xs font-semibold text-ir-muted",
         className
       )}
     >

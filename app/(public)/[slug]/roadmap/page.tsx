@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,6 +9,7 @@ import {
 } from "@/components/roadmap/manual/manual-roadmap-board";
 import type { BoardItem } from "@/components/roadmap/manual/manual-roadmap-card";
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
+import { Button } from "@/components/ui/button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
@@ -121,7 +122,7 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
     : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-ir-background">
       <PortalHeader
         active="roadmap"
         boards={publicBoards}
@@ -139,24 +140,23 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
       />
       <PoweredByBadge />
 
-      <div className="max-w-5xl mx-auto flex flex-col">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-4 py-6 sm:px-8">
+      <main className="mx-auto flex max-w-5xl flex-col" id="main-content">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ir-border px-4 py-6 sm:px-8">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Roadmap</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1 className="text-xl font-semibold text-ir-heading">Roadmap</h1>
+            <p className="mt-1 text-sm text-ir-muted">
               {totalPosts === 0
                 ? "No items on the roadmap yet."
                 : `${totalPosts} item${totalPosts === 1 ? "" : "s"} across all columns`}
             </p>
           </div>
           {feedbackHref && (
-            <Link
-              className="flex items-center gap-1.5 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90"
-              href={feedbackHref}
-            >
-              <Plus className="size-4" />
-              Feedback
-            </Link>
+            <Button asChild>
+              <Link href={feedbackHref}>
+                <PlusIcon data-icon="inline-start" />
+                Feedback
+              </Link>
+            </Button>
           )}
         </div>
 
@@ -188,7 +188,7 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
             />
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

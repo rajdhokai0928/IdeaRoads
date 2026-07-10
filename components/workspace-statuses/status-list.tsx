@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  Archive,
-  Edit2,
-  Map as MapIcon,
-  Plus,
-  Star,
-  Trash2,
-} from "lucide-react";
+  ArchiveIcon,
+  MapTrifoldIcon,
+  PencilIcon,
+  PlusIcon,
+  StarIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -18,23 +18,10 @@ import {
   updateWorkspaceStatusAction,
 } from "@/app/actions/workspace-statuses";
 import { Button } from "@/components/ui/button";
+import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page";
-
-const COLOR_PRESETS = [
-  "#6b7280",
-  "#374151",
-  "#6366f1",
-  "#8b5cf6",
-  "#ec4899",
-  "#ef4444",
-  "#f97316",
-  "#eab308",
-  "#22c55e",
-  "#14b8a6",
-  "#06b6d4",
-  "#3b82f6",
-];
 
 interface WorkspaceStatus {
   color: string;
@@ -224,7 +211,7 @@ export function StatusList({
         actions={
           canManage && !form ? (
             <Button onClick={openCreate}>
-              <Plus data-icon="inline-start" />
+              <PlusIcon data-icon="inline-start" />
               New Status
             </Button>
           ) : undefined
@@ -238,20 +225,23 @@ export function StatusList({
         {/* Inline form */}
         {form && canManage && (
           <form
-            className="border border-border p-4 space-y-4"
+            className="space-y-4 rounded-ir-card border border-ir-border bg-ir-surface p-4 shadow-ir-xs"
             onSubmit={handleSubmit}
           >
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3 className="text-sm font-semibold text-ir-heading">
               {form.mode === "create" ? "New Status" : "Edit Status"}
             </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1">
-                  Name <span className="text-destructive">*</span>
+                <label
+                  className="mb-1 block text-xs font-medium text-ir-heading"
+                  htmlFor="status-name"
+                >
+                  Name <span className="text-ir-danger">*</span>
                 </label>
-                <input
-                  className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                <Input
+                  id="status-name"
                   maxLength={48}
                   onChange={(e) =>
                     setForm((f) => f && { ...f, name: e.target.value })
@@ -263,36 +253,24 @@ export function StatusList({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-foreground mb-2">
+                <span className="mb-2 block text-xs font-medium text-ir-heading">
                   Color
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {COLOR_PRESETS.map((c) => (
-                    <button
-                      className="size-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      key={c}
-                      onClick={() => setForm((f) => f && { ...f, color: c })}
-                      style={{
-                        backgroundColor: c,
-                        borderColor: form.color === c ? "#000" : "transparent",
-                      }}
-                      title={c}
-                      type="button"
-                    />
-                  ))}
-                </div>
+                </span>
+                <ColorSwatchPicker
+                  onChange={(c) => setForm((f) => f && { ...f, color: c })}
+                  value={form.color}
+                />
                 {form.name && (
                   <div className="mt-2">
                     <span
-                      className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium"
+                      className="inline-flex items-center gap-1.5 rounded-ir-sm px-2 py-0.5 text-xs font-medium"
                       style={{
                         backgroundColor: `${form.color}18`,
                         color: form.color,
-                        borderRadius: 2,
                       }}
                     >
                       <span
-                        className="inline-block w-1.5 h-1.5 rounded-full"
+                        className="inline-block h-1.5 w-1.5 rounded-ir-full"
                         style={{ backgroundColor: form.color }}
                       />
                       {form.name || "Preview"}
@@ -302,60 +280,58 @@ export function StatusList({
               </div>
             </div>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-xs text-ir-danger">{error}</p>}
 
             <div className="flex items-center gap-2">
-              <button
-                className="px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                disabled={isPending}
-                type="submit"
-              >
+              <Button disabled={isPending} type="submit">
                 {isPending
                   ? "Saving…"
                   : form.mode === "create"
                     ? "Create"
                     : "Save Changes"}
-              </button>
-              <button
-                className="px-4 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              </Button>
+              <Button
                 disabled={isPending}
                 onClick={closeForm}
                 type="button"
+                variant="outline"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         )}
 
         {/* Active statuses */}
         {active.length === 0 && !form ? (
-          <div className="border border-dashed border-border py-12 text-center">
-            <p className="text-sm text-muted-foreground">No statuses found.</p>
+          <div className="rounded-ir-card border border-dashed border-ir-border py-12 text-center">
+            <p className="text-sm text-ir-muted">No statuses found.</p>
           </div>
         ) : (
           active.length > 0 && (
-            <div className="border border-border divide-y divide-border">
+            <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
               {active.map((s) => (
-                <div className="flex items-center gap-4 px-4 py-4" key={s.id}>
+                <div
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface"
+                  key={s.id}
+                >
                   <span
-                    className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium shrink-0"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-ir-sm px-2 py-0.5 text-xs font-medium"
                     style={{
                       backgroundColor: `${s.color}18`,
                       color: s.color,
-                      borderRadius: 2,
                     }}
                   >
                     <span
-                      className="inline-block w-1.5 h-1.5 rounded-full"
+                      className="inline-block h-1.5 w-1.5 rounded-ir-full"
                       style={{ backgroundColor: s.color }}
                     />
                     {s.name}
                   </span>
 
                   {s.isDefault && (
-                    <span className="text-2xs font-medium text-muted-foreground border border-border px-1.5 py-0.5 flex items-center gap-1">
-                      <Star className="size-2.5" />
+                    <span className="flex items-center gap-1 rounded-ir-sm border border-ir-border px-1.5 py-0.5 text-2xs font-medium text-ir-muted">
+                      <StarIcon className="size-2.5" />
                       Default
                     </span>
                   )}
@@ -363,17 +339,17 @@ export function StatusList({
                   {canManage && (
                     <button
                       aria-pressed={s.showOnRoadmap}
-                      className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 text-2xs font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      className={`ml-auto inline-flex items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
                         s.showOnRoadmap
-                          ? "border-primary/40 bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground"
+                          ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
+                          : "border-ir-border text-ir-muted hover:text-ir-heading"
                       }`}
                       disabled={isPending}
                       onClick={() => handleToggleRoadmap(s)}
                       title="Show this status as a column on the roadmap (Sync from Feedback mode)"
                       type="button"
                     >
-                      <MapIcon className="size-2.5" />
+                      <MapTrifoldIcon className="size-2.5" />
                       Roadmap
                       <span className="opacity-70">
                         {s.showOnRoadmap ? "On" : "Off"}
@@ -382,38 +358,46 @@ export function StatusList({
                   )}
 
                   {canManage && (
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex shrink-0 items-center gap-1">
                       {!s.isDefault && (
                         <button
-                          className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label={`Set ${s.name} as default`}
+                          className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                           disabled={isPending}
                           onClick={() => handleSetDefault(s)}
                           title="Set as default"
+                          type="button"
                         >
-                          <Star className="size-3.5" />
+                          <StarIcon className="size-3.5" />
                         </button>
                       )}
                       <button
-                        className="p-1.5 text-primary hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Edit ${s.name}`}
+                        className="rounded-ir-xs p-1.5 text-ir-primary transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => openEdit(s)}
                         title="Edit"
+                        type="button"
                       >
-                        <Edit2 className="size-3.5" />
+                        <PencilIcon className="size-3.5" />
                       </button>
                       <button
-                        className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Archive ${s.name}`}
+                        className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setArchiveTarget(s)}
                         title="Archive"
+                        type="button"
                       >
-                        <Archive className="size-3.5" />
+                        <ArchiveIcon className="size-3.5" />
                       </button>
                       {!s.isDefault && (
                         <button
-                          className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label={`Delete ${s.name}`}
+                          className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                           onClick={() => setDeleteTarget(s)}
                           title="Delete"
+                          type="button"
                         >
-                          <Trash2 className="size-3.5" />
+                          <TrashIcon className="size-3.5" />
                         </button>
                       )}
                     </div>
@@ -427,39 +411,45 @@ export function StatusList({
         {/* Archived statuses */}
         {archived.length > 0 && (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            <p className="mb-2 text-xs font-semibold tracking-wider text-ir-muted uppercase">
               Archived
             </p>
-            <div className="border border-border divide-y divide-border opacity-60">
+            <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface opacity-60">
               {archived.map((s) => (
-                <div className="flex items-center gap-4 px-4 py-4" key={s.id}>
+                <div
+                  className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:gap-4"
+                  key={s.id}
+                >
                   <span
-                    className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium shrink-0"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-ir-sm px-2 py-0.5 text-xs font-medium"
                     style={{
                       backgroundColor: `${s.color}18`,
                       color: s.color,
-                      borderRadius: 2,
                     }}
                   >
                     <span
-                      className="inline-block w-1.5 h-1.5 rounded-full"
+                      className="inline-block h-1.5 w-1.5 rounded-ir-full"
                       style={{ backgroundColor: s.color }}
                     />
                     {s.name}
                   </span>
                   {canManage && (
-                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                    <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
                       <button
-                        className="p-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none"
+                        aria-label={`Restore ${s.name}`}
+                        className="rounded-ir-xs p-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none"
                         onClick={() => setArchiveTarget(s)}
+                        type="button"
                       >
                         Restore
                       </button>
                       <button
-                        className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Delete ${s.name}`}
+                        className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setDeleteTarget(s)}
+                        type="button"
                       >
-                        <Trash2 className="size-3.5" />
+                        <TrashIcon className="size-3.5" />
                       </button>
                     </div>
                   )}

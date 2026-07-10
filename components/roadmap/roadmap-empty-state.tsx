@@ -1,23 +1,22 @@
+"use client";
+
+import { TrayIcon } from "@phosphor-icons/react";
+import { motion, useReducedMotion } from "framer-motion";
+
 export function RoadmapEmptyState({ label }: { label?: string }) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <div className="size-8 mb-3 text-muted-foreground/30">
-        <svg
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          viewBox="0 0 24 24"
-        >
-          <path
-            d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+    <motion.div
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center justify-center gap-3 px-4 py-12 text-center"
+      initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+    >
+      <div className="flex size-9 items-center justify-center rounded-ir-full bg-ir-muted-surface text-ir-muted">
+        <TrayIcon className="size-4" />
       </div>
-      <p className="text-sm text-muted-foreground">
-        {label ?? "Nothing here yet."}
-      </p>
-    </div>
+      <p className="text-sm text-ir-muted">{label ?? "Nothing here yet."}</p>
+    </motion.div>
   );
 }

@@ -1,5 +1,5 @@
+import { DownloadIcon } from "@phosphor-icons/react/dist/ssr";
 import { desc, eq } from "drizzle-orm";
-import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { session as sessionTable, user } from "@/db/schema";
 import { db } from "@/lib/db";
@@ -47,8 +47,8 @@ export async function AccountSettingsContent({
       {/* Profile */}
       <section>
         <div className="mb-4">
-          <h2 className="text-sm font-semibold text-foreground">Profile</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <h2 className="text-sm font-semibold text-ir-heading">Profile</h2>
+          <p className="mt-0.5 text-xs text-ir-muted">
             Your display name and email address for this account.
           </p>
         </div>
@@ -64,23 +64,23 @@ export async function AccountSettingsContent({
 
       {/* Export */}
       <section>
-        <div className="border border-border p-5">
+        <div className="rounded-ir-card border border-ir-border bg-ir-surface p-5 shadow-ir-xs">
           <div className="flex items-start gap-4">
-            <div className="flex size-9 shrink-0 items-center justify-center border border-border bg-muted">
-              <Download className="size-4 text-muted-foreground" />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-ir-sm bg-ir-muted-surface">
+              <DownloadIcon className="size-4 text-ir-muted" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-sm font-semibold text-ir-heading">
                 Export your data
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-ir-muted">
                 Download a JSON archive of everything we store: your profile,
                 linked auth accounts, active sessions, and audit history.
               </p>
               <div className="mt-4">
                 <Button asChild size="sm" variant="secondary">
                   <a download href="/api/account/export">
-                    <Download className="size-3.5" />
+                    <DownloadIcon className="size-3.5" />
                     Download JSON export
                   </a>
                 </Button>

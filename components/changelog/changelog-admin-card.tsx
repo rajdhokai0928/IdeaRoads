@@ -1,7 +1,13 @@
 "use client";
 
+import {
+  BellIcon,
+  GlobeIcon,
+  LockIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import { format } from "date-fns";
-import { Bell, Edit, Globe, Lock, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -89,74 +95,68 @@ export function ChangelogAdminCard({
 
   return (
     <div
-      className={`border border-border bg-card p-5 ${entry.isPublished ? "" : "opacity-80"}`}
+      className={`rounded-ir-card border border-ir-border bg-ir-surface p-5 shadow-ir-xs transition-shadow duration-150 ease-ir-standard hover:shadow-ir-sm ${entry.isPublished ? "" : "opacity-80"}`}
     >
       {/* Header row */}
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2.5">
           <ChangelogLabelBadge label={entry.label} />
           {entry.isPublished ? (
-            <span className="inline-flex items-center gap-1 rounded-sm bg-success-subtle px-2 py-0.5 text-[11px] font-semibold text-success-foreground">
-              <Globe className="size-2.5" />
+            <span className="inline-flex items-center gap-1 rounded-ir-sm bg-ir-success/10 px-2 py-0.5 text-[11px] font-semibold text-ir-success">
+              <GlobeIcon className="size-2.5" />
               Published
             </span>
           ) : (
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold bg-muted text-muted-foreground"
-              style={{ borderRadius: 2 }}
-            >
-              <Lock className="size-2.5" />
+            <span className="inline-flex items-center gap-1 rounded-ir-sm bg-ir-muted-surface px-2 py-0.5 text-[11px] font-semibold text-ir-muted">
+              <LockIcon className="size-2.5" />
               Draft
             </span>
           )}
           {entry.notifiedAt && (
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
-              style={{ borderRadius: 2 }}
-            >
-              <Bell className="size-2.5" />
+            <span className="inline-flex items-center gap-1 rounded-ir-sm px-2 py-0.5 text-[11px] font-semibold text-ir-muted">
+              <BellIcon className="size-2.5" />
               Voters notified
             </span>
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <Link
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-primary/40 text-primary hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex items-center gap-1.5 rounded-ir-sm border border-ir-primary/40 px-3 py-1.5 text-xs font-medium text-ir-primary transition-colors duration-150 ease-ir-standard hover:bg-ir-primary-light/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             href={`/${workspaceSlug}/settings/changelog/${entry.id}/edit`}
           >
-            <Edit className="size-3" />
+            <PencilIcon className="size-3" />
             Edit
           </Link>
 
           {entry.isPublished ? (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              className="flex cursor-pointer items-center gap-1.5 rounded-ir-sm border border-ir-border px-3 py-1.5 text-xs font-medium text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
               disabled={isPending}
               onClick={handleUnpublish}
             >
-              <Lock className="size-3" />
+              <LockIcon className="size-3" />
               Unpublish
             </button>
           ) : (
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              className="flex cursor-pointer items-center gap-1.5 rounded-ir-sm bg-ir-primary px-3 py-1.5 text-xs font-medium text-ir-primary-foreground shadow-ir-xs transition-colors duration-150 ease-ir-standard hover:bg-ir-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
               disabled={isPending}
               onClick={handlePublish}
             >
-              <Globe className="size-3" />
+              <GlobeIcon className="size-3" />
               Publish
             </button>
           )}
 
           <button
             aria-label="Delete entry"
-            className="flex items-center justify-center p-1.5 text-destructive hover:opacity-70 transition-opacity cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            className="flex cursor-pointer items-center justify-center rounded-ir-sm p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
             disabled={isPending}
             onClick={() => setDeleteDialogOpen(true)}
           >
-            <Trash2 className="size-3.5" />
+            <TrashIcon className="size-3.5" />
           </button>
         </div>
       </div>
@@ -178,19 +178,19 @@ export function ChangelogAdminCard({
           // biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image
           <img
             alt=""
-            className="size-14 shrink-0 border border-border object-cover"
+            className="size-14 shrink-0 rounded-ir-sm border border-ir-border object-cover"
             src={entry.coverImageUrl}
           />
         )}
         <div className="min-w-0">
           {/* Title */}
-          <h3 className="text-base font-semibold text-foreground leading-snug">
+          <h3 className="text-base font-semibold leading-snug text-ir-heading">
             {entry.title}
           </h3>
 
           {/* Excerpt */}
           {excerpt && (
-            <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">
+            <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ir-muted">
               {excerpt}
             </p>
           )}
@@ -198,7 +198,7 @@ export function ChangelogAdminCard({
       </div>
 
       {/* Footer */}
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ir-muted">
         {entry.publishedAt && (
           <span>{format(entry.publishedAt, "MMM d, yyyy")}</span>
         )}

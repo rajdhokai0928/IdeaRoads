@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, X } from "lucide-react";
+import { ImageIcon, XIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import {
   updateRoadmapItemAction,
   uploadRoadmapCoverImageAction,
 } from "@/app/actions/roadmap";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,7 @@ const QuillEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-40 border border-input bg-muted/30 animate-pulse" />
+      <div className="h-40 animate-pulse rounded-ir-input border border-ir-border bg-ir-muted-surface" />
     ),
   }
 );
@@ -70,7 +71,7 @@ function toDateInput(iso: string | null | undefined): string {
 }
 
 const inputClass =
-  "w-full border border-border bg-background px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
+  "w-full rounded-ir-input border border-ir-border bg-ir-surface px-2.5 py-1.5 text-sm text-ir-body placeholder:text-ir-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50";
 
 export function AddRoadmapItemDialog({
   open,
@@ -218,11 +219,11 @@ export function AddRoadmapItemDialog({
         className="flex max-h-[calc(100dvh-4rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
         showCloseButton={false}
       >
-        <div className="shrink-0 border-b border-border px-5 py-4">
+        <div className="shrink-0 border-b border-ir-border px-5 py-4">
           <DialogTitle className="text-base font-semibold">
             {isEdit ? "Edit Roadmap Item" : "Add Roadmap Item"}
           </DialogTitle>
-          <DialogDescription className="mt-0.5 text-xs text-muted-foreground">
+          <DialogDescription className="mt-0.5 text-xs text-ir-muted">
             {isEdit
               ? "Update this roadmap item."
               : "Create a roadmap item, optionally filling it from existing feedback."}
@@ -238,10 +239,10 @@ export function AddRoadmapItemDialog({
           >
             <div>
               <label
-                className="mb-1 block text-xs font-medium text-foreground"
+                className="mb-1 block text-xs font-medium text-ir-heading"
                 htmlFor="ri-title"
               >
-                Title <span className="text-destructive">*</span>
+                Title <span className="text-ir-danger">*</span>
               </label>
               <input
                 autoFocus
@@ -255,7 +256,7 @@ export function AddRoadmapItemDialog({
             </div>
 
             <div>
-              <span className="mb-1 block text-xs font-medium text-foreground">
+              <span className="mb-1 block text-xs font-medium text-ir-heading">
                 Description
               </span>
               <QuillEditor
@@ -270,7 +271,7 @@ export function AddRoadmapItemDialog({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label
-                  className="mb-1 block text-xs font-medium text-foreground"
+                  className="mb-1 block text-xs font-medium text-ir-heading"
                   htmlFor="ri-date"
                 >
                   Launch Date
@@ -285,7 +286,7 @@ export function AddRoadmapItemDialog({
               </div>
               <div>
                 <label
-                  className="mb-1 block text-xs font-medium text-foreground"
+                  className="mb-1 block text-xs font-medium text-ir-heading"
                   htmlFor="ri-status"
                 >
                   Column
@@ -312,36 +313,34 @@ export function AddRoadmapItemDialog({
             </div>
 
             <div>
-              <span className="mb-1 block text-xs font-medium text-foreground">
+              <span className="mb-1 block text-xs font-medium text-ir-heading">
                 Cover Image{" "}
-                <span className="font-normal text-muted-foreground">
-                  (optional)
-                </span>
+                <span className="font-normal text-ir-muted">(optional)</span>
               </span>
               {coverImage ? (
                 <div className="relative block w-full">
                   {/* biome-ignore lint/performance/noImgElement: dynamic upload URL, not known at build time for next/image */}
                   <img
                     alt=""
-                    className="max-h-40 w-full border border-border bg-muted/30 object-contain"
+                    className="max-h-40 w-full rounded-ir-md border border-ir-border bg-ir-muted-surface object-contain"
                     src={coverImage}
                   />
                   <button
                     aria-label="Remove cover image"
-                    className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-ir-full border border-ir-border bg-ir-surface text-ir-danger shadow-ir-xs transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                     onClick={removeCover}
                     type="button"
                   >
-                    <X className="size-3.5" />
+                    <XIcon className="size-3.5" />
                   </button>
                 </div>
               ) : (
                 <label
-                  className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-6 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+                  className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-ir-input border border-dashed border-ir-border px-3 py-6 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-heading ${
                     isUploadingCover ? "pointer-events-none opacity-50" : ""
                   }`}
                 >
-                  <ImagePlus className="size-4" />
+                  <ImageIcon className="size-4" />
                   {isUploadingCover ? "Uploading…" : "Upload a cover image"}
                   <input
                     accept={ALLOWED_COVER_TYPES}
@@ -354,17 +353,17 @@ export function AddRoadmapItemDialog({
                 </label>
               )}
               {coverError && (
-                <p className="mt-1 text-xs text-destructive">{coverError}</p>
+                <p className="mt-1 text-xs text-ir-danger">{coverError}</p>
               )}
             </div>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-xs text-ir-danger">{error}</p>}
           </form>
 
           {/* Right — feedback search. Only this panel scrolls; the modal itself
               stays fixed-height (the results list has its own overflow). */}
           {!isEdit && (
-            <div className="flex min-h-0 h-64 flex-col overflow-hidden border-t border-border bg-muted/30 md:h-auto md:border-l md:border-t-0">
+            <div className="flex h-64 min-h-0 flex-col overflow-hidden border-t border-ir-border bg-ir-muted-surface md:h-auto md:border-t-0 md:border-l">
               <FeedbackSearchPanel
                 onFill={handleFill}
                 workspaceId={workspaceId}
@@ -373,23 +372,22 @@ export function AddRoadmapItemDialog({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3">
-          <button
-            className="border border-border px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-ir-border px-5 py-3">
+          <Button
             disabled={isPending}
             onClick={() => onOpenChange(false)}
             type="button"
+            variant="outline"
           >
             Cancel
-          </button>
-          <button
-            className="bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          </Button>
+          <Button
             disabled={isPending || isImporting || isUploadingCover}
             form="roadmap-item-form"
             type="submit"
           >
             {isPending ? "Saving…" : isEdit ? "Save Changes" : "Add Item"}
-          </button>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

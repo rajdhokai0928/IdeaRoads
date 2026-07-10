@@ -21,7 +21,7 @@ export default function VoterListButton({
   return (
     <>
       <button
-        className="text-2xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+        className="text-2xs text-ir-muted underline underline-offset-2 transition-colors duration-150 ease-ir-standard hover:text-ir-primary"
         onClick={() => setOpen(true)}
         type="button"
       >

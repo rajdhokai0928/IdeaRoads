@@ -1,3 +1,4 @@
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import type { RoadmapStatusColumn } from "@/lib/roadmap/queries";
 import { RoadmapColumn } from "./roadmap-column";
 
@@ -23,14 +24,14 @@ export function RoadmapBoard({
   return (
     <div className="px-6 pb-12">
       {isAdmin && (
-        <div className="mb-6 mt-4 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300 text-xs font-medium">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-warning" />
+        <div className="mt-4 mb-6 flex items-center gap-2 rounded-ir-md border border-ir-warning/30 bg-ir-warning/10 px-3 py-2 text-xs font-medium text-ir-warning">
+          <InfoIcon className="size-3.5 shrink-0" />
           Admin view includes posts from private boards
         </div>
       )}
 
       {columns.length === 0 ? (
-        <div className="mt-4 border border-dashed border-border px-4 py-16 text-center text-sm text-muted-foreground">
+        <div className="mt-4 rounded-ir-card border border-dashed border-ir-border px-4 py-16 text-center text-sm text-ir-muted">
           No roadmap columns yet. Add feedback statuses to populate the roadmap.
         </div>
       ) : (

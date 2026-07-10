@@ -60,7 +60,7 @@ export function ChangelogFilters({
         onValueChange={(v) => updateParam({ label: v === "all" ? null : v })}
         value={activeLabel || "all"}
       >
-        <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+        <SelectTrigger size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

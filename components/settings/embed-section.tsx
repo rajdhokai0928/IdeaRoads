@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateEmbedConfigAction } from "@/app/actions/embed";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -84,13 +86,9 @@ function CopyButton({ value }: { value: string }) {
   }
 
   return (
-    <button
-      className="shrink-0 px-2.5 py-1 text-xs border border-border hover:bg-muted transition-colors duration-150 focus-visible:outline-none"
-      onClick={copy}
-      type="button"
-    >
+    <Button onClick={copy} size="xs" type="button" variant="outline">
       {copied ? "Copied!" : "Copy"}
-    </button>
+    </Button>
   );
 }
 
@@ -158,7 +156,7 @@ export function EmbedSection({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="embed-mode"
             >
               Launcher
@@ -179,7 +177,7 @@ export function EmbedSection({
                 ))}
               </SelectContent>
             </Select>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-ir-muted">
               Inline embeds in the page; the floating launcher adds a button
               that opens a panel.
             </p>
@@ -187,7 +185,7 @@ export function EmbedSection({
 
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="embed-position"
             >
               Position
@@ -208,14 +206,14 @@ export function EmbedSection({
                 ))}
               </SelectContent>
             </Select>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-ir-muted">
               Only applies to the floating launcher.
             </p>
           </div>
 
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="embed-theme"
             >
               Theme
@@ -240,7 +238,7 @@ export function EmbedSection({
 
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="embed-accent"
             >
               Accent color
@@ -248,14 +246,14 @@ export function EmbedSection({
             <div className="flex items-center gap-2">
               <input
                 aria-label="Pick accent color"
-                className="h-8 w-8 shrink-0 border border-border p-0.5 bg-background"
+                className="h-10 w-10 shrink-0 rounded-ir-input border border-ir-border bg-ir-surface p-0.5"
                 disabled={isPending}
                 onChange={(e) => setAccentColor(e.target.value)}
                 type="color"
                 value={HEX_COLOR.test(accentColor) ? accentColor : "#111111"}
               />
-              <input
-                className="w-full h-8 border border-border bg-background px-2.5 text-sm font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              <Input
+                className="font-mono"
                 disabled={isPending}
                 id="embed-accent"
                 onChange={(e) => setAccentColor(e.target.value)}
@@ -264,21 +262,18 @@ export function EmbedSection({
               />
             </div>
             {accentColorError && (
-              <p className="mt-1 text-xs text-destructive">
-                {accentColorError}
-              </p>
+              <p className="mt-1 text-xs text-ir-danger">{accentColorError}</p>
             )}
           </div>
 
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="embed-width"
             >
               Width (px)
             </label>
-            <input
-              className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Input
               disabled={isPending}
               id="embed-width"
               max={1200}
@@ -291,13 +286,12 @@ export function EmbedSection({
 
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="embed-height"
             >
               Height (px)
             </label>
-            <input
-              className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Input
               disabled={isPending}
               id="embed-height"
               max={1200}
@@ -306,7 +300,7 @@ export function EmbedSection({
               type="number"
               value={height}
             />
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-ir-muted">
               Initial size for inline embeds — they auto-resize to fit content
               after loading.
             </p>
@@ -314,24 +308,20 @@ export function EmbedSection({
         </div>
 
         <div className="flex justify-end">
-          <button
-            className="px-3.5 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            disabled={isPending}
-            type="submit"
-          >
+          <Button disabled={isPending} type="submit">
             {isPending ? "Saving…" : "Save changes"}
-          </button>
+          </Button>
         </div>
       </form>
 
       <section>
-        <h2 className="text-sm font-semibold text-foreground">Embed snippet</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <h2 className="text-sm font-semibold text-ir-heading">Embed snippet</h2>
+        <p className="mt-0.5 text-xs text-ir-muted">
           Paste this where you want the widget to appear on your site. It
           updates live as you change the settings above.
         </p>
-        <div className="mt-3 flex items-start gap-2 p-3 bg-muted border border-border">
-          <pre className="flex-1 min-w-0 overflow-x-auto whitespace-pre font-mono text-xs text-foreground">
+        <div className="mt-3 flex items-start gap-2 rounded-ir-sm border border-ir-border bg-ir-muted-surface p-3">
+          <pre className="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-pre text-ir-heading">
             {snippet}
           </pre>
           <CopyButton value={snippet} />

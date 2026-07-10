@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Link2, Share2 } from "lucide-react";
+import { CheckIcon, LinkIcon, ShareNetworkIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 
 interface ChangelogShareButtonProps {
@@ -37,23 +37,23 @@ export function ChangelogShareButton({
 
   return (
     <button
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="inline-flex items-center gap-1.5 rounded-ir-sm border border-ir-border px-3 py-1.5 text-xs font-medium text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
       onClick={handleClick}
       type="button"
     >
       {copied ? (
         <>
-          <Check className="size-3.5 text-success" />
+          <CheckIcon className="size-3.5 text-ir-success" />
           Copied
         </>
       ) : canNativeShare ? (
         <>
-          <Share2 className="size-3.5" />
+          <ShareNetworkIcon className="size-3.5" />
           Share
         </>
       ) : (
         <>
-          <Link2 className="size-3.5" />
+          <LinkIcon className="size-3.5" />
           Copy link
         </>
       )}

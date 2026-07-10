@@ -76,15 +76,15 @@ export function FeedbackFilters({
   return (
     <div className="flex flex-col gap-0">
       {/* Sort + Board + Status + Category row */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ir-border px-4">
         {/* Sort tabs */}
         <div className="flex">
           {SORT_TABS.map((tab) => (
             <button
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer duration-150 focus-visible:outline-none ${
+              className={`cursor-pointer border-b-2 px-4 py-3 text-sm font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 focus-visible:ring-inset ${
                 activeSort === tab.value
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  ? "border-ir-primary text-ir-heading"
+                  : "border-transparent text-ir-muted hover:text-ir-heading"
               }`}
               key={tab.value}
               onClick={() => updateParam({ sort: tab.value })}
@@ -96,7 +96,7 @@ export function FeedbackFilters({
         </div>
 
         {/* Right controls */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 py-2">
           {/* Category filter */}
           {activeCategories.length > 0 && (
             <Select
@@ -105,10 +105,7 @@ export function FeedbackFilters({
               }
               value={activeCategoryId || "all"}
             >
-              <SelectTrigger
-                className="text-xs text-muted-foreground"
-                size="sm"
-              >
+              <SelectTrigger size="sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -129,7 +126,7 @@ export function FeedbackFilters({
             }
             value={activeStatus || "all"}
           >
-            <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+            <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -149,7 +146,7 @@ export function FeedbackFilters({
             }
             value={activeDraft}
           >
-            <SelectTrigger className="text-xs text-muted-foreground" size="sm">
+            <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -162,7 +159,7 @@ export function FeedbackFilters({
       </div>
 
       {/* Search bar */}
-      <div className="border-b border-border px-4 py-2">
+      <div className="border-b border-ir-border px-4 py-3">
         <SearchInput
           className="w-full sm:max-w-sm"
           defaultValue={activeSearch}

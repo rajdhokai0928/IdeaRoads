@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff } from "lucide-react";
+import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -43,13 +43,16 @@ export default function VisibilityToggle({
 
   if (!canEdit) {
     return isApproved ? (
-      <Eye aria-label="Visible" className="size-4 text-success">
+      <EyeIcon aria-label="Visible" className="size-4 text-ir-success">
         <title>Visible</title>
-      </Eye>
+      </EyeIcon>
     ) : (
-      <EyeOff aria-label="Pending review" className="size-4 text-warning">
+      <EyeSlashIcon
+        aria-label="Pending review"
+        className="size-4 text-ir-warning"
+      >
         <title>Pending review</title>
-      </EyeOff>
+      </EyeSlashIcon>
     );
   }
 
@@ -58,10 +61,10 @@ export default function VisibilityToggle({
       aria-label={
         isApproved ? "Hide from public (pending review)" : "Make visible"
       }
-      className={`transition-colors duration-150 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`rounded-ir-sm p-1 transition-all duration-150 ease-ir-standard hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
         isApproved
-          ? "text-success hover:text-warning"
-          : "text-warning hover:text-success"
+          ? "text-ir-success hover:text-ir-warning"
+          : "text-ir-warning hover:text-ir-success"
       }`}
       disabled={isPending}
       onClick={handleToggle}
@@ -72,7 +75,11 @@ export default function VisibilityToggle({
       }
       type="button"
     >
-      {isApproved ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+      {isApproved ? (
+        <EyeIcon className="size-4" />
+      ) : (
+        <EyeSlashIcon className="size-4" />
+      )}
     </button>
   );
 }

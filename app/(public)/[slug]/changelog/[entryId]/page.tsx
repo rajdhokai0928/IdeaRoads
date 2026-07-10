@@ -1,5 +1,5 @@
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -86,7 +86,7 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
   const entryUrl = `${portalBaseUrl()}/${slug}/changelog/${entryId}`;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-ir-background">
       <PortalHeader
         active="changelog"
         boards={publicBoards}
@@ -106,30 +106,33 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
       <PoweredByBadge />
 
       {/* Content */}
-      <div className="max-w-3xl mx-auto px-6 pt-10 pb-20">
+      <main
+        className="mx-auto max-w-3xl px-4 pt-10 pb-20 sm:px-8"
+        id="main-content"
+      >
         {/* Back link */}
         <Link
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="mb-8 inline-flex items-center gap-1.5 rounded-ir-sm text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
           href={`/${slug}/changelog`}
         >
-          <ArrowLeft className="size-3.5" />
+          <ArrowLeftIcon className="size-3.5" />
           All updates
         </Link>
 
         {/* Entry header */}
         <div className="mb-8">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-4">
+          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <ChangelogLabelBadge label={entry.label} size="md" />
             {entry.publishedAt && (
               <time
-                className="text-sm text-muted-foreground"
+                className="text-sm text-ir-muted"
                 dateTime={entry.publishedAt.toISOString()}
               >
                 {format(entry.publishedAt, "MMMM d, yyyy")}
               </time>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight leading-snug">
+          <h1 className="text-2xl leading-snug font-bold tracking-tight text-ir-heading">
             {entry.title}
           </h1>
         </div>
@@ -140,20 +143,20 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
           // biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image
           <img
             alt=""
-            className="mb-8 max-h-96 w-full border border-border object-cover"
+            className="mb-8 max-h-96 w-full rounded-ir-sm border border-ir-border object-cover"
             src={entry.coverImageUrl}
           />
         )}
 
         {/* Rendered body */}
         <div
-          className="prose prose-sm max-w-none text-foreground prose-headings:font-semibold prose-a:text-primary prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-pre:bg-muted"
+          className="prose prose-sm max-w-none text-ir-body prose-headings:font-semibold prose-headings:text-ir-heading prose-a:text-ir-primary prose-code:bg-ir-muted-surface prose-code:px-1 prose-code:py-0.5 prose-pre:bg-ir-muted-surface"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: server-side sanitized via DOMPurify
           dangerouslySetInnerHTML={{ __html: renderedBody }}
         />
 
         {/* Reactions + share */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ir-border pt-6">
           <ChangelogReactions
             changelogEntryId={entry.id}
             initialReactions={reactions}
@@ -164,32 +167,25 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
 
         {/* Linked posts */}
         {entry.linkedPosts.length > 0 && (
-          <div className="mt-12 pt-8 border-t border-border">
-            <h2 className="text-sm font-semibold text-foreground mb-4">
+          <div className="mt-12 border-t border-ir-border pt-8">
+            <h2 className="mb-4 text-sm font-semibold text-ir-heading">
               Related Feedback
             </h2>
             <div className="space-y-2">
               {entry.linkedPosts.map((post) => (
                 <Link
-                  className="flex flex-col gap-2 px-4 py-3 border border-border hover:bg-muted/40 transition-colors group sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                  className="group flex flex-col gap-2 rounded-ir-sm border border-ir-border px-4 py-3 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   href={`/${slug}/b/${post.boardSlug}/p/${post.slug}`}
                   key={post.id}
                 >
-                  <span className="flex-1 min-w-0 text-sm font-medium text-foreground group-hover:text-foreground/80 transition-colors">
+                  <span className="min-w-0 flex-1 text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard group-hover:text-ir-primary">
                     {post.title}
                   </span>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs text-muted-foreground">
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="text-xs text-ir-muted">
                       ↑ {post.upvotes}
                     </span>
-                    <span
-                      className="text-[11px] font-semibold px-2 py-0.5"
-                      style={{
-                        borderRadius: 2,
-                        backgroundColor: "#6b728018",
-                        color: "#6b7280",
-                      }}
-                    >
+                    <span className="rounded-ir-sm bg-ir-muted-surface px-2 py-0.5 text-[11px] font-semibold text-ir-muted">
                       {post.status.replace(/_/g, " ")}
                     </span>
                   </div>
@@ -200,7 +196,7 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
         )}
 
         {/* Comments */}
-        <div className="mt-12 pt-8 border-t border-border">
+        <div className="mt-12 border-t border-ir-border pt-8">
           <ChangelogCommentSection
             canModerate={!!member && member.role !== WORKSPACE_MEMBER}
             changelogEntryId={entry.id}
@@ -208,7 +204,7 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
             isSignedIn={isSignedIn}
           />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

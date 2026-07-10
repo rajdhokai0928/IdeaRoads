@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AuditLogTable } from "@/components/settings/audit-log-table";
+import { PageBody } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { listAuditLogs } from "@/lib/audit/queries";
 import { requireSession } from "@/lib/authz";
@@ -51,7 +52,7 @@ export default async function AuditLogPage({ params, searchParams }: Props) {
   });
 
   return (
-    <div className="px-4 py-6 sm:px-8">
+    <PageBody>
       <AuditLogTable
         filterAction={action}
         filterActor={actor}
@@ -63,6 +64,6 @@ export default async function AuditLogPage({ params, searchParams }: Props) {
         total={total}
         workspaceSlug={workspace.slug}
       />
-    </div>
+    </PageBody>
   );
 }

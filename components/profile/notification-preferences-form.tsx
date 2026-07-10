@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateNotificationPreferencesAction } from "@/app/actions/notifications";
+import { Switch } from "@/components/ui/switch";
 
 interface Prefs {
   emailChangelog: boolean;
@@ -37,53 +38,33 @@ function PreferenceRow({
   inAppDisabled: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-6 py-4 border-b border-border last:border-0">
+    <div className="flex items-start justify-between gap-6 border-b border-ir-border py-4 last:border-0">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+        <p className="text-sm font-medium text-ir-heading">{label}</p>
+        <p className="mt-0.5 text-xs text-ir-muted">{description}</p>
       </div>
-      <div className="flex items-center gap-6 shrink-0">
-        <label className="flex flex-col items-center gap-1 cursor-pointer">
-          <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="flex shrink-0 items-center gap-6">
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: Switch is a Radix custom control nested inside the label, which already associates it correctly */}
+        <label className="flex cursor-pointer flex-col items-center gap-1.5">
+          <span className="text-2xs font-semibold tracking-wide text-ir-muted uppercase">
             Email
           </span>
-          <button
-            aria-checked={emailEnabled}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed ${
-              emailEnabled ? "bg-primary" : "bg-muted"
-            }`}
+          <Switch
+            checked={emailEnabled}
             disabled={emailDisabled}
-            onClick={() => onEmailChange(!emailEnabled)}
-            role="switch"
-            type="button"
-          >
-            <span
-              className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                emailEnabled ? "translate-x-4" : "translate-x-0"
-              }`}
-            />
-          </button>
+            onCheckedChange={onEmailChange}
+          />
         </label>
-        <label className="flex flex-col items-center gap-1 cursor-pointer">
-          <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: Switch is a Radix custom control nested inside the label, which already associates it correctly */}
+        <label className="flex cursor-pointer flex-col items-center gap-1.5">
+          <span className="text-2xs font-semibold tracking-wide text-ir-muted uppercase">
             In-app
           </span>
-          <button
-            aria-checked={inAppEnabled}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed ${
-              inAppEnabled ? "bg-primary" : "bg-muted"
-            }`}
+          <Switch
+            checked={inAppEnabled}
             disabled={inAppDisabled}
-            onClick={() => onInAppChange(!inAppEnabled)}
-            role="switch"
-            type="button"
-          >
-            <span
-              className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                inAppEnabled ? "translate-x-4" : "translate-x-0"
-              }`}
-            />
-          </button>
+            onCheckedChange={onInAppChange}
+          />
         </label>
       </div>
     </div>
@@ -120,18 +101,18 @@ export function NotificationPreferencesForm({
   }
 
   return (
-    <div className="border border-border divide-y divide-border">
-      <div className="px-4 py-3 bg-muted/40 flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+    <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
+      <div className="flex items-center justify-between bg-ir-muted-surface px-4 py-3">
+        <span className="text-xs font-semibold tracking-wide text-ir-muted uppercase">
           Notification type
         </span>
-        <div className="flex items-center gap-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <span className="w-9 whitespace-nowrap text-center">Email</span>
-          <span className="w-9 whitespace-nowrap text-center">In-app</span>
+        <div className="flex items-center gap-6 text-xs font-semibold tracking-wide text-ir-muted uppercase">
+          <span className="w-9 text-center whitespace-nowrap">Email</span>
+          <span className="w-9 text-center whitespace-nowrap">In-app</span>
         </div>
       </div>
 
-      <div className="divide-y divide-border px-4">
+      <div className="divide-y divide-ir-border px-4">
         <PreferenceRow
           description="When a post you voted on changes status (e.g. Planned, In Progress)"
           emailDisabled={pendingKeys.has("emailStatusChange")}

@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, LogOut, Pencil } from "lucide-react";
+import { BellIcon, PencilIcon, SignOutIcon } from "@phosphor-icons/react";
 import { logoutAction } from "@/app/actions/auth";
 import { AccountIdentityForms } from "@/components/profile/account-forms";
 import { NotificationPreferencesForm } from "@/components/profile/notification-preferences-form";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -37,13 +38,10 @@ export function ProfileActions({
     <div className="flex flex-col gap-2 sm:flex-row">
       <Dialog>
         <DialogTrigger asChild>
-          <button
-            className="flex items-center justify-center gap-1.5 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90"
-            type="button"
-          >
-            <Pencil className="size-4" />
+          <Button size="sm">
+            <PencilIcon data-icon="inline-start" />
             Edit Profile
-          </button>
+          </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -58,13 +56,10 @@ export function ProfileActions({
 
       <Dialog>
         <DialogTrigger asChild>
-          <button
-            className="flex items-center justify-center gap-1.5 border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-muted"
-            type="button"
-          >
-            <Bell className="size-4" />
+          <Button size="sm" variant="outline">
+            <BellIcon data-icon="inline-start" />
             Notification Settings
-          </button>
+          </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -77,14 +72,10 @@ export function ProfileActions({
         </DialogContent>
       </Dialog>
 
-      <button
-        className="flex items-center justify-center gap-1.5 border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
-        onClick={() => logoutAction()}
-        type="button"
-      >
-        <LogOut className="size-4" />
+      <Button onClick={() => logoutAction()} size="sm" variant="ghost">
+        <SignOutIcon data-icon="inline-start" />
         Sign Out
-      </button>
+      </Button>
     </div>
   );
 }

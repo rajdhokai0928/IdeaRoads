@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { approvePostAction, deletePostAction } from "@/app/actions/posts";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { truncateHtmlToText } from "@/lib/changelog/html";
 
@@ -67,11 +68,11 @@ export function PendingPostsSection({ workspaceId, posts }: Props) {
   return (
     <section>
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-foreground">Pending posts</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <h2 className="text-sm font-semibold text-ir-heading">Pending posts</h2>
+        <p className="mt-0.5 text-xs text-ir-muted">
           Posts awaiting approval before they appear publicly.{" "}
           {posts.length > 0 && (
-            <span className="font-medium text-foreground">
+            <span className="font-medium text-ir-heading">
               {posts.length} pending
             </span>
           )}
@@ -79,28 +80,26 @@ export function PendingPostsSection({ workspaceId, posts }: Props) {
       </div>
 
       {posts.length === 0 ? (
-        <div className="border border-border p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            No posts pending approval.
-          </p>
+        <div className="rounded-ir-card border border-dashed border-ir-border p-8 text-center">
+          <p className="text-sm text-ir-muted">No posts pending approval.</p>
         </div>
       ) : (
-        <div className="border border-border divide-y divide-border">
+        <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
           {posts.map((post) => (
             <div
-              className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4"
+              className="flex flex-col gap-2 p-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
               key={post.id}
             >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ir-heading">
                   {post.title}
                 </p>
                 {post.body && (
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                  <p className="mt-0.5 line-clamp-2 text-xs text-ir-muted">
                     {truncateHtmlToText(post.body, 200)}
                   </p>
                 )}
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-ir-muted">
                   by {post.authorName || post.authorEmail} ·{" "}
                   {new Intl.DateTimeFormat("en", {
                     dateStyle: "medium",
@@ -109,22 +108,23 @@ export function PendingPostsSection({ workspaceId, posts }: Props) {
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <button
-                  className="px-2.5 py-1 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                <Button
                   disabled={isPending}
                   onClick={() => handleApprove(post)}
+                  size="xs"
                   type="button"
                 >
                   Approve
-                </button>
-                <button
-                  className="px-2.5 py-1 text-xs font-medium text-destructive border border-destructive/40 hover:bg-destructive hover:text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                </Button>
+                <Button
                   disabled={isPending}
                   onClick={() => setDeleteTarget(post)}
+                  size="xs"
                   type="button"
+                  variant="destructive"
                 >
                   Delete
-                </button>
+                </Button>
               </div>
             </div>
           ))}

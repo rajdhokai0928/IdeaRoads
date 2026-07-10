@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageOff } from "lucide-react";
+import { ImageBrokenIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -10,7 +10,11 @@ import {
   updateWorkspaceInfoAction,
   updateWorkspaceSettingsAction,
 } from "@/app/actions/workspace-settings";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 interface GeneralSettingsFormProps {
   canManage: boolean;
@@ -41,27 +45,17 @@ function ToggleRow({
   disabled: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-6 py-4 border-b border-border last:border-0 px-4">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+    <div className="flex items-start justify-between gap-6 border-b border-ir-border px-4 py-4 last:border-0">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-ir-heading">{label}</p>
+        <p className="mt-0.5 text-xs text-ir-muted">{description}</p>
       </div>
-      <button
-        aria-checked={checked}
-        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed ${
-          checked ? "bg-primary" : "bg-muted"
-        }`}
+      <Switch
+        checked={checked}
+        className="mt-0.5"
         disabled={disabled}
-        onClick={() => onChange(!checked)}
-        role="switch"
-        type="button"
-      >
-        <span
-          className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            checked ? "translate-x-4" : "translate-x-0"
-          }`}
-        />
-      </button>
+        onCheckedChange={onChange}
+      />
     </div>
   );
 }
@@ -75,8 +69,8 @@ function SectionHeader({
 }) {
   return (
     <div className="mb-4">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      <h2 className="text-sm font-semibold text-ir-heading">{title}</h2>
+      <p className="mt-0.5 text-xs text-ir-muted">{description}</p>
     </div>
   );
 }
@@ -86,7 +80,7 @@ function LogoPreview({ url }: { url: string }) {
   const trimmed = url.trim();
 
   return (
-    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden border border-border bg-muted">
+    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-ir-sm border border-ir-border bg-ir-muted-surface">
       {trimmed && !failed ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -98,7 +92,7 @@ function LogoPreview({ url }: { url: string }) {
           src={trimmed}
         />
       ) : (
-        <ImageOff className="size-4 text-muted-foreground" />
+        <ImageBrokenIcon className="size-4 text-ir-muted" />
       )}
     </div>
   );
@@ -118,21 +112,21 @@ function FormField({
   error?: string;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-1.5 py-3 border-b border-border last:border-0 sm:grid-cols-[160px_1fr] sm:items-center sm:gap-4">
+    <div className="grid grid-cols-1 gap-1.5 border-b border-ir-border py-3 last:border-0 sm:grid-cols-[160px_1fr] sm:items-center sm:gap-4">
       <div>
         <label
-          className="block text-sm font-medium text-foreground mt-0.5"
+          className="mt-0.5 block text-sm font-medium text-ir-heading"
           htmlFor={htmlFor}
         >
           {label}
         </label>
         {description && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+          <p className="mt-0.5 text-xs text-ir-muted">{description}</p>
         )}
       </div>
       <div>
         {children}
-        {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+        {error && <p className="mt-1 text-xs text-ir-danger">{error}</p>}
       </div>
     </div>
   );
@@ -280,14 +274,8 @@ export function GeneralSettingsForm({
     });
   }
 
-  const inputClass =
-    "w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed";
-
-  const btnPrimary =
-    "cursor-pointer px-3.5 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed";
-
   return (
-    <div className="px-4 py-6 max-w-2xl space-y-10 sm:px-8">
+    <div className="max-w-2xl space-y-10 px-4 py-6 sm:px-8">
       {/* Workspace Info */}
       <section>
         <SectionHeader
@@ -295,10 +283,9 @@ export function GeneralSettingsForm({
           title="Workspace info"
         />
         <form onSubmit={handleSaveInfo}>
-          <div className="border border-border p-4">
+          <div className="rounded-ir-card border border-ir-border bg-ir-surface p-4 shadow-ir-xs">
             <FormField error={infoErrors.name} htmlFor="ws-name" label="Name">
-              <input
-                className={inputClass}
+              <Input
                 disabled={!canManage || isPending}
                 id="ws-name"
                 maxLength={64}
@@ -315,11 +302,11 @@ export function GeneralSettingsForm({
               label="URL"
             >
               <div className="flex items-center">
-                <span className="inline-flex h-8 items-center border border-r-0 border-border bg-muted px-2.5 text-xs text-muted-foreground shrink-0">
+                <span className="inline-flex h-10 shrink-0 items-center rounded-l-ir-input border border-r-0 border-ir-border bg-ir-muted-surface px-2.5 text-xs text-ir-muted">
                   {appUrl}/
                 </span>
-                <input
-                  className={`${inputClass} flex-1`}
+                <Input
+                  className="flex-1 rounded-l-none"
                   disabled={!canManage || isPending}
                   id="ws-slug"
                   maxLength={48}
@@ -336,8 +323,7 @@ export function GeneralSettingsForm({
               htmlFor="ws-description"
               label="Description"
             >
-              <textarea
-                className="w-full border border-border bg-background px-2.5 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+              <Textarea
                 disabled={!canManage || isPending}
                 id="ws-description"
                 maxLength={300}
@@ -346,7 +332,7 @@ export function GeneralSettingsForm({
                 rows={3}
                 value={description}
               />
-              <p className="mt-1 text-xs text-muted-foreground text-right">
+              <p className="mt-1 text-right text-xs text-ir-muted">
                 {description.length}/300
               </p>
             </FormField>
@@ -359,8 +345,8 @@ export function GeneralSettingsForm({
             >
               <div className="flex items-center gap-3">
                 <LogoPreview url={logoUrl} />
-                <input
-                  className={`${inputClass} flex-1`}
+                <Input
+                  className="flex-1"
                   disabled={!canManage || isPending}
                   id="ws-logo"
                   onChange={(e) => setLogoUrl(e.target.value)}
@@ -374,9 +360,9 @@ export function GeneralSettingsForm({
 
           {canManage && (
             <div className="mt-3 flex justify-end">
-              <button className={btnPrimary} disabled={isPending} type="submit">
+              <Button disabled={isPending} type="submit">
                 {isPending ? "Saving…" : "Save changes"}
-              </button>
+              </Button>
             </div>
           )}
         </form>
@@ -388,7 +374,7 @@ export function GeneralSettingsForm({
           description="Control what the public can see."
           title="Visibility"
         />
-        <div className="border border-border">
+        <div className="rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
           <ToggleRow
             checked={roadmapPublic}
             description={`Show your roadmap at ${appUrl}/${workspaceSlug}/roadmap.`}
@@ -412,7 +398,7 @@ export function GeneralSettingsForm({
           description="Choose how roadmap items are managed."
           title="Roadmap"
         />
-        <div className="border border-border">
+        <div className="rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
           <ToggleRow
             checked={roadmapSyncEnabled}
             description="On: roadmap columns are generated from your feedback statuses and stay read-only. Off: manage roadmap items and columns manually, with drag-and-drop."
@@ -430,31 +416,31 @@ export function GeneralSettingsForm({
             description="Irreversible and destructive actions."
             title="Danger zone"
           />
-          <div className="border border-destructive/30 p-4">
+          <div className="rounded-ir-card border border-ir-danger/30 bg-ir-danger/5 p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-foreground">
+                <p className="text-sm font-medium text-ir-heading">
                   Delete workspace
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-0.5 text-xs text-ir-muted">
                   Permanently delete this workspace and all its data. This
                   cannot be undone.
                 </p>
               </div>
-              <button
-                className="shrink-0 px-3.5 py-1.5 text-sm font-medium text-destructive border border-destructive/40 hover:bg-destructive hover:text-white transition-colors cursor-pointer duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              <Button
                 onClick={() => setShowDeleteDialog(true)}
                 type="button"
+                variant="destructive"
               >
                 Delete workspace
-              </button>
+              </Button>
             </div>
           </div>
         </section>
       )}
 
       {!canManage && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ir-muted">
           Only owners and admins can change workspace settings.
         </p>
       )}
@@ -474,9 +460,9 @@ export function GeneralSettingsForm({
         title="Delete workspace"
         variant="destructive"
       >
-        <input
+        <Input
           autoComplete="off"
-          className="mt-3 w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mt-3"
           onChange={(e) => setDeleteConfirmName(e.target.value)}
           placeholder={workspaceName}
           value={deleteConfirmName}

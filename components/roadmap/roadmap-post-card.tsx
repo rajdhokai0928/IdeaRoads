@@ -1,4 +1,4 @@
-import { MessageSquare, Pin } from "lucide-react";
+import { ChatCircleIcon, PushPinIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { CategoryChip } from "@/components/categories/category-chip";
 import VoteButton from "@/components/voting/vote-button";
@@ -31,13 +31,10 @@ export function RoadmapPostCard({
     (useWorkspaceLinks
       ? `/${workspaceSlug}/feedback/${post.id}`
       : `/${workspaceSlug}/b/${post.boardSlug}/p/${post.slug}`) + backParams;
-  const boardHref = useWorkspaceLinks
-    ? `/${workspaceSlug}/feedback?board=${post.boardId}`
-    : `/${workspaceSlug}/b/${post.boardSlug}`;
 
   return (
     // `relative` anchors the title's stretched-link overlay to the whole card.
-    <div className="group relative bg-background border border-border p-4 hover:border-border/80 hover:shadow-sm transition-all duration-150">
+    <div className="group relative rounded-ir-card border border-ir-border bg-ir-surface p-4 shadow-ir-xs transition-all duration-150 ease-ir-standard hover:border-ir-primary/30 hover:shadow-ir-sm">
       <div className="flex items-start gap-3">
         {/* Vote button — kept above the card-wide link overlay (z-10) so voting
             never triggers navigation. */}
@@ -53,10 +50,13 @@ export function RoadmapPostCard({
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 pt-1">
+        <div className="min-w-0 flex-1 pt-1">
           <div className="flex items-start gap-1.5">
             {post.isPinned && (
-              <Pin className="size-3 text-muted-foreground shrink-0 mt-0.5" />
+              <PushPinIcon
+                className="mt-0.5 size-3 shrink-0 text-ir-primary"
+                weight="fill"
+              />
             )}
             {/* The title is the single navigation target. Its `after:inset-0`
                 overlay stretches over the whole card, making the entire card
@@ -64,7 +64,7 @@ export function RoadmapPostCard({
                 click and "open in new tab" all keep working, and there is no
                 second/duplicate click handler. */}
             <Link
-              className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors leading-snug group-hover:underline underline-offset-2 focus-visible:outline-none focus-visible:underline after:absolute after:inset-0 after:content-['']"
+              className="text-sm leading-snug font-medium text-ir-heading underline-offset-2 transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-ir-primary group-hover:underline focus-visible:outline-none focus-visible:underline"
               href={postHref}
             >
               {post.title}
@@ -80,20 +80,12 @@ export function RoadmapPostCard({
               />
             )}
             {post.commentCount > 0 && (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <MessageSquare className="size-3" />
+              <span className="flex items-center gap-1 text-[11px] text-ir-muted">
+                <ChatCircleIcon className="size-3" />
                 {post.commentCount}
               </span>
             )}
           </div>
-
-          {/* Board link stays a distinct target, elevated above the overlay. */}
-          {/* <Link
-            className="relative z-10 mt-2 inline-block text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-            href={boardHref}
-          >
-            {post.boardName}
-          </Link> */}
         </div>
       </div>
     </div>

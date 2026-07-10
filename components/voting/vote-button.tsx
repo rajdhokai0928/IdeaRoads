@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronUp } from "lucide-react";
+import { CaretUpIcon } from "@phosphor-icons/react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ export default function VoteButton({
   compact = false,
 }: VoteButtonProps) {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const [count, setCount] = useState(initialCount);
   const [hasVoted, setHasVoted] = useState(initialHasVoted);
   const [isPending, setIsPending] = useState(false);
@@ -87,45 +89,50 @@ export default function VoteButton({
 
   if (compact) {
     return (
-      <button
+      <motion.button
         aria-label={hasVoted ? "Remove vote" : "Vote for this post"}
         aria-pressed={hasVoted}
-        className={`flex flex-col items-center gap-0.5 px-2 py-1.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        className={`flex flex-col items-center gap-0.5 rounded-ir-sm px-2 py-1.5 transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
           disabled && !isPending
-            ? "cursor-not-allowed opacity-50 text-muted-foreground"
+            ? "cursor-not-allowed text-ir-muted opacity-50"
             : hasVoted
-              ? "text-primary hover:bg-primary/10 cursor-pointer"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+              ? "cursor-pointer bg-ir-primary-light/15 text-ir-primary hover:bg-ir-primary-light/25"
+              : "cursor-pointer text-ir-muted hover:bg-ir-muted-surface hover:text-ir-heading"
         } ${isPending ? "opacity-70" : ""}`}
         disabled={disabled}
         onClick={handleClick}
         title={tooltip}
         type="button"
+        whileTap={disabled || shouldReduceMotion ? undefined : { scale: 0.9 }}
       >
-        <ChevronUp className="size-4" />
+        <CaretUpIcon
+          className="size-4"
+          weight={hasVoted ? "bold" : "regular"}
+        />
         <span className="text-xs font-semibold tabular-nums">{count}</span>
-      </button>
+      </motion.button>
     );
   }
 
   return (
-    <button
+    <motion.button
       aria-label={hasVoted ? "Remove vote" : "Vote for this post"}
       aria-pressed={hasVoted}
-      className={`flex flex-col items-center gap-0.5 border px-2.5 py-1.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`flex flex-col items-center gap-0.5 rounded-ir-sm border px-2.5 py-1.5 transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
         disabled && !isPending
-          ? "cursor-not-allowed opacity-50 border-border text-muted-foreground"
+          ? "cursor-not-allowed border-ir-border text-ir-muted opacity-50"
           : hasVoted
-            ? "border-primary/40 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer"
-            : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground cursor-pointer"
+            ? "cursor-pointer border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary hover:bg-ir-primary-light/25"
+            : "cursor-pointer border-ir-border text-ir-muted hover:border-ir-primary/30 hover:text-ir-heading"
       } ${isPending ? "opacity-70" : ""}`}
       disabled={disabled}
       onClick={handleClick}
       title={tooltip}
       type="button"
+      whileTap={disabled ? undefined : { scale: 0.9 }}
     >
-      <ChevronUp className="size-4" />
+      <CaretUpIcon className="size-4" weight={hasVoted ? "bold" : "regular"} />
       <span className="text-sm font-semibold tabular-nums">{count}</span>
-    </button>
+    </motion.button>
   );
 }

@@ -83,7 +83,7 @@ export default async function PublicProfilePage({ params }: Props) {
   const displayName = session.user.name?.trim() || session.user.email;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-ir-background">
       <PortalHeader
         boards={publicBoards}
         changelogPublic={workspace.changelogPublic}
@@ -99,12 +99,15 @@ export default async function PublicProfilePage({ params }: Props) {
       />
       <PoweredByBadge />
 
-      <div className="max-w-5xl mx-auto flex flex-col px-4 py-8 sm:px-8">
-        <h1 className="mb-4 text-xl font-semibold text-foreground">
+      <main
+        className="mx-auto flex max-w-5xl flex-col px-4 py-8 sm:px-8"
+        id="main-content"
+      >
+        <h1 className="mb-4 text-xl font-semibold text-ir-heading">
           My Profile
         </h1>
 
-        <div className="flex flex-col gap-4 border border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 rounded-ir-card border border-ir-border bg-ir-surface p-5 shadow-ir-xs sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <SquareAvatar
               alt={displayName}
@@ -113,13 +116,13 @@ export default async function PublicProfilePage({ params }: Props) {
               imageUrl={session.user.image}
             />
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold text-foreground">
+              <p className="truncate text-base font-semibold text-ir-heading">
                 {displayName}
               </p>
-              <p className="truncate text-sm text-muted-foreground">
+              <p className="truncate text-sm text-ir-muted">
                 {session.user.email}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-ir-muted">
                 {postCount} post{postCount === 1 ? "" : "s"}
               </p>
             </div>
@@ -133,10 +136,10 @@ export default async function PublicProfilePage({ params }: Props) {
         </div>
 
         <div className="mt-8">
-          <h2 className="mb-3 text-sm font-semibold text-foreground">
+          <h2 className="mb-3 text-sm font-semibold text-ir-heading">
             My Posts
           </h2>
-          <div className="border border-border">
+          <div className="rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
             <PostsTable
               categories={categories}
               isAdminOrOwner={isAdminOrOwner}
@@ -149,7 +152,7 @@ export default async function PublicProfilePage({ params }: Props) {
             />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

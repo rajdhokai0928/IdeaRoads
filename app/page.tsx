@@ -9,6 +9,7 @@ import { LiveDemo } from "@/components/marketing/live-demo";
 import { Nav } from "@/components/marketing/nav";
 import { ProblemFraming } from "@/components/marketing/problem-framing";
 import { ProductTour } from "@/components/marketing/product-tour";
+import { PageTransition } from "@/components/motion/page-transition";
 import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
 
@@ -41,18 +42,20 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-ir-background">
       <Nav />
-      <main>
-        <Hero />
-        {/* <TrustBar /> */}
-        <ProblemFraming />
-        <ProductTour />
-        <FeaturesGrid />
-        <LiveDemo />
-        <Comparison />
-        <FinalCta />
-      </main>
+      <PageTransition>
+        <main>
+          <Hero />
+          {/* <TrustBar /> */}
+          <ProblemFraming />
+          <ProductTour />
+          <FeaturesGrid />
+          <LiveDemo />
+          <Comparison />
+          <FinalCta />
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );

@@ -7,6 +7,7 @@ import {
   unpublishPostAction,
   updatePostStatusAction,
 } from "@/app/actions/posts";
+import { PostStatusBadge } from "@/components/posts/post-status-badge";
 import {
   Select,
   SelectContent,
@@ -37,7 +38,6 @@ interface StatusSelectProps {
 // Sentinel for the Draft publication state in the same dropdown as the workflow
 // statuses. Underscored so it can never collide with a real status slug.
 const DRAFT_VALUE = "__draft__";
-const DRAFT_COLOR = "#6b7280";
 
 export default function StatusSelect({
   postId,
@@ -51,7 +51,6 @@ export default function StatusSelect({
   const [isPending, startTransition] = useTransition();
 
   const activeStatuses = workspaceStatuses.filter((s) => !s.isArchived);
-  const current = workspaceStatuses.find((s) => s.slug === currentStatus);
 
   function handleChange(value: string) {
     if (value === DRAFT_VALUE) {
@@ -91,27 +90,19 @@ export default function StatusSelect({
     });
   }
 
-  const displayName = isDraft
-    ? "Draft"
-    : (current?.name ?? currentStatus.replace(/_/g, " "));
-  const displayColor = isDraft ? DRAFT_COLOR : (current?.color ?? "#6b7280");
-
   if (!canEdit) {
+    if (isDraft) {
+      return (
+        <span className="inline-flex items-center rounded-ir-full bg-ir-warning/10 px-2 py-0.5 text-[11px] font-medium text-ir-warning">
+          Draft
+        </span>
+      );
+    }
     return (
-      <span
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium"
-        style={{
-          backgroundColor: `${displayColor}18`,
-          color: displayColor,
-          borderRadius: 2,
-        }}
-      >
-        <span
-          className="inline-block w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: displayColor }}
-        />
-        {displayName}
-      </span>
+      <PostStatusBadge
+        status={currentStatus}
+        workspaceStatuses={workspaceStatuses}
+      />
     );
   }
 
@@ -122,7 +113,7 @@ export default function StatusSelect({
       value={isDraft ? DRAFT_VALUE : currentStatus}
     >
       <SelectTrigger
-        className="h-auto gap-1.5 rounded-xs border-0 bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+        className="h-auto gap-1.5 rounded-ir-full border-0 bg-ir-muted-surface px-2.5 py-1 text-xs font-medium text-ir-heading"
         size="sm"
       >
         <SelectValue />

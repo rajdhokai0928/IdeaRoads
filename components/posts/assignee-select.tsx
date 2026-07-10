@@ -1,6 +1,6 @@
 "use client";
 
-import { UserRound } from "lucide-react";
+import { UserCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -65,8 +65,8 @@ export default function AssigneeSelect({
   // Read-only view (Team Members): show who it's assigned to, or nothing.
   if (!canEdit) {
     return current ? (
-      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <UserRound className="size-3" />
+      <span className="inline-flex items-center gap-1 text-xs text-ir-muted">
+        <UserCircleIcon className="size-3" />
         {current.name || current.email}
       </span>
     ) : null;
@@ -79,7 +79,7 @@ export default function AssigneeSelect({
       value={currentAssigneeId ?? "unassigned"}
     >
       <SelectTrigger
-        className="h-auto gap-1.5 rounded-xs border-0 bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
+        className="h-auto gap-1.5 rounded-ir-full border-0 bg-ir-muted-surface px-2.5 py-1 text-xs font-medium text-ir-heading"
         size="sm"
       >
         <SelectValue />

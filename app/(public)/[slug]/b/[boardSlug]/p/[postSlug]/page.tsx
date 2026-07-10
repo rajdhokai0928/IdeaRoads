@@ -149,7 +149,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
 
   return (
     <div
-      className={`min-h-screen bg-background ${embedWrapper.className}`}
+      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
@@ -170,25 +170,27 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
       )}
       {!isEmbed && <PoweredByBadge />}
 
-      <PostDetailContent
-        assignees={assignees}
-        backLabel={back.label}
-        boardHref={back.href}
-        boardIsArchived={board.isArchived}
-        categories={categories}
-        currentUserId={session?.user.id ?? null}
-        embedQuery={embedQuery}
-        isAdminOrOwner={isAdminOrOwner}
-        isEmbed={isEmbed}
-        isMember={isMember}
-        isSignedIn={isSignedIn}
-        mergedTarget={mergedTarget}
-        post={post}
-        statusHistory={statusHistory}
-        votedByUser={votedByUser}
-        workspaceId={workspace.id}
-        workspaceStatuses={workspaceStatuses}
-      />
+      <main id="main-content">
+        <PostDetailContent
+          assignees={assignees}
+          backLabel={back.label}
+          boardHref={back.href}
+          boardIsArchived={board.isArchived}
+          categories={categories}
+          currentUserId={session?.user.id ?? null}
+          embedQuery={embedQuery}
+          isAdminOrOwner={isAdminOrOwner}
+          isEmbed={isEmbed}
+          isMember={isMember}
+          isSignedIn={isSignedIn}
+          mergedTarget={mergedTarget}
+          post={post}
+          statusHistory={statusHistory}
+          votedByUser={votedByUser}
+          workspaceId={workspace.id}
+          workspaceStatuses={workspaceStatuses}
+        />
+      </main>
     </div>
   );
 }

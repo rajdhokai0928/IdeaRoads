@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { truncateHtmlToText } from "@/lib/changelog/html";
 import type { CommentApi } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
@@ -96,25 +97,24 @@ export default function CommentEditForm({
         value={html}
       />
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-ir-danger">{error}</p>}
 
       <div className="flex items-center justify-end gap-2">
-        <button
-          className="px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        <Button
           disabled={isPending}
           onClick={onCancel}
-          type="button"
+          size="sm"
+          variant="ghost"
         >
           Cancel
-        </button>
-        <button
-          className="px-3 py-1 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        </Button>
+        <Button
           disabled={isPending || uploading || !text.trim()}
           onClick={submit}
-          type="button"
+          size="sm"
         >
           {isPending ? "Saving…" : "Save"}
-        </button>
+        </Button>
       </div>
     </div>
   );

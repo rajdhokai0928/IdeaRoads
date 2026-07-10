@@ -217,15 +217,15 @@ export default function QuillEditor({
 
   return (
     <div
-      className="relative border border-input bg-background focus-within:ring-2 focus-within:ring-ring"
+      className="relative rounded-ir-input border border-ir-border bg-ir-surface focus-within:ring-2 focus-within:ring-ir-primary/40"
       style={{ ["--ql-min-height" as string]: `${minHeight}px` }}
     >
       <div
-        className={disabled ? "opacity-50 pointer-events-none" : ""}
+        className={disabled ? "pointer-events-none opacity-50" : ""}
         ref={wrapperRef}
       />
       {uploadingCount > 0 && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/60 text-xs font-medium text-muted-foreground">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-ir-input bg-ir-surface/60 text-xs font-medium text-ir-muted">
           Uploading image…
         </div>
       )}

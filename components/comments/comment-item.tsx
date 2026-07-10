@@ -1,7 +1,11 @@
 "use client";
 
+import {
+  ArrowBendDownRightIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FeedbackBody } from "@/components/posts/feedback-body";
@@ -30,6 +34,7 @@ interface CommentItemProps {
   currentUserId: string | null;
   depth?: number;
   isLocked: boolean;
+  isReplyOpen?: boolean;
   isSignedIn: boolean;
   onDelete: (commentId: string) => void;
   onReply?: () => void;
@@ -41,6 +46,7 @@ export default function CommentItem({
   currentUserId,
   canModerate,
   isLocked,
+  isReplyOpen = false,
   isSignedIn,
   depth = 0,
   onReply,
@@ -93,11 +99,11 @@ export default function CommentItem({
   return (
     <>
       <div
-        className={`flex gap-3 py-3.5 ${depth === 0 ? "border-b border-border last:border-0" : ""}`}
+        className={`flex gap-3 py-3.5 ${depth === 0 ? "border-b border-ir-border last:border-0" : ""}`}
       >
         {/* Avatar */}
         <div
-          className={`shrink-0 flex items-center justify-center bg-muted text-muted-foreground text-xs font-semibold ${depth === 1 ? "size-6" : "size-7"} ${comment.isDeleted ? "opacity-50" : ""}`}
+          className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-ir-muted-surface text-xs font-semibold text-ir-muted ${depth === 1 ? "size-6" : "size-7"} ${comment.isDeleted ? "opacity-50" : ""}`}
         >
           {comment.authorAvatar && !avatarFailed ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -113,20 +119,20 @@ export default function CommentItem({
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           {/* Header */}
-          <div className="flex items-baseline gap-2 flex-wrap">
+          <div className="flex flex-wrap items-baseline gap-2">
             <span
-              className={`text-xs font-medium ${comment.isDeleted ? "italic text-muted-foreground" : "text-foreground"}`}
+              className={`text-xs font-medium ${comment.isDeleted ? "italic text-ir-muted" : "text-ir-heading"}`}
             >
               {displayName}
             </span>
             {isPending && (
-              <span className="text-2xs uppercase tracking-wide text-warning border border-warning/40 px-1">
+              <span className="rounded-ir-full border border-ir-warning/40 px-1.5 text-2xs tracking-wide text-ir-warning uppercase">
                 Pending
               </span>
             )}
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-ir-muted">
               {formatDistanceToNow(new Date(comment.createdAt), {
                 addSuffix: true,
               })}
@@ -137,7 +143,7 @@ export default function CommentItem({
               handlers, keeps formatting + images). Swaps to an inline editor
               when the author is editing. */}
           {comment.isDeleted ? (
-            <p className="mt-1 text-sm italic leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-sm leading-relaxed text-ir-muted italic">
               This comment has been deleted.
             </p>
           ) : isEditing ? (
@@ -154,7 +160,7 @@ export default function CommentItem({
           ) : (
             <FeedbackBody
               body={body}
-              className="mt-1 text-sm leading-relaxed text-foreground wrap-break-word"
+              className="mt-1 text-sm leading-relaxed text-ir-body wrap-break-word"
             />
           )}
 
@@ -173,32 +179,33 @@ export default function CommentItem({
             <div className="mt-2 flex items-center gap-3">
               {canReply && (
                 <button
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-expanded={isReplyOpen}
+                  className="inline-flex items-center gap-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={onReply}
                   type="button"
                 >
-                  <CornerDownRight className="size-3" />
+                  <ArrowBendDownRightIcon className="size-3" />
                   Reply
                 </button>
               )}
               {canEdit && (
                 <button
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex items-center gap-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={() => setIsEditing(true)}
                   type="button"
                 >
-                  <Pencil className="size-3" />
+                  <PencilIcon className="size-3" />
                   Edit
                 </button>
               )}
               {canDelete && (
                 <button
                   aria-label="Delete comment"
-                  className="inline-flex items-center gap-1 text-xs text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none"
+                  className="inline-flex items-center gap-1 text-xs text-ir-danger transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none"
                   onClick={() => setShowDeleteDialog(true)}
                   type="button"
                 >
-                  <Trash2 className="size-3" />
+                  <TrashIcon className="size-3" />
                   Delete
                 </button>
               )}

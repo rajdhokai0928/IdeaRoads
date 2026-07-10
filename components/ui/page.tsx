@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 // directly. Reference: the Account/Settings pages.
 
 // Standard horizontal + vertical page padding, applied by every wrapper here.
-const PAGE_PADDING = "px-4 py-6 sm:px-8";
+const PAGE_PADDING = "px-4 py-3 sm:px-8";
 
 interface PageHeaderProps {
   actions?: ReactNode;
@@ -27,12 +27,12 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn("border-b border-border", PAGE_PADDING, className)}>
+    <div className={cn("border-b border-ir-border", PAGE_PADDING, className)}>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+          <h1 className="text-lg font-semibold text-ir-heading">{title}</h1>
           {description && (
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            <p className="mt-1 text-sm text-ir-muted">{description}</p>
           )}
         </div>
         {/* Page-specific actions sit to the right; the shared "Open Public

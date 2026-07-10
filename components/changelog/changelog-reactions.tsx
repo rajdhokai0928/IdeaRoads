@@ -1,6 +1,6 @@
 "use client";
 
-import { Smile } from "lucide-react";
+import { SmileyIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { REACTION_EMOJIS } from "@/config/platform";
 import type { ReactionGroup } from "@/lib/changelog-comments/reactions";
@@ -67,13 +67,13 @@ export function ChangelogReactions({
   }
 
   return (
-    <div className="relative flex items-center gap-1 flex-wrap">
+    <div className="relative flex flex-wrap items-center gap-1">
       {reactions.map((r) => (
         <button
-          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 ${
+          className={`inline-flex items-center gap-1 rounded-ir-sm border px-2 py-0.5 text-xs transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-60 ${
             r.hasReacted
-              ? "border-primary/40 bg-primary/5 text-foreground"
-              : "border-border bg-transparent text-foreground hover:border-muted-foreground/50"
+              ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-heading"
+              : "border-ir-border bg-transparent text-ir-heading hover:border-ir-primary/30"
           }`}
           disabled={!isSignedIn || !!pendingEmoji}
           key={r.emoji}
@@ -89,12 +89,12 @@ export function ChangelogReactions({
         <div className="relative">
           <button
             aria-label="Add reaction"
-            className="inline-flex items-center gap-1 px-2 py-0.5 text-xs border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1 rounded-ir-sm border border-ir-border px-2 py-0.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             disabled={!!pendingEmoji}
             onClick={() => setShowPicker((v) => !v)}
             type="button"
           >
-            <Smile className="size-3" />
+            <SmileyIcon className="size-3" />
           </button>
 
           {showPicker && (
@@ -105,10 +105,10 @@ export function ChangelogReactions({
                 onClick={() => setShowPicker(false)}
                 type="button"
               />
-              <div className="absolute left-0 bottom-full mb-1.5 z-20 flex gap-1 p-1.5 bg-background border border-border shadow-sm">
+              <div className="absolute bottom-full left-0 z-20 mb-1.5 flex gap-1 rounded-ir-md border border-ir-border bg-ir-surface p-1.5 shadow-ir-md">
                 {REACTION_EMOJIS.map((emoji) => (
                   <button
-                    className="p-1 text-base hover:bg-muted transition-colors duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring leading-none"
+                    className="rounded-ir-xs p-1 text-base leading-none transition-colors duration-100 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                     key={emoji}
                     onClick={() => handleReact(emoji)}
                     title={emoji}

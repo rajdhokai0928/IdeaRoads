@@ -1,6 +1,6 @@
 "use client";
 
-import { Send } from "lucide-react";
+import { PaperPlaneTiltIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ export default function PublishDraftButton({
       size="sm"
       type="button"
     >
-      <Send data-icon="inline-start" />
+      <PaperPlaneTiltIcon data-icon="inline-start" />
       {isPending ? "Publishing…" : "Publish"}
     </Button>
   );

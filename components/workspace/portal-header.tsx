@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { SquareAvatar } from "@/components/ui/square-avatar";
+import { PortalMobileNav } from "@/components/workspace/portal-mobile-nav";
 
 interface Board {
   id: string;
@@ -51,9 +53,9 @@ export function PortalHeader({
     .charAt(0)
     .toUpperCase();
   const navLinkClass =
-    "px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors";
+    "rounded-ir-sm px-3 py-1.5 text-sm font-medium text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading";
   const activeLinkClass =
-    "px-3 py-1.5 text-sm font-medium text-foreground border-b-2 border-foreground";
+    "rounded-ir-sm px-3 py-1.5 text-sm font-medium text-ir-primary bg-ir-primary-light/15";
 
   const homeHref = boards[0] ? `/${slug}/b/${boards[0].slug}` : `/${slug}`;
   const signInHref = currentPath
@@ -61,22 +63,29 @@ export function PortalHeader({
     : "/signin";
 
   return (
-    <header className="border-b border-border bg-background sticky top-0 z-10">
-      <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-20 border-b border-ir-border bg-ir-surface/90 backdrop-blur-sm">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-6">
         <div className="flex items-center gap-3">
+          <PortalMobileNav
+            active={active}
+            changelogPublic={changelogPublic}
+            isMember={isMember}
+            roadmapPublic={roadmapPublic}
+            slug={slug}
+          />
           <Link
-            className="flex items-center gap-2 text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-ir-heading transition-colors duration-150 ease-ir-standard hover:text-ir-primary"
             href={homeHref}
           >
             <SquareAvatar
               alt={workspaceName}
-              className="size-7"
+              className="size-7 rounded-ir-sm"
               fallback={workspaceName.charAt(0).toUpperCase()}
               imageUrl={logoUrl}
             />
             {workspaceName}
           </Link>
-          <nav className="hidden sm:flex items-center gap-1">
+          <nav className="hidden items-center gap-1 sm:flex">
             {(roadmapPublic || isMember) && (
               <Link
                 className={
@@ -104,7 +113,7 @@ export function PortalHeader({
             <>
               {isMember && (
                 <Link
-                  className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="rounded-ir-sm px-3.5 py-2 text-sm font-medium text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading"
                   href={`/${slug}`}
                 >
                   Dashboard
@@ -113,19 +122,16 @@ export function PortalHeader({
               <Link aria-label="My profile" href={`/${slug}/profile`}>
                 <SquareAvatar
                   alt={userName ?? "My profile"}
-                  className="size-9"
+                  className="size-9 rounded-ir-full ring-1 ring-ir-border transition-shadow duration-150 ease-ir-standard hover:ring-ir-primary/40"
                   fallback={profileFallback}
                   imageUrl={userImage}
                 />
               </Link>
             </>
           ) : (
-            <Link
-              className="px-3.5 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150"
-              href={signInHref}
-            >
-              Sign In / Sign Up
-            </Link>
+            <Button asChild size="sm">
+              <Link href={signInHref}>Sign In / Sign Up</Link>
+            </Button>
           )}
         </div>
       </div>

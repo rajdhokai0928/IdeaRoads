@@ -4,7 +4,7 @@ import { PRODUCT_NAME } from "@/config/platform";
 export function PoweredByBadge() {
   return (
     <Link
-      className="fixed bottom-4 right-4 z-20 flex items-center gap-1.5 border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm transition-colors duration-150 hover:text-foreground"
+      className="fixed right-4 bottom-4 z-20 flex items-center gap-1.5 rounded-ir-full border border-ir-border bg-ir-surface px-3 py-1.5 text-xs font-medium text-ir-muted shadow-ir-sm transition-colors duration-150 ease-ir-standard hover:text-ir-primary"
       href="/"
       rel="noopener noreferrer"
       target="_blank"

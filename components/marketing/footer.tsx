@@ -31,14 +31,14 @@ const LINKS = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background">
+    <footer className="border-t border-ir-border bg-ir-surface">
       <div className="mx-auto max-w-6xl px-4 pt-16 pb-8 sm:px-8">
         {/* Upper: logo + columns */}
         <div className="grid gap-10 sm:grid-cols-4">
           {/* Logo + tagline */}
           <div>
             <Link
-              className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex rounded-ir-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               href="/"
             >
               <Image
@@ -49,7 +49,7 @@ export function Footer() {
                 width={500}
               />
             </Link>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-3 text-sm text-ir-muted">
               Open-source customer feedback for growing teams.
             </p>
           </div>
@@ -57,14 +57,14 @@ export function Footer() {
           {/* Link columns */}
           {LINKS.map(({ heading, items }) => (
             <div key={heading}>
-              <p className="text-sm font-medium text-foreground">{heading}</p>
+              <p className="text-sm font-medium text-ir-heading">{heading}</p>
               <ul className="mt-4 space-y-2">
                 {items.map(({ label, href, ...rest }) => {
                   const isExternal = "external" in rest && rest.external;
                   return (
                     <li key={label}>
                       <Link
-                        className="text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
+                        className="text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading"
                         href={href}
                         rel={isExternal ? "noopener noreferrer" : undefined}
                         target={isExternal ? "_blank" : undefined}
@@ -80,8 +80,8 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 border-t border-border pt-6">
-          <p className="text-xs text-muted-foreground">
+        <div className="mt-10 border-t border-ir-border pt-6">
+          <p className="text-xs text-ir-muted">
             © 2026 IdeaRoads. Open source for Product teams.
           </p>
         </div>

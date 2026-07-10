@@ -1,6 +1,11 @@
 "use client";
 
-import { Archive, Edit2, Plus, Trash2 } from "lucide-react";
+import {
+  ArchiveIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -10,24 +15,11 @@ import {
   updateCategoryAction,
 } from "@/app/actions/categories";
 import { Button } from "@/components/ui/button";
+import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page";
 import { CategoryChip } from "./category-chip";
-
-const COLOR_PRESETS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#ec4899",
-  "#ef4444",
-  "#f97316",
-  "#eab308",
-  "#22c55e",
-  "#14b8a6",
-  "#06b6d4",
-  "#3b82f6",
-  "#6b7280",
-  "#374151",
-];
 
 interface Category {
   color: string;
@@ -186,7 +178,7 @@ export function CategoryList({
         actions={
           canManage && !form ? (
             <Button onClick={openCreate}>
-              <Plus data-icon="inline-start" />
+              <PlusIcon data-icon="inline-start" />
               New Category
             </Button>
           ) : undefined
@@ -200,20 +192,23 @@ export function CategoryList({
         {/* Inline form */}
         {form && canManage && (
           <form
-            className="border border-border p-4 space-y-4"
+            className="space-y-4 rounded-ir-card border border-ir-border bg-ir-surface p-4 shadow-ir-xs"
             onSubmit={handleSubmit}
           >
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3 className="text-sm font-semibold text-ir-heading">
               {form.mode === "create" ? "New Category" : "Edit Category"}
             </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1">
-                  Name <span className="text-destructive">*</span>
+                <label
+                  className="mb-1 block text-xs font-medium text-ir-heading"
+                  htmlFor="category-name"
+                >
+                  Name <span className="text-ir-danger">*</span>
                 </label>
-                <input
-                  className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                <Input
+                  id="category-name"
                   maxLength={64}
                   onChange={(e) =>
                     setForm((f) => f && { ...f, name: e.target.value })
@@ -225,14 +220,15 @@ export function CategoryList({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1">
+                <label
+                  className="mb-1 block text-xs font-medium text-ir-heading"
+                  htmlFor="category-description"
+                >
                   Description{" "}
-                  <span className="text-muted-foreground font-normal">
-                    (optional)
-                  </span>
+                  <span className="font-normal text-ir-muted">(optional)</span>
                 </label>
-                <input
-                  className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                <Input
+                  id="category-description"
                   maxLength={200}
                   onChange={(e) =>
                     setForm((f) => f && { ...f, description: e.target.value })
@@ -244,24 +240,13 @@ export function CategoryList({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-foreground mb-2">
+                <span className="mb-2 block text-xs font-medium text-ir-heading">
                   Color
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {COLOR_PRESETS.map((c) => (
-                    <button
-                      className="size-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      key={c}
-                      onClick={() => setForm((f) => f && { ...f, color: c })}
-                      style={{
-                        backgroundColor: c,
-                        borderColor: form.color === c ? "#000" : "transparent",
-                      }}
-                      title={c}
-                      type="button"
-                    />
-                  ))}
-                </div>
+                </span>
+                <ColorSwatchPicker
+                  onChange={(c) => setForm((f) => f && { ...f, color: c })}
+                  value={form.color}
+                />
                 {form.name && (
                   <div className="mt-2">
                     <CategoryChip
@@ -273,40 +258,37 @@ export function CategoryList({
               </div>
             </div>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-xs text-ir-danger">{error}</p>}
 
             <div className="flex items-center gap-2">
-              <button
-                className="px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                disabled={isPending}
-                type="submit"
-              >
+              <Button disabled={isPending} type="submit">
                 {isPending
                   ? "Saving…"
                   : form.mode === "create"
                     ? "Create"
                     : "Save Changes"}
-              </button>
-              <button
-                className="px-4 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              </Button>
+              <Button
                 disabled={isPending}
                 onClick={closeForm}
                 type="button"
+                variant="outline"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         )}
 
         {/* Active categories */}
         {active.length === 0 && !form ? (
-          <div className="border border-dashed border-border py-12 text-center">
-            <p className="text-sm text-muted-foreground">No categories yet.</p>
+          <div className="rounded-ir-card border border-dashed border-ir-border py-12 text-center">
+            <p className="text-sm text-ir-muted">No categories yet.</p>
             {canManage && (
               <button
-                className="mt-3 text-sm text-primary hover:underline focus-visible:outline-none"
+                className="mt-3 rounded-ir-sm text-sm text-ir-primary hover:underline focus-visible:outline-none"
                 onClick={openCreate}
+                type="button"
               >
                 Create your first category
               </button>
@@ -314,37 +296,46 @@ export function CategoryList({
           </div>
         ) : (
           active.length > 0 && (
-            <div className="border border-border divide-y divide-border">
+            <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
               {active.map((cat) => (
-                <div className="flex items-center gap-4 px-4 py-4" key={cat.id}>
+                <div
+                  className="flex flex-col gap-2 px-4 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
+                  key={cat.id}
+                >
                   <CategoryChip color={cat.color} name={cat.name} />
                   {cat.description && (
-                    <span className="text-xs text-muted-foreground truncate flex-1">
+                    <span className="truncate text-xs text-ir-muted sm:flex-1">
                       {cat.description}
                     </span>
                   )}
                   {canManage && (
-                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                    <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
                       <button
-                        className="p-1.5 text-primary hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Edit ${cat.name}`}
+                        className="rounded-ir-xs p-1.5 text-ir-primary transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => openEdit(cat)}
                         title="Edit"
+                        type="button"
                       >
-                        <Edit2 className="size-3.5" />
+                        <PencilIcon className="size-3.5" />
                       </button>
                       <button
-                        className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Archive ${cat.name}`}
+                        className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setArchiveTarget(cat)}
                         title="Archive"
+                        type="button"
                       >
-                        <Archive className="size-3.5" />
+                        <ArchiveIcon className="size-3.5" />
                       </button>
                       <button
-                        className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Delete ${cat.name}`}
+                        className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setDeleteTarget(cat)}
                         title="Delete"
+                        type="button"
                       >
-                        <Trash2 className="size-3.5" />
+                        <TrashIcon className="size-3.5" />
                       </button>
                     </div>
                   )}
@@ -357,33 +348,40 @@ export function CategoryList({
         {/* Archived categories */}
         {archived.length > 0 && (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            <p className="mb-2 text-xs font-semibold tracking-wider text-ir-muted uppercase">
               Archived
             </p>
-            <div className="border border-border divide-y divide-border opacity-60">
+            <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface opacity-60">
               {archived.map((cat) => (
-                <div className="flex items-center gap-4 px-4 py-4" key={cat.id}>
+                <div
+                  className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:gap-4"
+                  key={cat.id}
+                >
                   <CategoryChip color={cat.color} name={cat.name} />
                   {cat.description && (
-                    <span className="text-xs text-muted-foreground truncate flex-1">
+                    <span className="truncate text-xs text-ir-muted sm:flex-1">
                       {cat.description}
                     </span>
                   )}
                   {canManage && (
-                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                    <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
                       <button
-                        className="p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-xs"
+                        aria-label={`Restore ${cat.name}`}
+                        className="rounded-ir-xs p-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setArchiveTarget(cat)}
                         title="Restore"
+                        type="button"
                       >
                         Restore
                       </button>
                       <button
-                        className="p-1.5 text-destructive hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Delete ${cat.name}`}
+                        className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setDeleteTarget(cat)}
                         title="Delete"
+                        type="button"
                       >
-                        <Trash2 className="size-3.5" />
+                        <TrashIcon className="size-3.5" />
                       </button>
                     </div>
                   )}

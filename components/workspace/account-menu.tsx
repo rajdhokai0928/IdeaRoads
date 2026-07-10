@@ -2,15 +2,17 @@
 
 import {
   Bell,
-  ChevronsUpDown,
-  LogOut,
-  ScrollText,
+  CaretUpDown,
+  Scroll,
   Shield,
+  SignOut,
   Sliders,
-  User,
-} from "lucide-react";
+  UserCircle,
+} from "@phosphor-icons/react";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { logoutAction } from "@/app/actions/auth";
 import {
   DropdownMenu,
@@ -37,15 +39,17 @@ export function AccountMenu({
   workspaceSlug,
 }: AccountMenuProps) {
   const pathname = usePathname();
+  const shouldReduceMotion = useReducedMotion();
+  const [open, setOpen] = useState(false);
 
   const itemClass = (href: string) =>
-    pathname.startsWith(href) ? "bg-accent text-accent-foreground" : "";
+    pathname.startsWith(href) ? "bg-ir-primary-light/20 text-ir-primary" : "";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex h-14 w-full min-w-0 cursor-pointer items-center gap-2.5 border-t border-sidebar-border px-4 text-left transition-colors duration-150 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-14 w-full min-w-0 cursor-pointer items-center gap-2.5 border-t border-sidebar-border px-4 text-left transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
           type="button"
         >
           <SquareAvatar
@@ -60,7 +64,16 @@ export function AccountMenu({
           >
             {email}
           </span>
-          <ChevronsUpDown className="size-4 shrink-0 text-sidebar-foreground/40" />
+          <motion.span
+            animate={{ rotate: open ? 180 : 0 }}
+            className="shrink-0 text-sidebar-foreground/40"
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.15,
+              ease: "easeOut",
+            }}
+          >
+            <CaretUpDown className="size-4" />
+          </motion.span>
         </button>
       </DropdownMenuTrigger>
 
@@ -77,7 +90,7 @@ export function AccountMenu({
             imageUrl={userImage}
           />
           <span
-            className="flex-1 truncate text-xs font-medium text-foreground"
+            className="flex-1 truncate text-xs font-medium text-ir-heading"
             title={email}
           >
             {email}
@@ -111,7 +124,7 @@ export function AccountMenu({
                 className={itemClass(`/${workspaceSlug}/settings/audit-log`)}
               >
                 <Link href={`/${workspaceSlug}/settings/audit-log`}>
-                  <ScrollText />
+                  <Scroll />
                   Audit Log
                 </Link>
               </DropdownMenuItem>
@@ -135,7 +148,7 @@ export function AccountMenu({
             className={itemClass(`/${workspaceSlug}/settings/account`)}
           >
             <Link href={`/${workspaceSlug}/settings/account`}>
-              <User />
+              <UserCircle />
               Account
             </Link>
           </DropdownMenuItem>
@@ -143,7 +156,7 @@ export function AccountMenu({
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => logoutAction()} variant="destructive">
-          <LogOut />
+          <SignOut />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

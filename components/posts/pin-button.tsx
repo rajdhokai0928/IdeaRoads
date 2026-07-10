@@ -1,6 +1,6 @@
 "use client";
 
-import { Pin, PinOff } from "lucide-react";
+import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { pinPostAction } from "@/app/actions/posts";
@@ -28,19 +28,19 @@ export default function PinButton({
 
   return (
     <button
-      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+      className="flex items-center gap-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
       disabled={isPending}
       onClick={handleToggle}
       type="button"
     >
       {isPinned ? (
         <>
-          <PinOff className="size-3.5" />
+          <PushPinSlashIcon className="size-3.5" />
           Unpin
         </>
       ) : (
         <>
-          <Pin className="size-3.5" />
+          <PushPinIcon className="size-3.5" />
           Pin
         </>
       )}

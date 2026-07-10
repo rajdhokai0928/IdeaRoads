@@ -1,24 +1,49 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion, useReducedMotion } from "framer-motion"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+const MotionButton = motion.create("button")
+const MotionSlot = motion.create(Slot.Root)
+
+// motion.create()'s props conflict with the native HTML drag-event handlers
+// (onDrag/onDragStart/etc. have incompatible signatures) — Button never
+// exposes native drag, so those keys are dropped from the prop surface.
+type NativeButtonProps = Omit<
+  React.ComponentProps<"button">,
+  | "onDrag"
+  | "onDragEnd"
+  | "onDragEnter"
+  | "onDragExit"
+  | "onDragLeave"
+  | "onDragOver"
+  | "onDragStart"
+  | "onDrop"
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onAnimationIteration"
+>
+
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 cursor-pointer items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-semibold tracking-ui whitespace-nowrap uppercase transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+  "group/button inline-flex shrink-0 cursor-pointer items-center justify-center rounded-ir-button border border-transparent bg-clip-padding text-xs font-semibold tracking-ui whitespace-nowrap uppercase transition-all duration-150 ease-ir-standard outline-none select-none focus-visible:border-ir-primary focus-visible:ring-2 focus-visible:ring-ir-primary/30 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-ir-danger aria-invalid:ring-2 aria-invalid:ring-ir-danger/20 dark:aria-invalid:border-ir-danger/50 dark:aria-invalid:ring-ir-danger/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        default:
+          "bg-ir-primary text-ir-primary-foreground shadow-ir-xs hover:bg-ir-primary-hover hover:shadow-ir-sm",
         outline:
-          "border-border bg-transparent hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-input/30",
+          "border-ir-border bg-ir-surface hover:bg-ir-muted-surface hover:text-ir-heading aria-expanded:bg-ir-muted-surface aria-expanded:text-ir-heading dark:hover:bg-input/30",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-ir-muted-surface text-ir-body hover:bg-[color-mix(in_oklch,var(--ir-muted-surface),var(--ir-text-heading)_5%)] aria-expanded:bg-ir-muted-surface aria-expanded:text-ir-heading",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "hover:bg-ir-muted-surface hover:text-ir-heading aria-expanded:bg-ir-muted-surface aria-expanded:text-ir-heading dark:hover:bg-muted/50",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline underline-offset-4 hover:underline",
+          "bg-ir-danger/10 text-ir-danger hover:bg-ir-danger/20 focus-visible:border-ir-danger/40 focus-visible:ring-ir-danger/20 dark:bg-ir-danger/20 dark:hover:bg-ir-danger/30 dark:focus-visible:ring-ir-danger/40",
+        link: "text-ir-primary underline underline-offset-4 hover:text-ir-primary-hover hover:underline",
       },
       size: {
         default:
@@ -44,12 +69,18 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  disabled,
   ...props
-}: React.ComponentProps<"button"> &
+}: NativeButtonProps &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
   }) {
-  const Comp = asChild ? Slot.Root : "button"
+  const shouldReduceMotion = useReducedMotion()
+  const Comp = asChild ? MotionSlot : MotionButton
+  // Popover/dropdown/select triggers already animate their own open state —
+  // a hover/tap scale on top of that reads as busy, so they opt out.
+  const isPopupTrigger = props["aria-haspopup"] != null
+  const canAnimate = !shouldReduceMotion && !disabled && !isPopupTrigger
 
   return (
     <Comp
@@ -57,6 +88,10 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled}
+      transition={{ duration: 0.1, ease: "easeOut" }}
+      whileHover={canAnimate ? { scale: 1.015 } : undefined}
+      whileTap={canAnimate ? { scale: 0.97 } : undefined}
       {...props}
     />
   )

@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { blockUserAction, unblockUserAction } from "@/app/actions/moderation";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
 import type { BlockedUserRow } from "@/lib/moderation/queries";
 
 interface Props {
@@ -64,31 +66,30 @@ export function BlockedUsersSection({ workspaceId, blockedUsers }: Props) {
     });
   }
 
-  const inputClass =
-    "w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
-
   return (
     <section>
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-foreground">Blocked users</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <h2 className="text-sm font-semibold text-ir-heading">Blocked users</h2>
+        <p className="mt-0.5 text-xs text-ir-muted">
           Blocked users cannot post or comment in this workspace.
         </p>
       </div>
 
       {/* Block form */}
-      <form className="border border-border p-4 mb-4" onSubmit={handleBlock}>
-        <p className="text-sm font-medium text-foreground mb-3">Block a user</p>
+      <form
+        className="mb-4 rounded-ir-card border border-ir-border bg-ir-surface p-4 shadow-ir-xs"
+        onSubmit={handleBlock}
+      >
+        <p className="mb-3 text-sm font-medium text-ir-heading">Block a user</p>
         <div className="grid gap-3">
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="block-email"
             >
               Email address
             </label>
-            <input
-              className={inputClass}
+            <Input
               disabled={isPending}
               id="block-email"
               onChange={(e) => setEmail(e.target.value)}
@@ -100,16 +101,13 @@ export function BlockedUsersSection({ workspaceId, blockedUsers }: Props) {
           </div>
           <div>
             <label
-              className="block text-xs font-medium text-foreground mb-1"
+              className="mb-1 block text-xs font-medium text-ir-heading"
               htmlFor="block-reason"
             >
               Reason{" "}
-              <span className="text-muted-foreground font-normal">
-                (optional)
-              </span>
+              <span className="font-normal text-ir-muted">(optional)</span>
             </label>
-            <input
-              className={inputClass}
+            <Input
               disabled={isPending}
               id="block-reason"
               maxLength={300}
@@ -118,46 +116,44 @@ export function BlockedUsersSection({ workspaceId, blockedUsers }: Props) {
               value={reason}
             />
           </div>
-          {formError && <p className="text-xs text-destructive">{formError}</p>}
+          {formError && <p className="text-xs text-ir-danger">{formError}</p>}
           <div className="flex justify-end">
-            <button
-              className="px-3.5 py-1.5 text-sm font-medium text-destructive border border-destructive/40 hover:bg-destructive hover:text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
+            <Button
               disabled={isPending || !email.trim()}
               type="submit"
+              variant="destructive"
             >
               {isPending ? "Blocking…" : "Block user"}
-            </button>
+            </Button>
           </div>
         </div>
       </form>
 
       {/* Blocked list */}
       {blockedUsers.length === 0 ? (
-        <div className="border border-border p-6 text-center">
-          <p className="text-sm text-muted-foreground">No blocked users.</p>
+        <div className="rounded-ir-card border border-dashed border-ir-border p-8 text-center">
+          <p className="text-sm text-ir-muted">No blocked users.</p>
         </div>
       ) : (
-        <div className="border border-border divide-y divide-border">
+        <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
           {blockedUsers.map((bu) => (
             <div
-              className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4"
+              className="flex flex-col gap-2 p-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
               key={bu.id}
             >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ir-heading">
                   {bu.userName ?? bu.userEmail ?? "Unknown"}
                 </p>
                 {bu.userName && bu.userEmail && (
-                  <p className="text-xs text-muted-foreground">
-                    {bu.userEmail}
-                  </p>
+                  <p className="text-xs text-ir-muted">{bu.userEmail}</p>
                 )}
                 {bu.reason && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="mt-0.5 text-xs text-ir-muted">
                     Reason: {bu.reason}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="mt-0.5 text-xs text-ir-muted">
                   Blocked{" "}
                   {new Intl.DateTimeFormat("en", {
                     dateStyle: "medium",
@@ -167,14 +163,15 @@ export function BlockedUsersSection({ workspaceId, blockedUsers }: Props) {
                     : ""}
                 </p>
               </div>
-              <button
-                className="shrink-0 px-2.5 py-1 text-xs font-medium border border-border hover:bg-muted transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              <Button
                 disabled={isPending}
                 onClick={() => setUnblockTarget(bu)}
+                size="xs"
                 type="button"
+                variant="outline"
               >
                 Unblock
-              </button>
+              </Button>
             </div>
           ))}
         </div>

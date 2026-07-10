@@ -1,4 +1,10 @@
+import { BulkActionBar } from "@/components/posts/bulk-action-bar";
+import {
+  BulkSelectionProvider,
+  SelectAllCheckbox,
+} from "@/components/posts/bulk-selection-context";
 import { PostRow } from "@/components/posts/post-row";
+import { PostsEmptyState } from "@/components/posts/posts-empty-state";
 
 export interface PostsTableRow {
   authorEmail: string;
@@ -36,6 +42,10 @@ interface WorkspaceStatus {
 
 interface PostsTableProps {
   categories: Category[];
+  // Opt-in bulk select + floating action bar — only the admin feedback list
+  // page enables this; Dashboard and the public profile page never pass it,
+  // so they render exactly as before.
+  enableBulkActions?: boolean;
   isAdminOrOwner: boolean;
   isMember: boolean;
   isSignedIn: boolean;
@@ -59,55 +69,56 @@ export function PostsTable({
   isMember,
   workspaceId,
   showBoardColumn = true,
+  enableBulkActions = false,
 }: PostsTableProps) {
   if (posts.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-        <p className="text-sm font-medium text-foreground">No feedback yet</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Submitted feedback will show up here.
-        </p>
-      </div>
-    );
+    return <PostsEmptyState />;
   }
 
-  return (
+  const selectable = enableBulkActions && isMember;
+
+  const table = (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border">
-            <th className="w-16 px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+          <tr className="border-b border-ir-border">
+            {selectable && (
+              <th className="w-10 px-4 py-2.5">
+                <SelectAllCheckbox />
+              </th>
+            )}
+            <th className="w-16 px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted">
               Votes
             </th>
-            <th className="px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+            <th className="px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted">
               Title
             </th>
-            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground lg:table-cell">
+            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted lg:table-cell">
               Description
             </th>
-            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground sm:table-cell">
+            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted sm:table-cell">
               Author
             </th>
-            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground sm:table-cell">
+            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted sm:table-cell">
               Created
             </th>
-            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground md:table-cell">
+            <th className="hidden px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted md:table-cell">
               Category
             </th>
-            <th className="px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+            <th className="px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted">
               Status
             </th>
-            <th className="px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+            <th className="px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted">
               Visibility
             </th>
             {isMember && (
-              <th className="w-12 px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+              <th className="w-12 px-4 py-2.5 text-left text-2xs font-semibold uppercase tracking-eyebrow text-ir-muted">
                 <span className="sr-only">Actions</span>
               </th>
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">
+        <tbody className="divide-y divide-ir-border">
           {posts.map((post) => (
             <PostRow
               categories={categories}
@@ -117,6 +128,7 @@ export function PostsTable({
               isSignedIn={isSignedIn}
               key={post.id}
               post={post}
+              selectable={selectable}
               showBoardColumn={showBoardColumn}
               workspaceId={workspaceId}
               workspaceStatuses={workspaceStatuses}
@@ -125,5 +137,19 @@ export function PostsTable({
         </tbody>
       </table>
     </div>
+  );
+
+  if (!selectable) {
+    return table;
+  }
+
+  return (
+    <BulkSelectionProvider allIds={posts.map((p) => p.id)}>
+      {table}
+      <BulkActionBar
+        workspaceId={workspaceId}
+        workspaceStatuses={workspaceStatuses}
+      />
+    </BulkSelectionProvider>
   );
 }

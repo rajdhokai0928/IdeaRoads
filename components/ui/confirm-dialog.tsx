@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -43,26 +44,22 @@ export function ConfirmDialog({
         </DialogHeader>
         {children}
         <DialogFooter className="gap-2">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
+          <Button
             disabled={isPending}
-            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            onClick={() => onOpenChange(false)}
+            type="button"
+            variant="outline"
           >
             {cancelLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
+          </Button>
+          <Button
             disabled={isPending}
-            className={`px-4 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${
-              variant === "destructive"
-                ? "bg-destructive text-white hover:bg-destructive/90"
-                : "bg-primary text-primary-foreground hover:bg-primary/90"
-            }`}
+            onClick={onConfirm}
+            type="button"
+            variant={variant === "destructive" ? "destructive" : "default"}
           >
             {isPending ? "Please wait…" : confirmLabel}
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

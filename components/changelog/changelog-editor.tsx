@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Pencil, X } from "lucide-react";
+import { ImageIcon, PencilIcon, XIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/app/actions/changelog";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { LinkedPostsSelector } from "@/components/changelog/linked-posts-selector";
+import { Button } from "@/components/ui/button";
 import {
   CHANGELOG_LABEL_VALUES,
   getLabelInfo,
@@ -437,9 +438,9 @@ export function ChangelogEditor({
     <div className="flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-8">
       {/* Cover image — first, so it can be chosen before the details */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+        <label className="text-xs font-semibold uppercase tracking-wide text-ir-heading">
           Cover image
-          <span className="ml-1 text-muted-foreground font-normal normal-case">
+          <span className="ml-1 font-normal normal-case text-ir-muted">
             (optional)
           </span>
         </label>
@@ -449,25 +450,25 @@ export function ChangelogEditor({
             {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
             <img
               alt=""
-              className="max-h-64 w-full border border-border bg-muted/30 object-contain"
+              className="max-h-64 w-full rounded-ir-sm border border-ir-border bg-ir-muted-surface object-contain"
               src={coverImageUrl}
             />
             <button
               aria-label="Remove cover image"
-              className="absolute -top-2 -right-2 flex size-6 items-center justify-center border border-border bg-background text-destructive hover:opacity-70 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-ir-full border border-ir-border bg-ir-surface text-ir-danger shadow-ir-sm transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               onClick={removeCoverImage}
               type="button"
             >
-              <X className="size-3.5" />
+              <XIcon className="size-3.5" />
             </button>
           </div>
         ) : (
           <label
-            className={`flex w-full cursor-pointer items-center justify-center gap-1.5 border border-dashed border-input px-3 py-8 text-sm text-muted-foreground transition-colors duration-150 hover:border-muted-foreground/50 hover:text-foreground ${
+            className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-ir-input border border-dashed border-ir-border px-3 py-8 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-heading ${
               isUploadingCover ? "pointer-events-none opacity-50" : ""
             }`}
           >
-            <ImagePlus className="size-4" />
+            <ImageIcon className="size-4" />
             {isUploadingCover ? "Uploading…" : "Add a cover image"}
             <input
               accept="image/png,image/jpeg,image/webp,image/gif"
@@ -479,20 +480,20 @@ export function ChangelogEditor({
             />
           </label>
         )}
-        {coverError && <p className="text-xs text-destructive">{coverError}</p>}
+        {coverError && <p className="text-xs text-ir-danger">{coverError}</p>}
       </div>
 
       {/* Title */}
       <div className="space-y-1.5">
         <label
-          className="text-xs font-semibold text-foreground uppercase tracking-wide"
+          className="text-xs font-semibold uppercase tracking-wide text-ir-heading"
           htmlFor="title"
         >
           Title
         </label>
         <div className="relative">
           <input
-            className="w-full border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2.5 text-sm text-ir-body placeholder:text-ir-muted focus:ring-2 focus:ring-ir-primary/40 focus:outline-none"
             id="title"
             maxLength={200}
             onChange={(e) => setTitle(e.target.value)}
@@ -500,7 +501,7 @@ export function ChangelogEditor({
             type="text"
             value={title}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-ir-muted">
             {title.length}/200
           </span>
         </div>
@@ -508,7 +509,7 @@ export function ChangelogEditor({
 
       {/* Content — immediately after the title */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+        <label className="text-xs font-semibold uppercase tracking-wide text-ir-heading">
           Content
         </label>
         <QuillEditor
@@ -522,7 +523,7 @@ export function ChangelogEditor({
       {/* Label — built-in labels plus a create-your-own field */}
       <div className="space-y-1.5">
         <label
-          className="text-xs font-semibold text-foreground uppercase tracking-wide"
+          className="text-xs font-semibold uppercase tracking-wide text-ir-heading"
           htmlFor="new-label"
         >
           Label
@@ -534,10 +535,10 @@ export function ChangelogEditor({
             const isActive = label === l;
             return (
               <button
-                className={`px-3 py-1.5 text-xs font-semibold border transition-all focus-visible:outline-none focus-visible:ring-2 cursor-pointer focus-visible:ring-ring ${
+                className={`cursor-pointer rounded-ir-sm border px-3 py-1.5 text-xs font-semibold transition-all duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
                   isActive
                     ? "border-current"
-                    : "border-border text-muted-foreground hover:border-muted-foreground/50"
+                    : "border-ir-border text-ir-muted hover:border-ir-primary/30"
                 }`}
                 key={l}
                 onClick={() => setLabel(l)}
@@ -565,7 +566,7 @@ export function ChangelogEditor({
                 <input
                   aria-label={`Rename ${l.name}`}
                   autoFocus
-                  className="border border-ring bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="rounded-ir-sm border border-ir-primary bg-ir-surface px-2 py-1.5 text-xs text-ir-body focus:ring-2 focus:ring-ir-primary/40 focus:outline-none"
                   key={l.id}
                   maxLength={40}
                   onBlur={() => renameLabel(l.id)}
@@ -585,10 +586,10 @@ export function ChangelogEditor({
             }
             return (
               <span
-                className={`inline-flex items-center gap-1 border pl-3 pr-1.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`inline-flex items-center gap-1 rounded-ir-sm border py-1.5 pr-1.5 pl-3 text-xs font-semibold transition-all duration-150 ease-ir-standard ${
                   isActive
                     ? "border-current"
-                    : "border-border text-muted-foreground hover:border-muted-foreground/50"
+                    : "border-ir-border text-ir-muted hover:border-ir-primary/30"
                 }`}
                 key={l.id}
                 style={
@@ -602,7 +603,7 @@ export function ChangelogEditor({
                 }
               >
                 <button
-                  className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={() => setLabel(l.name)}
                   type="button"
                 >
@@ -610,7 +611,7 @@ export function ChangelogEditor({
                 </button>
                 <button
                   aria-label={`Rename ${l.name}`}
-                  className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  className="text-ir-muted hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
                   disabled={labelBusy}
                   onClick={() => {
                     setEditingLabelId(l.id);
@@ -618,16 +619,16 @@ export function ChangelogEditor({
                   }}
                   type="button"
                 >
-                  <Pencil className="size-3" />
+                  <PencilIcon className="size-3" />
                 </button>
                 <button
                   aria-label={`Delete ${l.name}`}
-                  className="text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  className="text-ir-muted hover:text-ir-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
                   disabled={labelBusy}
                   onClick={() => removeLabel(l.id, l.name)}
                   type="button"
                 >
-                  <X className="size-3" />
+                  <XIcon className="size-3" />
                 </button>
               </span>
             );
@@ -636,7 +637,7 @@ export function ChangelogEditor({
           {/* The selected label whose row was deleted — read-only. */}
           {orphanLabel && (
             <span
-              className="px-3 py-1.5 text-xs font-semibold border border-current"
+              className="rounded-ir-sm border border-current px-3 py-1.5 text-xs font-semibold"
               style={{
                 color: getLabelInfo(orphanLabel).color,
                 backgroundColor: `${getLabelInfo(orphanLabel).color}12`,
@@ -649,7 +650,7 @@ export function ChangelogEditor({
         </div>
         <div className="flex items-center gap-2">
           <input
-            className="w-full max-w-xs border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full max-w-xs rounded-ir-input border border-ir-border bg-ir-surface px-3 py-1.5 text-xs text-ir-body placeholder:text-ir-muted focus:ring-2 focus:ring-ir-primary/40 focus:outline-none"
             id="new-label"
             maxLength={40}
             onChange={(e) => setNewLabel(e.target.value)}
@@ -663,14 +664,16 @@ export function ChangelogEditor({
             type="text"
             value={newLabel}
           />
-          <button
-            className="shrink-0 border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          <Button
+            className="shrink-0"
             disabled={!newLabel.trim() || labelBusy}
             onClick={addCustomLabel}
+            size="sm"
             type="button"
+            variant="outline"
           >
             {labelBusy ? "Saving…" : "Add"}
-          </button>
+          </Button>
         </div>
         <div className="mt-1">
           <ChangelogLabelBadge label={label} size="md" />
@@ -679,13 +682,13 @@ export function ChangelogEditor({
 
       {/* Linked Posts */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+        <label className="text-xs font-semibold uppercase tracking-wide text-ir-heading">
           Linked Feedback Posts
-          <span className="ml-1 text-muted-foreground font-normal normal-case">
+          <span className="ml-1 font-normal normal-case text-ir-muted">
             (optional)
           </span>
         </label>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ir-muted">
           Link feedback posts that shipped in this update. Voters will be
           notified on first publish.
         </p>
@@ -697,48 +700,44 @@ export function ChangelogEditor({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ir-border pt-4">
         <div className="flex items-center gap-1.5">
           {saveStatus === "saving" && (
-            <span className="text-xs text-muted-foreground animate-pulse">
-              Saving…
-            </span>
+            <span className="animate-pulse text-xs text-ir-muted">Saving…</span>
           )}
           {saveStatus === "saved" && (
-            <span className="text-xs text-success">Saved</span>
+            <span className="text-xs text-ir-success">Saved</span>
           )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {!isPublished && (
-            <button
-              className="px-4 py-2 text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            <Button
               disabled={isPending || !title.trim()}
               onClick={handleSaveDraft}
               type="button"
+              variant="outline"
             >
               Save Draft
-            </button>
+            </Button>
           )}
 
           {isPublished ? (
-            <button
-              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            <Button
               disabled={isPending || !title.trim()}
               onClick={handleUpdate}
               type="button"
             >
               {isPending ? "Saving…" : "Update"}
-            </button>
+            </Button>
           ) : (
-            <button
-              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            <Button
               disabled={isPending || !title.trim()}
               onClick={handlePublish}
               type="button"
             >
               {isPending ? "Publishing…" : "Publish →"}
-            </button>
+            </Button>
           )}
         </div>
       </div>

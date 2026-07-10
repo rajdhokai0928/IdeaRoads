@@ -1,5 +1,5 @@
+import { ChatCircleIcon, PushPinIcon } from "@phosphor-icons/react/dist/ssr";
 import { formatDistanceToNow } from "date-fns";
-import { MessageSquare, Pin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -187,7 +187,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
 
   return (
     <div
-      className={`min-h-screen bg-background ${embedWrapper.className}`}
+      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
@@ -209,19 +209,17 @@ export default async function BoardPage({ params, searchParams }: Props) {
       )}
       {!isEmbed && <PoweredByBadge />}
 
-      <div className="max-w-5xl mx-auto flex flex-col">
+      <main className="mx-auto flex max-w-5xl flex-col" id="main-content">
         {/* Page header */}
-        <div className="border-b border-border px-4 py-6 sm:px-8">
-          <h1 className="text-xl font-semibold text-foreground">
+        <div className="border-b border-ir-border px-4 py-6 sm:px-8">
+          <h1 className="text-xl font-semibold text-ir-heading">
             {board.name}
           </h1>
           {board.description && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {board.description}
-            </p>
+            <p className="mt-1 text-sm text-ir-muted">{board.description}</p>
           )}
           {board.isArchived && (
-            <p className="mt-3 text-xs text-muted-foreground border-l-2 border-border pl-3">
+            <p className="mt-3 rounded-ir-sm border-l-2 border-ir-warning bg-ir-warning/10 py-1.5 pl-3 text-xs text-ir-muted">
               This board is archived and no longer accepting new feedback. Its
               posts remain readable below.
             </p>
@@ -230,7 +228,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
 
         <div className="flex flex-col gap-6 px-4 py-6 sm:px-8 lg:flex-row lg:items-start lg:gap-8">
           {/* Main content */}
-          <div className="min-w-0 flex-1 border border-border">
+          <div className="min-w-0 flex-1 rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
             <BoardFilters
               activeSearch={searchQuery}
               activeSort={validSort}
@@ -249,26 +247,26 @@ export default async function BoardPage({ params, searchParams }: Props) {
                 myVotesActive ||
                 mineActive ? (
                   <>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium text-ir-heading">
                       No posts match your filters
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-ir-muted">
                       Try a different search term, status, or category.
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium text-ir-heading">
                       No feedback yet
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-ir-muted">
                       Be the first to submit an idea or request.
                     </p>
                   </>
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-ir-border">
                 {boardPosts.map((post) => {
                   const postCategory = post.categoryId
                     ? categoryMap.get(post.categoryId)
@@ -276,7 +274,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
 
                   return (
                     <div
-                      className="group flex items-start gap-3 px-4 py-5 hover:bg-muted/40 transition-colors duration-150 sm:px-6"
+                      className="group flex items-start gap-3 px-4 py-5 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:px-6"
                       key={post.id}
                     >
                       {/* Post content */}
@@ -286,14 +284,17 @@ export default async function BoardPage({ params, searchParams }: Props) {
                       >
                         <div className="flex flex-wrap items-center gap-2">
                           {post.isPinned && (
-                            <Pin className="size-3 shrink-0 text-muted-foreground" />
+                            <PushPinIcon
+                              className="size-3 shrink-0 text-ir-primary"
+                              weight="fill"
+                            />
                           )}
-                          <p className="text-sm font-medium text-foreground transition-colors group-hover:text-foreground/80">
+                          <p className="text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard group-hover:text-ir-primary">
                             {post.title}
                           </p>
                         </div>
                         {post.body && (
-                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          <p className="mt-1 line-clamp-2 text-xs text-ir-muted">
                             {truncateHtmlToText(post.body, 240)}
                           </p>
                         )}
@@ -309,15 +310,15 @@ export default async function BoardPage({ params, searchParams }: Props) {
                             status={post.status}
                             workspaceStatuses={workspaceStatuses}
                           />
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-ir-muted">
                             {post.authorName || post.authorEmail} ·{" "}
                             {formatDistanceToNow(post.createdAt, {
                               addSuffix: true,
                             })}
                           </span>
                           {post.commentCount > 0 && (
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <MessageSquare className="size-3" />
+                            <span className="flex items-center gap-1 text-xs text-ir-muted">
+                              <ChatCircleIcon className="size-3" />
                               {post.commentCount}
                             </span>
                           )}
@@ -344,8 +345,8 @@ export default async function BoardPage({ params, searchParams }: Props) {
 
             {/* Pagination — numbered, shown only when there's more than one page */}
             {totalPages > 1 && (
-              <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-border px-4 py-3 sm:flex-row sm:px-6">
-                <span className="text-xs text-muted-foreground">
+              <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-ir-border px-4 py-3 sm:flex-row sm:px-6">
+                <span className="text-xs text-ir-muted">
                   Showing {rangeStart.toLocaleString()}–
                   {rangeEnd.toLocaleString()} of {totalCount.toLocaleString()}
                 </span>
@@ -372,7 +373,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
             slug={slug}
           />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

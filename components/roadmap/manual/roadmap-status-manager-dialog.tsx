@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Check, Plus, Trash2, X } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CheckIcon,
+  PlusIcon,
+  TrashIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
@@ -9,6 +16,8 @@ import {
   reorderRoadmapStatusesAction,
   updateRoadmapStatusAction,
 } from "@/app/actions/roadmap";
+import { Button } from "@/components/ui/button";
+import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import {
   Dialog,
   DialogContent,
@@ -16,21 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-const COLOR_PRESETS = [
-  "#6b7280",
-  "#374151",
-  "#6366f1",
-  "#8b5cf6",
-  "#ec4899",
-  "#ef4444",
-  "#f97316",
-  "#eab308",
-  "#22c55e",
-  "#14b8a6",
-  "#06b6d4",
-  "#3b82f6",
-];
 
 export interface ManagerStatus {
   color: string;
@@ -45,32 +39,6 @@ interface RoadmapStatusManagerDialogProps {
   open: boolean;
   statuses: ManagerStatus[];
   workspaceId: string;
-}
-
-function ColorPicker({
-  value,
-  onChange,
-}: {
-  onChange: (c: string) => void;
-  value: string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-1">
-      {COLOR_PRESETS.map((c) => (
-        <button
-          className="size-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          key={c}
-          onClick={() => onChange(c)}
-          style={{
-            backgroundColor: c,
-            borderColor: value === c ? "var(--foreground)" : "transparent",
-          }}
-          title={c}
-          type="button"
-        />
-      ))}
-    </div>
-  );
 }
 
 export function RoadmapStatusManagerDialog({
@@ -183,34 +151,36 @@ export function RoadmapStatusManagerDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="divide-y divide-border border border-border">
+        <div className="divide-y divide-ir-border rounded-ir-md border border-ir-border">
           {statuses.map((s, i) => (
             <div className="p-3" key={s.id}>
               {editingId === s.id ? (
                 <div className="space-y-2">
                   <input
-                    className="w-full border border-border bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-2.5 py-1.5 text-sm text-ir-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                     maxLength={48}
                     onChange={(e) => setEditName(e.target.value)}
                     value={editName}
                   />
-                  <ColorPicker onChange={setEditColor} value={editColor} />
+                  <ColorSwatchPicker
+                    onChange={setEditColor}
+                    value={editColor}
+                  />
                   <div className="flex items-center gap-1.5">
-                    <button
-                      className="flex items-center gap-1 bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                    <Button
                       disabled={isPending || !editName.trim()}
                       onClick={saveEdit}
-                      type="button"
+                      size="xs"
                     >
-                      <Check className="size-3" /> Save
-                    </button>
-                    <button
-                      className="flex items-center gap-1 border border-border px-2.5 py-1 text-xs text-muted-foreground"
+                      <CheckIcon data-icon="inline-start" /> Save
+                    </Button>
+                    <Button
                       onClick={() => setEditingId(null)}
-                      type="button"
+                      size="xs"
+                      variant="outline"
                     >
-                      <X className="size-3" /> Cancel
-                    </button>
+                      <XIcon data-icon="inline-start" /> Cancel
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -220,37 +190,35 @@ export function RoadmapStatusManagerDialog({
                     style={{ backgroundColor: s.color }}
                   />
                   <button
-                    className="min-w-0 flex-1 truncate text-left text-sm font-medium text-foreground hover:underline"
+                    className="min-w-0 flex-1 truncate text-left text-sm font-medium text-ir-heading hover:underline"
                     onClick={() => startEdit(s)}
                     type="button"
                   >
                     {s.name}
                   </button>
-                  <span className="text-xs text-muted-foreground">
-                    {s.itemCount}
-                  </span>
+                  <span className="text-xs text-ir-muted">{s.itemCount}</span>
                   <div className="flex items-center gap-0.5">
                     <button
                       aria-label="Move up"
-                      className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="rounded-ir-sm p-1 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading disabled:opacity-30"
                       disabled={isPending || i === 0}
                       onClick={() => move(i, -1)}
                       type="button"
                     >
-                      <ArrowUp className="size-3.5" />
+                      <ArrowUpIcon className="size-3.5" />
                     </button>
                     <button
                       aria-label="Move down"
-                      className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="rounded-ir-sm p-1 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading disabled:opacity-30"
                       disabled={isPending || i === statuses.length - 1}
                       onClick={() => move(i, 1)}
                       type="button"
                     >
-                      <ArrowDown className="size-3.5" />
+                      <ArrowDownIcon className="size-3.5" />
                     </button>
                     <button
                       aria-label="Delete column"
-                      className="p-1 text-destructive hover:opacity-70 disabled:opacity-30"
+                      className="rounded-ir-sm p-1 text-ir-danger transition-colors duration-150 ease-ir-standard hover:bg-ir-danger/10 disabled:opacity-30"
                       disabled={isPending || s.itemCount > 0}
                       onClick={() => handleDelete(s)}
                       title={
@@ -260,7 +228,7 @@ export function RoadmapStatusManagerDialog({
                       }
                       type="button"
                     >
-                      <Trash2 className="size-3.5" />
+                      <TrashIcon className="size-3.5" />
                     </button>
                   </div>
                 </div>
@@ -270,11 +238,11 @@ export function RoadmapStatusManagerDialog({
         </div>
 
         {/* Add column */}
-        <div className="space-y-2 border border-dashed border-border p-3">
-          <p className="text-xs font-semibold text-foreground">Add column</p>
+        <div className="space-y-2 rounded-ir-md border border-dashed border-ir-border p-3">
+          <p className="text-xs font-semibold text-ir-heading">Add column</p>
           <div className="flex items-center gap-2">
             <input
-              className="min-w-0 flex-1 border border-border bg-background px-2.5 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="min-w-0 flex-1 rounded-ir-input border border-ir-border bg-ir-surface px-2.5 py-1.5 text-sm text-ir-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               maxLength={48}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
@@ -286,16 +254,15 @@ export function RoadmapStatusManagerDialog({
               placeholder="Column name"
               value={newName}
             />
-            <button
-              className="flex items-center gap-1 bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+            <Button
               disabled={isPending || !newName.trim()}
               onClick={handleCreate}
-              type="button"
+              size="sm"
             >
-              <Plus className="size-3.5" /> Add
-            </button>
+              <PlusIcon data-icon="inline-start" /> Add
+            </Button>
           </div>
-          <ColorPicker onChange={setNewColor} value={newColor} />
+          <ColorSwatchPicker onChange={setNewColor} value={newColor} />
         </div>
       </DialogContent>
     </Dialog>

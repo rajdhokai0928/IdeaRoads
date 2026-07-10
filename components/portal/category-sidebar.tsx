@@ -1,4 +1,8 @@
-import { MessageSquare, Plus, User } from "lucide-react";
+import {
+  ChatCircleIcon,
+  PlusIcon,
+  UserIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -72,10 +76,10 @@ export function CategorySidebar({
 }: CategorySidebarProps) {
   const activeCategories = categories.filter((c) => !c.isArchived);
   const itemClass = (isActive: boolean) =>
-    `flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-150 ${
+    `flex items-center gap-2 rounded-ir-sm px-3 py-2 text-sm transition-colors duration-150 ease-ir-standard ${
       isActive
-        ? "bg-primary/10 text-primary font-medium"
-        : "text-foreground hover:bg-muted"
+        ? "bg-ir-primary-light/15 font-medium text-ir-primary"
+        : "text-ir-body hover:bg-ir-muted-surface"
     }`;
 
   return (
@@ -83,7 +87,7 @@ export function CategorySidebar({
       {newPostHref && (
         <Button asChild className="w-full">
           <Link href={newPostHref}>
-            <Plus data-icon="inline-start" />
+            <PlusIcon data-icon="inline-start" />
             Feedback
           </Link>
         </Button>
@@ -98,7 +102,7 @@ export function CategorySidebar({
             search: activeSearch,
           })}
         >
-          <MessageSquare className="size-4" />
+          <ChatCircleIcon className="size-4" />
           All Posts
         </Link>
         {activeCategories.map((category) => (
@@ -122,7 +126,7 @@ export function CategorySidebar({
       </nav>
 
       {isSignedIn && (
-        <nav className="space-y-0.5 border-t border-border pt-4">
+        <nav className="space-y-0.5 border-t border-ir-border pt-4">
           <Link
             className={itemClass(isMine)}
             href={buildHref(slug, boardSlug, {
@@ -132,7 +136,7 @@ export function CategorySidebar({
               mine: true,
             })}
           >
-            <User className="size-4" />
+            <UserIcon className="size-4" />
             My Posts
           </Link>
         </nav>

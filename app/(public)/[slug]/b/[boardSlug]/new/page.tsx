@@ -78,7 +78,7 @@ export default async function NewPostPage({ params, searchParams }: Props) {
 
   return (
     <div
-      className={`min-h-screen bg-background ${embedWrapper.className}`}
+      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
@@ -98,7 +98,7 @@ export default async function NewPostPage({ params, searchParams }: Props) {
         />
       )}
       {!isEmbed && <PoweredByBadge />}
-      <div className="max-w-5xl mx-auto">
+      <main className="mx-auto max-w-5xl" id="main-content">
         <NewPostForm
           boardId={board.id}
           boardName={board.name}
@@ -109,7 +109,7 @@ export default async function NewPostPage({ params, searchParams }: Props) {
           workspaceId={workspace.id}
           workspaceSlug={slug}
         />
-      </div>
+      </main>
     </div>
   );
 }

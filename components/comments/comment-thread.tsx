@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import CommentForm from "./comment-form";
 import CommentItem from "./comment-item";
@@ -31,6 +32,7 @@ export default function CommentThread({
   currentUserId,
   canModerate,
 }: CommentThreadProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [threads, setThreads] = useState<ThreadState[]>(() =>
     initialComments.map((c) => ({
       comment: c,
@@ -91,7 +93,7 @@ export default function CommentThread({
   if (approvedThreads.length === 0 && !isLocked) {
     return (
       <div className="space-y-0">
-        <p className="text-xs text-muted-foreground py-4 border-b border-border">
+        <p className="border-b border-ir-border py-4 text-xs text-ir-muted">
           No comments yet. Be the first to share your thoughts.
         </p>
         <div className="pt-6">
@@ -109,7 +111,7 @@ export default function CommentThread({
 
   if (approvedThreads.length === 0 && isLocked) {
     return (
-      <p className="text-xs text-muted-foreground py-4">
+      <p className="py-4 text-xs text-ir-muted">
         No comments. Comments are closed on this post.
       </p>
     );
@@ -128,6 +130,7 @@ export default function CommentThread({
               currentUserId={currentUserId}
               depth={0}
               isLocked={isLocked}
+              isReplyOpen={thread.showReplyForm}
               isSignedIn={isSignedIn}
               onDelete={() => handleDeleteTopLevel(thread.comment.id)}
               onReply={
@@ -137,7 +140,7 @@ export default function CommentThread({
 
             {/* Replies */}
             {thread.replies.length > 0 && (
-              <div className="ml-10 border-l border-border pl-4 mb-2">
+              <div className="mb-2 ml-10 border-l border-ir-border pl-4">
                 {thread.replies
                   .filter((r) => r.isApproved || canModerate)
                   .map((reply) => (
@@ -159,26 +162,39 @@ export default function CommentThread({
             )}
 
             {/* Inline reply form */}
-            {thread.showReplyForm && (
-              <CommentReplyForm
-                api={api}
-                isSignedIn={isSignedIn}
-                key={`reply-form-${thread.comment.id}`}
-                onCancel={() => toggleReplyForm(thread.comment.id)}
-                onSuccess={(reply) =>
-                  handleReplyAdded(thread.comment.id, reply)
-                }
-                parentId={thread.comment.id}
-                postId={postId}
-              />
-            )}
+            <AnimatePresence>
+              {thread.showReplyForm && (
+                <motion.div
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={
+                    shouldReduceMotion ? undefined : { height: 0, opacity: 0 }
+                  }
+                  initial={
+                    shouldReduceMotion ? false : { height: 0, opacity: 0 }
+                  }
+                  style={{ overflow: "hidden" }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                >
+                  <CommentReplyForm
+                    api={api}
+                    isSignedIn={isSignedIn}
+                    onCancel={() => toggleReplyForm(thread.comment.id)}
+                    onSuccess={(reply) =>
+                      handleReplyAdded(thread.comment.id, reply)
+                    }
+                    parentId={thread.comment.id}
+                    postId={postId}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
       </div>
 
       {/* New comment form */}
       {!isLocked && (
-        <div className="pt-6 mt-2 border-t border-border">
+        <div className="mt-2 border-t border-ir-border pt-6">
           <CommentForm
             api={api}
             isLocked={isLocked}

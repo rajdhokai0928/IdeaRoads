@@ -1,15 +1,15 @@
 "use client";
 
 import {
-  Copy,
-  GitMerge,
-  MoreHorizontal,
-  Pencil,
-  Pin,
-  PinOff,
-  Send,
-  Trash2,
-} from "lucide-react";
+  CopyIcon,
+  DotsThreeIcon,
+  GitMergeIcon,
+  PaperPlaneTiltIcon,
+  PencilIcon,
+  PushPinIcon,
+  PushPinSlashIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import {
   publishPostAction,
   searchMergeTargetsAction,
 } from "@/app/actions/posts";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
@@ -199,17 +200,17 @@ export function PostActionsMenu({
         <DropdownMenuTrigger asChild>
           <button
             aria-label="Feedback actions"
-            className="flex size-7 items-center justify-center text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-7 items-center justify-center rounded-ir-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             type="button"
           >
-            <MoreHorizontal className="size-4" />
+            <DotsThreeIcon className="size-4" weight="bold" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           {isDraft && (
             <>
               <DropdownMenuItem onSelect={handlePublish}>
-                <Send />
+                <PaperPlaneTiltIcon />
                 Publish
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -218,27 +219,27 @@ export function PostActionsMenu({
           <DropdownMenuItem
             onSelect={() => router.push(`${detailHref}?edit=1`)}
           >
-            <Pencil />
+            <PencilIcon />
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleDuplicate}>
-            <Copy />
+            <CopyIcon />
             Duplicate
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handlePinToggle}>
-            {isPinned ? <PinOff /> : <Pin />}
+            {isPinned ? <PushPinSlashIcon /> : <PushPinIcon />}
             {isPinned ? "Unpin" : "Pin"}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={openMerge}>
-            <GitMerge />
+            <GitMergeIcon />
             Merge
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
             onSelect={() => setDeleteOpen(true)}
+            variant="destructive"
           >
-            <Trash2 />
+            <TrashIcon />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -251,61 +252,59 @@ export function PostActionsMenu({
             <DialogTitle>Merge feedback</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Merge <span className="font-medium">"{postTitle}"</span> into
-              another post. Its votes transfer to the target and this post is
-              locked.
+            <p className="text-xs text-ir-muted">
+              Merge{" "}
+              <span className="font-medium text-ir-heading">"{postTitle}"</span>{" "}
+              into another post. Its votes transfer to the target and this post
+              is locked.
             </p>
             <input
-              className="w-full border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-sm text-ir-body placeholder:text-ir-muted focus:outline-none focus:ring-2 focus:ring-ir-primary/40"
               onChange={(e) => handleMergeSearchChange(e.target.value)}
               placeholder="Search posts to merge into…"
               type="text"
               value={mergeQuery}
             />
-            <div className="max-h-60 divide-y divide-border overflow-y-auto border border-border">
+            <div className="max-h-60 divide-y divide-ir-border overflow-y-auto rounded-ir-md border border-ir-border">
               {mergeResults.length > 0 ? (
                 mergeResults.map((r) => (
                   <button
-                    className={`block w-full px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none ${
+                    className={`block w-full px-3 py-2 text-left text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none ${
                       mergeSelected?.id === r.id
-                        ? "bg-primary/10 text-foreground"
-                        : "text-foreground hover:bg-muted/60"
+                        ? "bg-ir-primary-light/20 text-ir-primary"
+                        : "text-ir-body hover:bg-ir-muted-surface"
                     }`}
                     key={r.id}
                     onClick={() => setMergeSelected(r)}
                     type="button"
                   >
                     <span className="line-clamp-1">{r.title}</span>
-                    <span className="text-2xs text-muted-foreground">
+                    <span className="text-2xs text-ir-muted">
                       ↑ {r.upvotes}
                     </span>
                   </button>
                 ))
               ) : (
-                <p className="px-3 py-3 text-xs text-muted-foreground">
+                <p className="px-3 py-3 text-xs text-ir-muted">
                   {mergeSearching ? "Searching…" : "No matching posts."}
                 </p>
               )}
             </div>
           </div>
           <DialogFooter>
-            <button
-              className="px-3 py-1.5 text-xs text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            <Button
               disabled={isPending}
               onClick={() => setMergeOpen(false)}
-              type="button"
+              variant="ghost"
             >
               Cancel
-            </button>
-            <button
-              className="bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            </Button>
+            <Button
               disabled={isPending || !mergeSelected}
               onClick={handleMergeConfirm}
-              type="button"
             >
               {isPending ? "Merging…" : "Merge"}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

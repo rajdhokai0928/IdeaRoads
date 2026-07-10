@@ -43,32 +43,30 @@ const SECTIONS = [
 
 export default function TermsPage() {
   return (
-    <section className="bg-background">
+    <section className="bg-ir-background">
       <div className="mx-auto max-w-3xl px-4 py-20 sm:px-8">
-        <p className="font-bold text-xs uppercase tracking-eyebrow text-muted-foreground">
+        <p className="font-bold text-xs uppercase tracking-eyebrow text-ir-muted">
           Legal
         </p>
-        <h1 className="mt-4 font-black text-4xl tracking-normal text-foreground sm:text-5xl">
+        <h1 className="mt-4 font-black text-4xl tracking-normal text-ir-heading sm:text-5xl">
           Terms of Service
         </h1>
-        <p className="mt-4 text-sm text-muted-foreground">
+        <p className="mt-4 text-sm text-ir-muted">
           Last updated: June 24, 2026
         </p>
 
-        <div className="mt-12 divide-y divide-border border-t border-border">
+        <div className="mt-12 divide-y divide-ir-border border-t border-ir-border">
           {SECTIONS.map(({ heading, body }) => (
             <div className="py-8" key={heading}>
-              <h2 className="font-bold text-lg text-foreground">{heading}</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                {body}
-              </p>
+              <h2 className="font-bold text-lg text-ir-heading">{heading}</h2>
+              <p className="mt-3 text-sm leading-7 text-ir-muted">{body}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 border-t border-border pt-8">
+        <div className="mt-12 border-t border-ir-border pt-8">
           <Link
-            className="text-sm font-semibold text-foreground transition-colors duration-150 hover:text-muted-foreground"
+            className="rounded-ir-sm text-sm font-semibold text-ir-heading transition-colors duration-150 ease-ir-standard hover:text-ir-primary"
             href="/"
           >
             ← Back to IdeaRoads

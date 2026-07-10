@@ -10,7 +10,9 @@ import {
   updateWebhookEndpointAction,
 } from "@/app/actions/webhooks";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
 import {
   ALL_WEBHOOK_EVENTS,
   WEBHOOK_EVENT_LABELS,
@@ -46,10 +48,10 @@ function SecretDisplay({ secret }: { secret: string }) {
   }
 
   return (
-    <div className="mt-3 flex items-center gap-2 p-2.5 bg-muted border border-border font-mono text-xs break-all">
+    <div className="mt-3 flex items-center gap-2 rounded-ir-sm border border-ir-border bg-ir-muted-surface p-2.5 font-mono text-xs break-all">
       <span className="flex-1 select-all">{secret}</span>
       <button
-        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none"
+        className="shrink-0 rounded-ir-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
         onClick={copy}
         type="button"
       >
@@ -139,22 +141,21 @@ function EndpointForm({
 
   return (
     <form
-      className="border border-border p-4 space-y-4"
+      className="space-y-4 rounded-ir-card border border-ir-border bg-ir-surface p-4 shadow-ir-xs"
       onSubmit={handleSubmit}
     >
-      <p className="text-sm font-medium text-foreground">
+      <p className="text-sm font-medium text-ir-heading">
         {endpointId ? "Edit endpoint" : "New endpoint"}
       </p>
 
       <div>
         <label
-          className="block text-xs font-medium text-foreground mb-1"
+          className="mb-1 block text-xs font-medium text-ir-heading"
           htmlFor="wh-url"
         >
           URL
         </label>
-        <input
-          className="w-full h-8 border border-border bg-background px-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        <Input
           disabled={isPending}
           id="wh-url"
           onChange={(e) => setUrl(e.target.value)}
@@ -163,24 +164,21 @@ function EndpointForm({
           type="url"
           value={url}
         />
-        {urlError && (
-          <p className="mt-1 text-xs text-destructive">{urlError}</p>
-        )}
+        {urlError && <p className="mt-1 text-xs text-ir-danger">{urlError}</p>}
       </div>
 
       <div>
-        <p className="text-xs font-medium text-foreground mb-2">Events</p>
-        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+        <p className="mb-2 text-xs font-medium text-ir-heading">Events</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {ALL_WEBHOOK_EVENTS.map((ev) => (
-            <label className="flex items-center gap-2 cursor-pointer" key={ev}>
-              <input
+            // biome-ignore lint/a11y/noLabelWithoutControl: Checkbox is a Radix custom control nested inside the label, which already associates it correctly
+            <label className="flex cursor-pointer items-center gap-2" key={ev}>
+              <Checkbox
                 checked={events.includes(ev)}
-                className="h-3.5 w-3.5 accent-primary"
                 disabled={isPending}
-                onChange={() => toggleEvent(ev)}
-                type="checkbox"
+                onCheckedChange={() => toggleEvent(ev)}
               />
-              <span className="text-xs text-foreground">
+              <span className="text-xs text-ir-heading">
                 {WEBHOOK_EVENT_LABELS[ev]}
               </span>
             </label>
@@ -190,26 +188,22 @@ function EndpointForm({
 
       <div className="flex justify-end gap-2">
         {onCancel && (
-          <button
-            className="px-3.5 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <Button
             disabled={isPending}
             onClick={onCancel}
             type="button"
+            variant="outline"
           >
             Cancel
-          </button>
+          </Button>
         )}
-        <button
-          className="px-3.5 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-          disabled={isPending}
-          type="submit"
-        >
+        <Button disabled={isPending} type="submit">
           {isPending
             ? "Saving…"
             : endpointId
               ? "Save changes"
               : "Create endpoint"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -283,13 +277,15 @@ export function WebhookEndpointsSection({
 
   if (!encryptionAvailable) {
     return (
-      <div className="border border-border p-6 text-center">
-        <p className="text-sm font-medium text-foreground">
+      <div className="rounded-ir-card border border-dashed border-ir-border p-8 text-center">
+        <p className="text-sm font-medium text-ir-heading">
           Webhooks unavailable
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-ir-muted">
           The{" "}
-          <code className="text-xs bg-muted px-1 py-0.5">ENCRYPTION_KEY</code>{" "}
+          <code className="rounded-ir-xs bg-ir-muted-surface px-1 py-0.5">
+            ENCRYPTION_KEY
+          </code>{" "}
           environment variable is not configured. Contact your server
           administrator.
         </p>
@@ -301,8 +297,8 @@ export function WebhookEndpointsSection({
     <section>
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Endpoints</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <h2 className="text-sm font-semibold text-ir-heading">Endpoints</h2>
+          <p className="mt-0.5 text-xs text-ir-muted">
             Events are sent as signed POST requests to your HTTPS URL.
           </p>
         </div>
@@ -331,13 +327,13 @@ export function WebhookEndpointsSection({
       )}
 
       {endpoints.length === 0 && !showCreateForm ? (
-        <div className="border border-border p-6 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-ir-card border border-dashed border-ir-border p-8 text-center">
+          <p className="text-sm text-ir-muted">
             No webhook endpoints configured.
           </p>
         </div>
       ) : (
-        <div className="border border-border divide-y divide-border">
+        <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
           {endpoints.map((ep) => (
             <div key={ep.id}>
               {editingId === ep.id ? (
@@ -355,28 +351,28 @@ export function WebhookEndpointsSection({
                   />
                 </div>
               ) : (
-                <div className="p-4">
+                <div className="p-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium text-foreground truncate font-mono">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate font-mono text-sm font-medium text-ir-heading">
                           {ep.url}
                         </p>
                         <span
-                          className={`shrink-0 inline-block px-1.5 py-0.5 text-2xs font-medium rounded-sm ${
+                          className={`inline-block shrink-0 rounded-ir-xs px-1.5 py-0.5 text-2xs font-medium ${
                             ep.isEnabled
-                              ? "bg-success-subtle text-success-foreground"
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-ir-success/10 text-ir-success"
+                              : "bg-ir-muted-surface text-ir-muted"
                           }`}
                         >
                           {ep.isEnabled ? "Active" : "Disabled"}
                         </span>
                       </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-xs text-ir-muted">
                         {ep.events.length} event
                         {ep.events.length === 1 ? "" : "s"}
                         {ep.consecutiveFailures > 0 && (
-                          <span className="ml-2 text-destructive">
+                          <span className="ml-2 text-ir-danger">
                             {ep.consecutiveFailures} consecutive failure
                             {ep.consecutiveFailures === 1 ? "" : "s"}
                           </span>
@@ -387,38 +383,42 @@ export function WebhookEndpointsSection({
                       )}
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-                      <button
-                        className="px-2.5 py-1 text-xs border border-border hover:bg-muted transition-colors duration-150 focus-visible:outline-none disabled:opacity-50"
+                      <Button
                         disabled={isPending}
                         onClick={() => handleRevealSecret(ep)}
+                        size="xs"
                         type="button"
+                        variant="outline"
                       >
                         Secret
-                      </button>
-                      <button
-                        className="px-2.5 py-1 text-xs border border-border hover:bg-muted transition-colors duration-150 focus-visible:outline-none disabled:opacity-50"
+                      </Button>
+                      <Button
                         disabled={isPending}
                         onClick={() => setEditingId(ep.id)}
+                        size="xs"
                         type="button"
+                        variant="outline"
                       >
                         Edit
-                      </button>
-                      <button
-                        className="px-2.5 py-1 text-xs border border-border hover:bg-muted transition-colors duration-150 focus-visible:outline-none disabled:opacity-50"
+                      </Button>
+                      <Button
                         disabled={isPending}
                         onClick={() => handleToggleEnabled(ep)}
+                        size="xs"
                         type="button"
+                        variant="outline"
                       >
                         {ep.isEnabled ? "Disable" : "Enable"}
-                      </button>
-                      <button
-                        className="px-2.5 py-1 text-xs text-destructive border border-destructive/30 hover:bg-destructive hover:text-white transition-colors duration-150 focus-visible:outline-none disabled:opacity-50"
+                      </Button>
+                      <Button
                         disabled={isPending}
                         onClick={() => setDeleteTarget(ep)}
+                        size="xs"
                         type="button"
+                        variant="destructive"
                       >
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

@@ -41,26 +41,26 @@ export function BreakdownCard({ metrics, period }: BreakdownCardProps) {
   ];
 
   return (
-    <div className="border border-border bg-background">
-      <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
-        <h2 className="text-sm font-semibold text-foreground">Breakdown</h2>
+    <div className="rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
+      <div className="flex items-center justify-between gap-4 border-b border-ir-border px-5 py-4">
+        <h2 className="text-sm font-semibold text-ir-heading">Breakdown</h2>
         <ParamSelect
           options={PERIOD_OPTIONS}
           paramName="period"
           value={period}
         />
       </div>
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-ir-border">
         {rows.map((row) => (
           <div
             className="flex items-center justify-between gap-4 px-5 py-3.5"
             key={row.label}
           >
             <div className="flex items-baseline gap-2.5">
-              <span className="text-lg font-semibold tabular-nums text-foreground">
+              <span className="text-lg font-semibold tabular-nums text-ir-heading">
                 {row.value.toLocaleString()}
               </span>
-              <span className="text-sm text-muted-foreground">{row.label}</span>
+              <span className="text-sm text-ir-muted">{row.label}</span>
             </div>
             <ChangeIndicator current={row.value} previous={row.previous} />
           </div>

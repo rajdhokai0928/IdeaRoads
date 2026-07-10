@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -105,16 +105,16 @@ export default function FeaturesPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-background">
+      <section className="bg-ir-background">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
-          <p className="font-bold text-xs uppercase tracking-eyebrow text-success">
+          <p className="font-bold text-xs uppercase tracking-eyebrow text-ir-success">
             Features
           </p>
-          <h1 className="mt-4 font-black text-5xl tracking-normal text-foreground sm:text-6xl">
+          <h1 className="mt-4 font-black text-5xl tracking-normal text-ir-heading sm:text-6xl">
             Close the feedback loop,
             <br className="hidden sm:block" /> automatically.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-ir-muted">
             From the first feature request to the shipped notification —
             {PRODUCT_NAME} connects every step in one place. No duct tape, no
             manual sync.
@@ -131,28 +131,31 @@ export default function FeaturesPage() {
       </section>
 
       {/* 3 major feature panels */}
-      <section className="border-y border-border bg-muted">
+      <section className="border-y border-ir-border bg-ir-muted-surface">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
-          <div className="grid gap-px bg-border sm:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-ir-lg bg-ir-border sm:grid-cols-3">
             {MAJOR_FEATURES.map(
               ({ title, tagline, description, included, href }) => (
-                <div className="flex flex-col bg-muted p-8" key={title}>
-                  <h2 className="font-bold text-xl text-foreground">{title}</h2>
-                  <p className="mt-1 text-sm font-semibold text-success">
+                <div
+                  className="flex flex-col bg-ir-muted-surface p-8"
+                  key={title}
+                >
+                  <h2 className="text-xl font-bold text-ir-heading">{title}</h2>
+                  <p className="mt-1 text-sm font-semibold text-ir-success">
                     {tagline}
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  <p className="mt-3 text-sm leading-6 text-ir-muted">
                     {description}
                   </p>
                   <ul className="mt-5 space-y-2">
                     {included.map((item) => (
                       <li
-                        className="flex items-center gap-2 text-sm text-foreground"
+                        className="flex items-center gap-2 text-sm text-ir-heading"
                         key={item}
                       >
                         <span
                           aria-hidden="true"
-                          className="shrink-0 font-mono text-success"
+                          className="shrink-0 font-mono text-ir-success"
                         >
                           ✓
                         </span>
@@ -161,11 +164,11 @@ export default function FeaturesPage() {
                     ))}
                   </ul>
                   <Link
-                    className="mt-auto pt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground transition-colors duration-150 hover:text-muted-foreground"
+                    className="mt-auto inline-flex items-center gap-1.5 rounded-ir-sm pt-6 text-sm font-semibold text-ir-heading transition-colors duration-150 ease-ir-standard hover:text-ir-primary"
                     href={href}
                   >
                     Explore {title}
-                    <ArrowRight aria-hidden="true" className="size-3.5" />
+                    <ArrowRightIcon aria-hidden="true" className="size-3.5" />
                   </Link>
                 </div>
               )
@@ -175,33 +178,33 @@ export default function FeaturesPage() {
       </section>
 
       {/* Full features list */}
-      <section className="bg-background">
+      <section className="bg-ir-background">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
-          <p className="font-bold text-xs uppercase tracking-eyebrow text-muted-foreground">
+          <p className="font-bold text-xs uppercase tracking-eyebrow text-ir-muted">
             Everything Included
           </p>
-          <h2 className="mt-4 font-bold text-3xl text-foreground sm:text-4xl">
+          <h2 className="mt-4 font-bold text-3xl text-ir-heading sm:text-4xl">
             Every feature. Every plan.
           </h2>
-          <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
+          <p className="mt-3 max-w-2xl text-lg text-ir-muted">
             No feature gating. No per-voter fees. No surprise add-ons.
           </p>
 
           <div className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {ALL_FEATURES.map(({ category, items }) => (
               <div key={category}>
-                <p className="border-b border-border pb-2 text-xs font-semibold uppercase tracking-ui text-muted-foreground">
+                <p className="border-b border-ir-border pb-2 text-xs font-semibold uppercase tracking-ui text-ir-muted">
                   {category}
                 </p>
                 <ul className="mt-4 space-y-2.5">
                   {items.map((item) => (
                     <li
-                      className="flex items-start gap-2 text-sm text-foreground"
+                      className="flex items-start gap-2 text-sm text-ir-heading"
                       key={item}
                     >
                       <span
                         aria-hidden="true"
-                        className="mt-0.5 shrink-0 font-mono text-success"
+                        className="mt-0.5 shrink-0 font-mono text-ir-success"
                       >
                         ✓
                       </span>
@@ -216,12 +219,12 @@ export default function FeaturesPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-border bg-muted">
+      <section className="border-t border-ir-border bg-ir-muted-surface">
         <div className="mx-auto max-w-6xl px-4 py-24 text-center sm:px-8">
-          <h2 className="font-black text-3xl text-foreground sm:text-4xl">
+          <h2 className="font-black text-3xl text-ir-heading sm:text-4xl">
             Every feature. One flat price.
           </h2>
-          <p className="mt-3 text-lg text-muted-foreground">
+          <p className="mt-3 text-lg text-ir-muted">
             No credit card required. Voters never pay a seat fee.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

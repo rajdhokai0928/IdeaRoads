@@ -10,15 +10,14 @@ export function CategoryChip({ name, color, size = "sm" }: CategoryChipProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-medium ${padding}`}
+      className={`inline-flex items-center gap-1.5 rounded-ir-full font-medium ${padding}`}
       style={{
         backgroundColor: `${color}18`,
         color,
-        borderRadius: 2,
       }}
     >
       <span
-        className="inline-block rounded-full"
+        className="inline-block rounded-ir-full"
         style={{ width: 6, height: 6, backgroundColor: color }}
       />
       {name}

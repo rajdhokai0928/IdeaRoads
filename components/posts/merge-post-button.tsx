@@ -1,10 +1,11 @@
 "use client";
 
-import { GitMerge } from "lucide-react";
+import { GitMergeIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { mergePostAction, searchMergeTargetsAction } from "@/app/actions/posts";
+import { Button } from "@/components/ui/button";
 
 interface MergeTarget {
   id: string;
@@ -30,6 +31,7 @@ export default function MergePostButton({
   const [results, setResults] = useState<MergeTarget[]>([]);
   const [selected, setSelected] = useState<MergeTarget | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -44,9 +46,7 @@ export default function MergePostButton({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  function runSearch(q: string) {
-    setQuery(q);
-    setSelected(null);
+  function search(q: string) {
     startTransition(async () => {
       const result = await searchMergeTargetsAction({
         workspaceId,
@@ -57,6 +57,15 @@ export default function MergePostButton({
         setResults(result.data.posts);
       }
     });
+  }
+
+  function runSearch(q: string) {
+    setQuery(q);
+    setSelected(null);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => search(q), 250);
   }
 
   function handleMerge() {
@@ -82,54 +91,52 @@ export default function MergePostButton({
   return (
     <div className="relative" ref={containerRef}>
       <button
-        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+        className="flex items-center gap-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
         disabled={isPending}
         onClick={() => {
           setOpen((v) => !v);
           if (!open && results.length === 0) {
-            runSearch("");
+            search("");
           }
         }}
         type="button"
       >
-        <GitMerge className="size-3.5" />
+        <GitMergeIcon className="size-3.5" />
         Merge
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-1 w-80 border border-border bg-popover shadow-md p-3 space-y-2">
-          <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="absolute top-full left-0 z-20 mt-1 w-80 space-y-2 rounded-ir-md border border-ir-border bg-ir-surface p-3 shadow-ir-lg">
+          <p className="text-2xs font-semibold uppercase tracking-wide text-ir-muted">
             Merge into another post
           </p>
           <input
-            className="w-full px-3 py-2 text-sm border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-sm text-ir-body placeholder:text-ir-muted focus:outline-none focus:ring-2 focus:ring-ir-primary/40"
             onChange={(e) => runSearch(e.target.value)}
             placeholder="Search posts…"
             type="text"
             value={query}
           />
 
-          <div className="max-h-56 overflow-y-auto border border-border divide-y divide-border">
+          <div className="max-h-56 divide-y divide-ir-border overflow-y-auto rounded-ir-md border border-ir-border">
             {results.length === 0 ? (
-              <p className="px-3 py-3 text-xs text-muted-foreground">
+              <p className="px-3 py-3 text-xs text-ir-muted">
                 No matching posts.
               </p>
             ) : (
               results.map((r) => (
                 <button
-                  className={`block w-full px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none ${
+                  className={`block w-full px-3 py-2 text-left text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none ${
                     selected?.id === r.id
-                      ? "bg-primary/10 text-foreground"
-                      : "text-foreground hover:bg-muted/60"
+                      ? "bg-ir-primary-light/20 text-ir-primary"
+                      : "text-ir-body hover:bg-ir-muted-surface"
                   }`}
                   key={r.id}
                   onClick={() => setSelected(r)}
                   type="button"
                 >
                   <span className="line-clamp-1">{r.title}</span>
-                  <span className="text-2xs text-muted-foreground">
-                    ↑ {r.upvotes}
-                  </span>
+                  <span className="text-2xs text-ir-muted">↑ {r.upvotes}</span>
                 </button>
               ))
             )}
@@ -137,27 +144,28 @@ export default function MergePostButton({
 
           {selected && (
             <div className="space-y-2 pt-1">
-              <p className="text-xs text-muted-foreground">
-                Merge <span className="font-medium">"{postTitle}"</span> into{" "}
-                <span className="font-medium">"{selected.title}"</span>? Votes
-                transfer to the target and this post is locked.
+              <p className="text-xs text-ir-muted">
+                Merge{" "}
+                <span className="font-medium text-ir-heading">
+                  "{postTitle}"
+                </span>{" "}
+                into{" "}
+                <span className="font-medium text-ir-heading">
+                  "{selected.title}"
+                </span>
+                ? Votes transfer to the target and this post is locked.
               </p>
               <div className="flex items-center gap-2">
-                <button
-                  className="px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  disabled={isPending}
-                  onClick={handleMerge}
-                  type="button"
-                >
+                <Button disabled={isPending} onClick={handleMerge} size="sm">
                   {isPending ? "Merging…" : "Merge"}
-                </button>
-                <button
-                  className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                </Button>
+                <Button
                   onClick={() => setSelected(null)}
-                  type="button"
+                  size="sm"
+                  variant="outline"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}

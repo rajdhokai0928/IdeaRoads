@@ -1,4 +1,4 @@
-import { ChevronUp, MessageSquare } from "lucide-react";
+import { CaretUpIcon, ChatCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -48,59 +48,62 @@ const BOARD_POSTS = [
 
 function PublicBoardMockup() {
   return (
-    <div aria-hidden="true" className="border border-border bg-card">
-      <div className="flex items-center gap-3 border-b border-border bg-muted px-4 py-3">
+    <div
+      aria-hidden="true"
+      className="overflow-hidden rounded-ir-lg border border-ir-border bg-ir-surface shadow-ir-sm"
+    >
+      <div className="flex items-center gap-3 border-b border-ir-border bg-ir-muted-surface px-4 py-3">
         <div className="flex shrink-0 gap-1.5">
-          <span className="block size-2.5 bg-border" />
-          <span className="block size-2.5 bg-border" />
-          <span className="block size-2.5 bg-border" />
+          <span className="block size-2.5 rounded-ir-full bg-ir-border" />
+          <span className="block size-2.5 rounded-ir-full bg-ir-border" />
+          <span className="block size-2.5 rounded-ir-full bg-ir-border" />
         </div>
-        <div className="min-w-0 flex-1 border border-border bg-background px-3 py-1 text-center">
-          <span className="font-mono text-2xs text-muted-foreground">
+        <div className="min-w-0 flex-1 border border-ir-border bg-ir-background px-3 py-1 text-center">
+          <span className="font-mono text-2xs text-ir-muted">
             feedback.acme.com/boards/feature-requests
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="text-sm font-semibold text-foreground">
+      <div className="flex items-center justify-between border-b border-ir-border px-4 py-3">
+        <span className="text-sm font-semibold text-ir-heading">
           Feature Requests
         </span>
-        <span className="border border-border px-2 py-0.5 text-2xs font-semibold uppercase tracking-ui text-foreground">
+        <span className="rounded-ir-sm border border-ir-border px-2 py-0.5 text-2xs font-semibold uppercase tracking-ui text-ir-heading">
           + Submit Idea
         </span>
       </div>
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-ir-border">
         {BOARD_POSTS.map((post) => (
           <div className="flex items-stretch" key={post.title}>
-            <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 border-r border-border px-2 py-3">
-              <ChevronUp
+            <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 border-r border-ir-border px-2 py-3">
+              <CaretUpIcon
                 aria-hidden="true"
-                className={`size-4 ${post.voted ? "text-success" : "text-muted-foreground"}`}
+                className={`size-4 ${post.voted ? "text-ir-success" : "text-ir-muted"}`}
               />
               <span
-                className={`font-mono text-sm font-semibold ${post.voted ? "text-success" : "text-foreground"}`}
+                className={`font-mono text-sm font-semibold ${post.voted ? "text-ir-success" : "text-ir-heading"}`}
               >
                 {post.votes}
               </span>
             </div>
             <div className="min-w-0 flex-1 px-4 py-3">
               <div className="flex items-start justify-between gap-4">
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-sm font-medium text-ir-heading">
                   {post.title}
                 </span>
                 <span
-                  className={`shrink-0 text-2xs font-semibold uppercase tracking-ui ${post.status === "Open" ? "text-muted-foreground" : "text-success"}`}
+                  className={`shrink-0 text-2xs font-semibold uppercase tracking-ui ${post.status === "Open" ? "text-ir-muted" : "text-ir-success"}`}
                 >
                   {post.status}
                 </span>
               </div>
-              <div className="mt-1.5 flex items-center gap-2 text-muted-foreground">
+              <div className="mt-1.5 flex items-center gap-2 text-ir-muted">
                 <span className="text-2xs font-semibold uppercase tracking-ui">
                   {post.category}
                 </span>
                 <span className="text-2xs">·</span>
                 <div className="flex items-center gap-1">
-                  <MessageSquare aria-hidden="true" className="size-3" />
+                  <ChatCircleIcon aria-hidden="true" className="size-3" />
                   <span className="text-2xs">{post.comments}</span>
                 </div>
               </div>
@@ -122,53 +125,56 @@ const BOARDS = [
 
 function AdminWorkspaceMockup() {
   return (
-    <div aria-hidden="true" className="border border-border bg-card">
-      <div className="flex items-center gap-3 border-b border-border bg-muted px-4 py-3">
+    <div
+      aria-hidden="true"
+      className="overflow-hidden rounded-ir-lg border border-ir-border bg-ir-surface shadow-ir-sm"
+    >
+      <div className="flex items-center gap-3 border-b border-ir-border bg-ir-muted-surface px-4 py-3">
         <div className="flex shrink-0 gap-1.5">
-          <span className="block size-2.5 bg-border" />
-          <span className="block size-2.5 bg-border" />
-          <span className="block size-2.5 bg-border" />
+          <span className="block size-2.5 rounded-ir-full bg-ir-border" />
+          <span className="block size-2.5 rounded-ir-full bg-ir-border" />
+          <span className="block size-2.5 rounded-ir-full bg-ir-border" />
         </div>
-        <div className="min-w-0 flex-1 border border-border bg-background px-3 py-1 text-center">
-          <span className="font-mono text-2xs text-muted-foreground">
+        <div className="min-w-0 flex-1 border border-ir-border bg-ir-background px-3 py-1 text-center">
+          <span className="font-mono text-2xs text-ir-muted">
             app.idearoads.com/workspace
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-ir-border px-4 py-3">
         <div>
-          <p className="text-2xs font-semibold uppercase tracking-ui text-muted-foreground">
+          <p className="text-2xs font-semibold uppercase tracking-ui text-ir-muted">
             Workspace
           </p>
-          <p className="text-sm font-semibold text-foreground">Acme Corp</p>
+          <p className="text-sm font-semibold text-ir-heading">Acme Corp</p>
         </div>
-        <span className="text-2xs font-semibold uppercase tracking-ui text-muted-foreground">
+        <span className="text-2xs font-semibold uppercase tracking-ui text-ir-muted">
           Team · Settings
         </span>
       </div>
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="text-sm font-semibold text-foreground">Boards</span>
-        <span className="border border-border px-2 py-0.5 text-2xs font-semibold uppercase tracking-ui text-foreground">
+      <div className="flex items-center justify-between border-b border-ir-border px-4 py-3">
+        <span className="text-sm font-semibold text-ir-heading">Boards</span>
+        <span className="rounded-ir-sm border border-ir-border px-2 py-0.5 text-2xs font-semibold uppercase tracking-ui text-ir-heading">
           + New Board
         </span>
       </div>
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-ir-border">
         {BOARDS.map(({ name, posts, activity }) => (
           <div
             className="flex items-center justify-between px-4 py-3.5"
             key={name}
           >
             <div>
-              <p className="text-sm font-medium text-foreground">{name}</p>
-              <p className="mt-0.5 text-2xs text-muted-foreground">
+              <p className="text-sm font-medium text-ir-heading">{name}</p>
+              <p className="mt-0.5 text-2xs text-ir-muted">
                 {posts} posts · {activity}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-mono text-xs font-semibold text-muted-foreground">
+              <span className="font-mono text-xs font-semibold text-ir-muted">
                 {posts}
               </span>
-              <span className="text-sm text-muted-foreground">→</span>
+              <span className="text-sm text-ir-muted">→</span>
             </div>
           </div>
         ))}
@@ -181,49 +187,52 @@ function AdminWorkspaceMockup() {
 
 function EmailMockup() {
   return (
-    <div aria-hidden="true" className="border border-border bg-card">
-      <div className="space-y-1.5 border-b border-border bg-muted px-4 py-3">
+    <div
+      aria-hidden="true"
+      className="overflow-hidden rounded-ir-lg border border-ir-border bg-ir-surface shadow-ir-sm"
+    >
+      <div className="space-y-1.5 border-b border-ir-border bg-ir-muted-surface px-4 py-3">
         <div className="flex gap-3">
-          <span className="w-14 shrink-0 text-2xs font-semibold uppercase tracking-ui text-muted-foreground">
+          <span className="w-14 shrink-0 text-2xs font-semibold uppercase tracking-ui text-ir-muted">
             From
           </span>
-          <span className="text-2xs text-foreground">
+          <span className="text-2xs text-ir-heading">
             IdeaRoads · Acme Corp &lt;noreply@acme.com&gt;
           </span>
         </div>
         <div className="flex gap-3">
-          <span className="w-14 shrink-0 text-2xs font-semibold uppercase tracking-ui text-muted-foreground">
+          <span className="w-14 shrink-0 text-2xs font-semibold uppercase tracking-ui text-ir-muted">
             To
           </span>
-          <span className="text-2xs text-foreground">alex@example.com</span>
+          <span className="text-2xs text-ir-heading">alex@example.com</span>
         </div>
         <div className="flex gap-3">
-          <span className="w-14 shrink-0 text-2xs font-semibold uppercase tracking-ui text-muted-foreground">
+          <span className="w-14 shrink-0 text-2xs font-semibold uppercase tracking-ui text-ir-muted">
             Subject
           </span>
-          <span className="text-2xs font-semibold text-foreground">
+          <span className="text-2xs font-semibold text-ir-heading">
             Dark mode just shipped you asked for this
           </span>
         </div>
       </div>
       <div className="space-y-3 p-5 text-sm">
-        <p className="text-foreground">Hi Alex,</p>
-        <p className="leading-5 text-muted-foreground">
+        <p className="text-ir-heading">Hi Alex,</p>
+        <p className="leading-5 text-ir-muted">
           Something you voted for just shipped. The team at Acme Corp has
           published a new update.
         </p>
-        <div className="border border-border bg-muted p-3">
-          <p className="text-xs font-semibold text-foreground">
+        <div className="border border-ir-border bg-ir-muted-surface p-3">
+          <p className="text-xs font-semibold text-ir-heading">
             Dark mode is here
           </p>
-          <p className="mt-0.5 text-2xs text-muted-foreground">
+          <p className="mt-0.5 text-2xs text-ir-muted">
             Jun 24, 2026 · Feature
           </p>
-          <p className="mt-1.5 text-xs leading-4 text-muted-foreground">
+          <p className="mt-1.5 text-xs leading-4 text-ir-muted">
             Toggle it in your profile settings. Available on all workspaces now.
           </p>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-ir-muted">
           You&apos;re receiving this because you voted for this feature.{" "}
           <span className="underline">Unsubscribe</span>
         </p>
@@ -265,16 +274,16 @@ export default function DemoPage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-background">
+      <section className="bg-ir-background">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
-          <p className="font-bold text-xs uppercase tracking-eyebrow text-success">
+          <p className="font-bold text-xs uppercase tracking-eyebrow text-ir-success">
             Live Demo
           </p>
-          <h1 className="mt-4 font-black text-5xl tracking-normal text-foreground sm:text-6xl">
+          <h1 className="mt-4 font-black text-5xl tracking-normal text-ir-heading sm:text-6xl">
             See IdeaRoads
             <br className="hidden sm:block" /> in action.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-ir-muted">
             Here&apos;s exactly what your users see, what your team manages, and
             what happens automatically when you ship. No account required.
           </p>
@@ -290,9 +299,9 @@ export default function DemoPage() {
       </section>
 
       {/* Demo sections */}
-      <section className="bg-background">
+      <section className="bg-ir-background">
         <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-8">
-          <div className="divide-y divide-border border-t border-border">
+          <div className="divide-y divide-ir-border border-t border-ir-border">
             {DEMO_SECTIONS.map(
               ({ step, label, heading, description, Mockup }) => (
                 <div
@@ -300,16 +309,16 @@ export default function DemoPage() {
                   key={step}
                 >
                   <div className="lg:pt-2">
-                    <span className="font-mono text-2xs text-muted-foreground">
+                    <span className="font-mono text-2xs text-ir-muted">
                       {step}
                     </span>
-                    <p className="mt-1 font-bold text-xs uppercase tracking-eyebrow text-success">
+                    <p className="mt-1 font-bold text-xs uppercase tracking-eyebrow text-ir-success">
                       {label}
                     </p>
-                    <h2 className="mt-3 font-bold text-2xl text-foreground">
+                    <h2 className="mt-3 font-bold text-2xl text-ir-heading">
                       {heading}
                     </h2>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-2 text-sm leading-6 text-ir-muted">
                       {description}
                     </p>
                   </div>
@@ -322,12 +331,12 @@ export default function DemoPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-border bg-muted">
+      <section className="border-t border-ir-border bg-ir-muted-surface">
         <div className="mx-auto max-w-6xl px-4 py-24 text-center sm:px-8">
-          <h2 className="font-black text-3xl text-foreground sm:text-4xl">
+          <h2 className="font-black text-3xl text-ir-heading sm:text-4xl">
             Ready to set up your own?
           </h2>
-          <p className="mt-3 text-lg text-muted-foreground">
+          <p className="mt-3 text-lg text-ir-muted">
             No credit card required. Your first board is live in minutes.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

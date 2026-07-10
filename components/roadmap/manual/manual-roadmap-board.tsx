@@ -1,6 +1,7 @@
 "use client";
 
-import { Plus, Settings2 } from "lucide-react";
+import { PlusIcon, SlidersIcon } from "@phosphor-icons/react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,9 +9,13 @@ import {
   deleteRoadmapItemAction,
   moveRoadmapItemAction,
 } from "@/app/actions/roadmap";
+import { RoadmapEmptyState } from "@/components/roadmap/roadmap-empty-state";
+import { RoadmapStatusHeader } from "@/components/roadmap/roadmap-status-header";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { AddRoadmapItemDialog } from "./add-roadmap-item-dialog";
+import { ManualItemDetailDialog } from "./manual-item-detail-dialog";
 import { type BoardItem, ManualRoadmapCard } from "./manual-roadmap-card";
 import {
   type ManagerStatus,
@@ -56,6 +61,7 @@ export function ManualRoadmapBoard({
   canManage,
 }: ManualRoadmapBoardProps) {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const [cols, setCols] = useState<Cols>(() => buildCols(statuses, items));
   const [drag, setDrag] = useState<BoardItem | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -63,6 +69,7 @@ export function ManualRoadmapBoard({
   const [addOpen, setAddOpen] = useState(false);
   const [addStatusId, setAddStatusId] = useState<string | undefined>();
   const [editItem, setEditItem] = useState<BoardItem | null>(null);
+  const [viewItem, setViewItem] = useState<BoardItem | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BoardItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -159,38 +166,37 @@ export function ManualRoadmapBoard({
     <div className="flex flex-col">
       {canManage && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-2 pb-4">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-ir-muted">
             Manual roadmap · {totalItems} item{totalItems === 1 ? "" : "s"} ·
             drag cards between columns
           </p>
           <div className="flex items-center gap-2">
-            <button
-              className="flex items-center gap-1.5 border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Button
               onClick={() => setManageOpen(true)}
-              type="button"
+              size="sm"
+              variant="outline"
             >
-              <Settings2 className="size-4" />
+              <SlidersIcon data-icon="inline-start" />
               Manage columns
-            </button>
-            <button
-              className="flex items-center gap-1.5 bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            </Button>
+            <Button
               disabled={statuses.length === 0}
               onClick={() => {
                 setAddStatusId(undefined);
                 setEditItem(null);
                 setAddOpen(true);
               }}
-              type="button"
+              size="sm"
             >
-              <Plus className="size-4" />
+              <PlusIcon data-icon="inline-start" />
               Add Roadmap Item
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {statuses.length > 0 && (
-        <div className="px-6 pb-4">
+        <div className="px-6 pb-4 mt-2">
           <SearchInput
             aria-label="Search roadmap items"
             className="h-9 min-w-50 max-w-md"
@@ -202,11 +208,11 @@ export function ManualRoadmapBoard({
 
       <div className="px-6 pb-12">
         {statuses.length === 0 ? (
-          <div className="border border-dashed border-border px-4 py-16 text-center text-sm text-muted-foreground">
+          <div className="rounded-ir-card border border-dashed border-ir-border px-4 py-16 text-center text-sm text-ir-muted">
             No roadmap columns yet.
             {canManage && (
               <button
-                className="ml-1 text-primary underline"
+                className="ml-1 text-ir-primary underline"
                 onClick={() => setManageOpen(true)}
                 type="button"
               >
@@ -227,29 +233,11 @@ export function ManualRoadmapBoard({
                   className="flex w-full min-w-0 flex-col md:w-80 md:shrink-0"
                   key={s.id}
                 >
-                  <div
-                    className="mb-3 flex items-center justify-between gap-2 border border-border px-4 py-3"
-                    style={{ backgroundColor: `${s.color}12` }}
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span
-                        className="inline-block size-2 shrink-0 rounded-full"
-                        style={{ backgroundColor: s.color }}
-                      />
-                      <h2 className="truncate text-sm font-semibold text-foreground">
-                        {s.name}
-                      </h2>
-                    </div>
-                    <span
-                      className="inline-flex shrink-0 items-center px-2 py-0.5 text-xs font-semibold"
-                      style={{
-                        backgroundColor: `${s.color}20`,
-                        color: s.color,
-                      }}
-                    >
-                      {columnItems.length}
-                    </span>
-                  </div>
+                  <RoadmapStatusHeader
+                    color={s.color}
+                    count={columnItems.length}
+                    name={s.name}
+                  />
 
                   {/* Drop zone. Keyboard users reorder/move via the item Edit
                       dialog's Column selector and the Manage-columns controls;
@@ -257,9 +245,9 @@ export function ManualRoadmapBoard({
                   {/* biome-ignore lint/a11y/noStaticElementInteractions: native drop zone */}
                   {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: native drop zone */}
                   <div
-                    className={`flex min-h-24 flex-col gap-2 border border-dashed p-1 transition-colors ${
+                    className={`flex min-h-24 flex-col gap-2 rounded-ir-md border border-dashed p-1 transition-colors duration-150 ease-ir-standard ${
                       isDropTarget && canManage
-                        ? "border-primary/60 bg-primary/5"
+                        ? "border-ir-primary/60 bg-ir-primary-light/10"
                         : "border-transparent"
                     }`}
                     onDragLeave={() => canManage && setDropTarget(null)}
@@ -281,67 +269,92 @@ export function ManualRoadmapBoard({
                     }}
                   >
                     {columnItems.length === 0 ? (
-                      <div className="px-3 py-8 text-center text-xs text-muted-foreground/70">
-                        {isFiltering
-                          ? "No matches"
-                          : canManage
-                            ? "Drop items here"
-                            : "Nothing here yet."}
-                      </div>
+                      <RoadmapEmptyState
+                        label={
+                          isFiltering
+                            ? "No matches"
+                            : canManage
+                              ? "Drop items here"
+                              : "Nothing here yet."
+                        }
+                      />
                     ) : (
-                      columnItems.map((item, index) => (
-                        // biome-ignore lint/a11y/noStaticElementInteractions: native draggable card
-                        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: native draggable card
-                        <div
-                          draggable={dragEnabled}
-                          key={item.id}
-                          onDragEnd={() => {
-                            setDrag(null);
-                            setDropTarget(null);
-                          }}
-                          onDragOver={(e) => {
-                            if (!dragEnabled || !drag) {
-                              return;
-                            }
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDropTarget(s.id);
-                          }}
-                          onDragStart={(e) => {
-                            if (!dragEnabled) {
-                              return;
-                            }
-                            e.dataTransfer.effectAllowed = "move";
-                            setDrag(item);
-                          }}
-                          onDrop={(e) => {
-                            if (!canManage || !drag) {
-                              return;
-                            }
-                            e.preventDefault();
-                            e.stopPropagation();
-                            performMove(drag, s.id, index);
-                            setDrag(null);
-                            setDropTarget(null);
-                          }}
-                        >
-                          <ManualRoadmapCard
-                            canManage={canManage}
-                            dragging={drag?.id === item.id}
-                            item={item}
-                            onDelete={setDeleteTarget}
-                            onEdit={(it) => {
-                              setEditItem(it);
-                              setAddOpen(false);
+                      <AnimatePresence initial={false}>
+                        {columnItems.map((item, index) => (
+                          // Native HTML5 DnD lives on this plain div — framer's
+                          // motion.div defines its own onDragStart/onDrop event
+                          // types for its pointer-gesture drag system, which
+                          // conflict with the native DragEvent handlers here.
+                          // The animated layout/enter/exit lives on the nested
+                          // motion.div instead, which has no DnD props at all.
+                          // biome-ignore lint/a11y/noStaticElementInteractions: native draggable card
+                          // biome-ignore lint/a11y/noNoninteractiveElementInteractions: native draggable card
+                          <div
+                            draggable={dragEnabled}
+                            key={item.id}
+                            onDragEnd={() => {
+                              setDrag(null);
+                              setDropTarget(null);
                             }}
-                          />
-                        </div>
-                      ))
+                            onDragOver={(e) => {
+                              if (!dragEnabled || !drag) {
+                                return;
+                              }
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDropTarget(s.id);
+                            }}
+                            onDragStart={(e) => {
+                              if (!dragEnabled) {
+                                return;
+                              }
+                              e.dataTransfer.effectAllowed = "move";
+                              setDrag(item);
+                            }}
+                            onDrop={(e) => {
+                              if (!canManage || !drag) {
+                                return;
+                              }
+                              e.preventDefault();
+                              e.stopPropagation();
+                              performMove(drag, s.id, index);
+                              setDrag(null);
+                              setDropTarget(null);
+                            }}
+                          >
+                            <motion.div
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={
+                                shouldReduceMotion ? undefined : { opacity: 0 }
+                              }
+                              initial={
+                                shouldReduceMotion
+                                  ? false
+                                  : { opacity: 0, y: 4 }
+                              }
+                              layout={!shouldReduceMotion}
+                              transition={{ duration: 0.15, ease: "easeOut" }}
+                            >
+                              <ManualRoadmapCard
+                                canManage={canManage}
+                                dragging={drag?.id === item.id}
+                                item={item}
+                                onDelete={setDeleteTarget}
+                                onEdit={(it) => {
+                                  setEditItem(it);
+                                  setAddOpen(false);
+                                }}
+                                onView={setViewItem}
+                              />
+                            </motion.div>
+                          </div>
+                        ))}
+                      </AnimatePresence>
                     )}
 
                     {canManage && (
                       <button
-                        className="mt-1 flex items-center justify-center gap-1 border border-dashed border-border py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="mt-1 flex items-center justify-center gap-1 rounded-ir-sm border border-dashed border-ir-border py-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => {
                           setEditItem(null);
                           setAddStatusId(s.id);
@@ -349,7 +362,7 @@ export function ManualRoadmapBoard({
                         }}
                         type="button"
                       >
-                        <Plus className="size-3.5" /> Add item
+                        <PlusIcon className="size-3.5" /> Add item
                       </button>
                     )}
                   </div>
@@ -359,6 +372,21 @@ export function ManualRoadmapBoard({
           </div>
         )}
       </div>
+
+      <ManualItemDetailDialog
+        canManage={canManage}
+        item={viewItem}
+        onDelete={setDeleteTarget}
+        onEdit={
+          canManage
+            ? (it) => {
+                setEditItem(it);
+                setAddOpen(false);
+              }
+            : undefined
+        }
+        onOpenChange={(o) => !o && setViewItem(null)}
+      />
 
       {canManage && (
         <>

@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import { INVITE_EXPIRY_DAYS } from "@/config/platform";
 import {
   emailOutbox,
@@ -237,6 +237,33 @@ export async function revokeInvite(input: {
     .update(workspaceInvites)
     .set({ revokedAt: new Date(), revokedById: input.revokedById })
     .where(eq(workspaceInvites.id, input.inviteId));
+}
+
+// Revokes every still-pending invite in the workspace, optionally excluding
+// a role the actor isn't allowed to revoke (mirrors the single-invite
+// permission check in revokeInviteAction: an admin actor can't revoke
+// admin-level invites, only the owner can).
+export async function revokeAllInvites(input: {
+  excludeRole?: "admin";
+  revokedById: string;
+  workspaceId: string;
+}): Promise<{ email: string; id: string }[]> {
+  const now = new Date();
+  const conditions = [
+    eq(workspaceInvites.workspaceId, input.workspaceId),
+    isNull(workspaceInvites.acceptedAt),
+    isNull(workspaceInvites.revokedAt),
+    gt(workspaceInvites.expiresAt, now),
+  ];
+  if (input.excludeRole) {
+    conditions.push(ne(workspaceInvites.role, input.excludeRole));
+  }
+
+  return db
+    .update(workspaceInvites)
+    .set({ revokedAt: now, revokedById: input.revokedById })
+    .where(and(...conditions))
+    .returning({ id: workspaceInvites.id, email: workspaceInvites.email });
 }
 
 export async function listPendingInvites(workspaceId: string) {

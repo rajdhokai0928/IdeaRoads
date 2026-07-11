@@ -1,9 +1,17 @@
 "use client";
 
+import { XIcon } from "@phosphor-icons/react";
 import "quill/dist/quill.snow.css";
 import { useEffect, useRef, useState } from "react";
 
 type QuillInstance = InstanceType<typeof import("quill").default>;
+
+interface HoveredImage {
+  img: HTMLImageElement;
+  left: number;
+  top: number;
+  width: number;
+}
 
 interface QuillEditorProps {
   disabled?: boolean;
@@ -31,8 +39,10 @@ export default function QuillEditor({
   disabled = false,
   minHeight = 80,
 }: QuillEditorProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<QuillInstance | null>(null);
+  const removeButtonRef = useRef<HTMLButtonElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const onSubmitRef = useRef(onSubmit);
@@ -43,6 +53,36 @@ export default function QuillEditor({
   onUploadingChangeRef.current = onUploadingChange;
 
   const [uploadingCount, setUploadingCount] = useState(0);
+  // Purely a UI affordance — never touches quill.root, so it can never leak
+  // into the saved HTML. Removing the image is a direct DOM removal, which
+  // Quill's own MutationObserver picks up (same path native spellcheck edits
+  // take), so the existing text-change → onChange wiring fires normally.
+  const [hoveredImage, setHoveredImage] = useState<HoveredImage | null>(null);
+
+  function showImageOverlay(img: HTMLImageElement) {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+    const containerRect = container.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+    setHoveredImage({
+      img,
+      top: imgRect.top - containerRect.top,
+      left: imgRect.left - containerRect.left,
+      width: imgRect.width,
+    });
+  }
+
+  function hideImageOverlay() {
+    setHoveredImage(null);
+  }
+
+  function handleRemoveHoveredImage() {
+    hoveredImage?.img.remove();
+    quillRef.current?.update("user");
+    setHoveredImage(null);
+  }
 
   // Upload a file through the caller's uploader and insert it at the cursor.
   async function uploadAndInsert(quill: QuillInstance, file: File) {
@@ -100,6 +140,17 @@ export default function QuillEditor({
     const editorDiv = document.createElement("div");
     wrapper.appendChild(editorDiv);
     const cleanups: (() => void)[] = [];
+
+    // Catch-all: if the pointer leaves the whole editor (e.g. a fast flick
+    // off-screen skips the img's own mouseout), make sure the overlay
+    // doesn't get stuck visible.
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("mouseleave", hideImageOverlay);
+      cleanups.push(() =>
+        container.removeEventListener("mouseleave", hideImageOverlay)
+      );
+    }
 
     import("quill").then(({ default: Quill }) => {
       if (!document.contains(editorDiv) || quillRef.current) {
@@ -191,6 +242,33 @@ export default function QuillEditor({
           quill.root.removeEventListener("paste", onPaste, true);
         });
       }
+
+      // Hover-to-remove: show a small remove button over any image on
+      // hover, instead of requiring backspace to select and delete it.
+      const onMouseOver = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "IMG") {
+          showImageOverlay(target as HTMLImageElement);
+        }
+      };
+      const onMouseOut = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== "IMG") {
+          return;
+        }
+        const to = e.relatedTarget as Node | null;
+        // Moving onto the remove button itself keeps it visible.
+        if (to && removeButtonRef.current?.contains(to)) {
+          return;
+        }
+        hideImageOverlay();
+      };
+      quill.root.addEventListener("mouseover", onMouseOver);
+      quill.root.addEventListener("mouseout", onMouseOut);
+      cleanups.push(() => {
+        quill.root.removeEventListener("mouseover", onMouseOver);
+        quill.root.removeEventListener("mouseout", onMouseOut);
+      });
     });
 
     return () => {
@@ -218,6 +296,7 @@ export default function QuillEditor({
   return (
     <div
       className="relative rounded-ir-input border border-ir-border bg-ir-surface focus-within:ring-2 focus-within:ring-ir-primary/40"
+      ref={containerRef}
       style={{ ["--ql-min-height" as string]: `${minHeight}px` }}
     >
       <div
@@ -228,6 +307,27 @@ export default function QuillEditor({
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-ir-input bg-ir-surface/60 text-xs font-medium text-ir-muted">
           Uploading image…
         </div>
+      )}
+      {hoveredImage && !disabled && (
+        <button
+          aria-label="Remove image"
+          className="absolute flex size-6 items-center justify-center rounded-ir-full bg-ir-heading/70 text-white shadow-ir-sm transition-colors duration-150 ease-ir-standard hover:bg-ir-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+          onClick={handleRemoveHoveredImage}
+          onMouseLeave={(e) => {
+            if (e.relatedTarget === hoveredImage.img) {
+              return;
+            }
+            hideImageOverlay();
+          }}
+          ref={removeButtonRef}
+          style={{
+            top: hoveredImage.top + 6,
+            left: hoveredImage.left + hoveredImage.width - 30,
+          }}
+          type="button"
+        >
+          <XIcon className="size-3.5" weight="bold" />
+        </button>
       )}
     </div>
   );

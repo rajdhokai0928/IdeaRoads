@@ -135,6 +135,25 @@ export async function markAllNotificationsAsRead(
   return result.length;
 }
 
+// ─── Clear All ────────────────────────────────────────────────────────────────
+
+export async function clearAllNotifications(
+  userId: string,
+  workspaceId?: string
+): Promise<number> {
+  const conditions = [eq(notifications.userId, userId)];
+  if (workspaceId) {
+    conditions.push(eq(notifications.workspaceId, workspaceId));
+  }
+
+  const result = await db
+    .delete(notifications)
+    .where(and(...conditions))
+    .returning({ id: notifications.id });
+
+  return result.length;
+}
+
 // ─── Preferences ──────────────────────────────────────────────────────────────
 
 export async function getNotificationPreferences(

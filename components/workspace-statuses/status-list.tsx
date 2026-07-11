@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/ui/page";
+import { ContentContainer, PageHeader } from "@/components/ui/page";
 
 interface WorkspaceStatus {
   color: string;
@@ -220,8 +220,7 @@ export function StatusList({
         title="Statuses"
       />
 
-      {/* Centered content column */}
-      <div className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:px-8">
+      <ContentContainer className="flex-1 space-y-6">
         {/* Inline form */}
         {form && canManage && (
           <form
@@ -488,7 +487,7 @@ export function StatusList({
           }
           variant="default"
         />
-      </div>
+      </ContentContainer>
     </div>
   );
 }

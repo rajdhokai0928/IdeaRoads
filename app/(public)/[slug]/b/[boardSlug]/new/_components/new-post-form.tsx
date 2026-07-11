@@ -159,7 +159,7 @@ export default function NewPostForm({
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-5xl px-8 py-8">
+      <div className="px-8 py-8">
         <h1 className="mb-6 text-xl font-semibold text-ir-heading">
           Submit feedback
         </h1>

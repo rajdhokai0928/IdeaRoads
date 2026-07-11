@@ -122,7 +122,7 @@ export function PostDetailContent({
   const statusMap = new Map(workspaceStatuses.map((s) => [s.slug, s.name]));
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col">
+    <div className="mx-auto flex max-w-5xl flex-col">
       {/* Back nav — hidden in embed mode (no navigation chrome) */}
       {!isEmbed && (
         <div className="border-b border-ir-border px-4 py-4 sm:px-8">

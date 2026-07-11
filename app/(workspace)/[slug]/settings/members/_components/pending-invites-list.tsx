@@ -4,7 +4,10 @@ import { SpinnerIcon, XIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { revokeInviteAction } from "@/app/actions/members";
+import {
+  revokeAllInvitesAction,
+  revokeInviteAction,
+} from "@/app/actions/members";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { workspaceRoleLabel } from "@/config/platform";
@@ -46,6 +49,8 @@ export function PendingInvitesList({
   const [pendingRevoke, setPendingRevoke] = useState<PendingInvite | null>(
     null
   );
+  const [revokeAllOpen, setRevokeAllOpen] = useState(false);
+  const [revokingAll, setRevokingAll] = useState(false);
 
   async function handleConfirmRevoke() {
     if (!pendingRevoke) {
@@ -67,13 +72,63 @@ export function PendingInvitesList({
     }
   }
 
+  // Same per-invite rule the row actions already apply: an admin actor can
+  // revoke everything except admin-level invites, only the owner can revoke
+  // those. "Revoke All" only ever acts on invites the actor is allowed to
+  // touch — the rest are left for the owner.
+  const revocableInvites = invites.filter(
+    (invite) => canManage && (actorRole === "owner" || invite.role !== "admin")
+  );
+  const hasWithheldAdminInvites =
+    revocableInvites.length < invites.length && actorRole !== "owner";
+
+  async function handleConfirmRevokeAll() {
+    setRevokeAllOpen(false);
+    setRevokingAll(true);
+    const result = await revokeAllInvitesAction({ workspaceId });
+    setRevokingAll(false);
+    if (result.success) {
+      toast.success(
+        result.data.count === 1
+          ? "Invitation revoked"
+          : `${result.data.count} invitations revoked`
+      );
+      router.refresh();
+    } else {
+      toast.error(result.error ?? "Failed to revoke invitations.");
+    }
+  }
+
   return (
     <>
       <div>
-        <h2 className="mb-4 text-sm font-semibold tracking-eyebrow text-ir-muted uppercase">
-          Pending invitations
-          {invites.length > 0 ? ` (${invites.length})` : ""}
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h2 className="text-sm font-semibold tracking-eyebrow text-ir-muted uppercase">
+            Pending invitations
+            {invites.length > 0 ? ` (${invites.length})` : ""}
+          </h2>
+          {revocableInvites.length > 0 && (
+            <Button
+              className="shrink-0 text-ir-danger hover:opacity-70"
+              disabled={revokingAll}
+              onClick={() => setRevokeAllOpen(true)}
+              size="sm"
+              variant="ghost"
+            >
+              {revokingAll ? (
+                <SpinnerIcon className="size-4 animate-spin" />
+              ) : (
+                <XIcon className="size-4" />
+              )}
+              <span className="ml-1.5">
+                Revoke All
+                {revocableInvites.length > 1
+                  ? ` (${revocableInvites.length})`
+                  : ""}
+              </span>
+            </Button>
+          )}
+        </div>
         {invites.length === 0 ? (
           <p className="text-sm text-ir-muted">No pending invitations.</p>
         ) : (
@@ -126,6 +181,16 @@ export function PendingInvitesList({
         onOpenChange={(open) => !open && setPendingRevoke(null)}
         open={!!pendingRevoke}
         title="Revoke Invitation"
+      />
+
+      <ConfirmDialog
+        confirmLabel="Revoke All"
+        description={`Revoke ${revocableInvites.length} pending invitation${revocableInvites.length === 1 ? "" : "s"}? They will no longer be able to use their invite links.${hasWithheldAdminInvites ? " Admin-level invitations must be revoked individually by the workspace owner." : ""}`}
+        isPending={revokingAll}
+        onConfirm={handleConfirmRevokeAll}
+        onOpenChange={setRevokeAllOpen}
+        open={revokeAllOpen}
+        title="Revoke All Invitations"
       />
     </>
   );

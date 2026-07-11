@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PageBody } from "@/components/ui/page";
+import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER, WORKSPACE_OWNER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { adminBaseUrl } from "@/lib/urls";
@@ -50,7 +50,7 @@ export default async function InvitesPage({ params }: Props) {
   const appUrl = adminBaseUrl();
 
   return (
-    <PageBody className="space-y-10">
+    <ContentContainer className="space-y-10">
       {canManage && (
         <div className="space-y-6 border-b border-ir-border pb-10">
           <InviteForm
@@ -80,6 +80,6 @@ export default async function InvitesPage({ params }: Props) {
         invites={pendingInvites}
         workspaceId={workspace.id}
       />
-    </PageBody>
+    </ContentContainer>
   );
 }

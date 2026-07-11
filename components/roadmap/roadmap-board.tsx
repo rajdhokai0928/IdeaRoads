@@ -35,9 +35,9 @@ export function RoadmapBoard({
           No roadmap columns yet. Add feedback statuses to populate the roadmap.
         </div>
       ) : (
-        // Kanban row: columns wrap on desktop when few, scroll horizontally when
-        // many; stacks vertically on mobile. Mirrors the status set 1:1.
-        <div className="flex flex-col gap-6 md:flex-row md:flex-wrap md:overflow-x-auto md:pb-2">
+        // Responsive grid: 1 column on mobile, 2 on tablet, 3 on desktop —
+        // a 4th+ column wraps to a new row instead of squeezing into one.
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {columns.map((col) => (
             <RoadmapColumn
               color={col.color}

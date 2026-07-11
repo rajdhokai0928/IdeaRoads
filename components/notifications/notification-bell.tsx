@@ -4,7 +4,7 @@ import { Bell } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useNotificationsContext } from "@/components/notifications/notifications-context";
 import { cn } from "@/lib/utils";
 
 interface NotificationBellProps {
@@ -19,39 +19,15 @@ export function NotificationBell({
   indicatorId,
 }: NotificationBellProps) {
   const shouldReduceMotion = useReducedMotion();
-  const [unreadCount, setUnreadCount] = useState(initialCount);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Shared with the notifications page via NotificationsProvider (mounted in
+  // the workspace layout) so opening/reading/clearing notifications there
+  // updates this badge on the same render — no separate poll, no refresh.
+  // Falls back to the server-rendered initialCount if ever rendered outside
+  // the provider.
+  const notificationsCtx = useNotificationsContext();
+  const unreadCount = notificationsCtx?.unreadCount ?? initialCount;
   const pathname = usePathname();
   const isActive = pathname.startsWith(`/${workspaceSlug}/notifications`);
-
-  useEffect(() => {
-    const fetchCount = async () => {
-      if (document.visibilityState === "hidden") {
-        return;
-      }
-      try {
-        const res = await fetch("/api/notifications/count");
-        if (!res.ok) {
-          return;
-        }
-        const data = await res.json();
-        setUnreadCount(data.unreadCount ?? 0);
-      } catch {
-        // network failure — keep previous count
-      }
-    };
-
-    fetchCount();
-    intervalRef.current = setInterval(fetchCount, 30_000);
-    document.addEventListener("visibilitychange", fetchCount);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      document.removeEventListener("visibilitychange", fetchCount);
-    };
-  }, []);
 
   const displayCount = unreadCount > 99 ? "99+" : String(unreadCount);
 
@@ -76,13 +52,13 @@ export function NotificationBell({
           }
         />
       )}
-      <span className="relative shrink-0">
+      <span className="relative inline-flex size-4 shrink-0 items-center justify-center overflow-visible">
         <Bell className="size-4" weight={isActive ? "fill" : "regular"} />
         <AnimatePresence>
           {unreadCount > 0 && (
             <motion.span
               animate={{ scale: 1, opacity: 1 }}
-              className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-ir-full bg-ir-danger px-0.5 text-2xs leading-none font-bold text-white"
+              className="absolute -top-1.5 -right-1.5 z-10 flex h-4 min-w-4 items-center justify-center rounded-ir-full bg-ir-danger px-0.5 text-2xs leading-none font-bold text-white"
               exit={shouldReduceMotion ? undefined : { scale: 0, opacity: 0 }}
               initial={shouldReduceMotion ? false : { scale: 0, opacity: 0 }}
               key={displayCount}

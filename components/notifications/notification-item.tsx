@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useNotificationsContext } from "@/components/notifications/notifications-context";
 import type { NotificationType } from "@/db/schema/notifications";
 import type { NotificationListItem } from "@/lib/notifications/queries";
 
@@ -43,12 +44,16 @@ export function NotificationItem({
   const Icon = TYPE_ICONS[notification.type as NotificationType] ?? Bell;
   const isRead = notification.isRead;
   const isRemoved = notification.targetMissing;
+  const notificationsCtx = useNotificationsContext();
 
   // Opening a notification always marks it read (persisted best-effort so the
-  // badge/count stay in sync even after navigating away).
+  // badge/count stay in sync even after navigating away). Decrementing the
+  // shared context here — not just the list's local state — is what makes
+  // the sidebar bell update on the same click instead of the next poll.
   function markRead() {
     if (!isRead) {
       onRead(notification.id);
+      notificationsCtx?.decrementUnread(1);
       fetch(`/api/notifications/${notification.id}`, {
         method: "PATCH",
       }).catch(() => {

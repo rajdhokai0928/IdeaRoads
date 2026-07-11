@@ -4,7 +4,10 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { NotificationEmptyState } from "@/components/notifications/notification-empty-state";
 import { NotificationItem } from "@/components/notifications/notification-item";
+import { useNotificationsContext } from "@/components/notifications/notifications-context";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { NotificationListItem } from "@/lib/notifications/queries";
+import { cn } from "@/lib/utils";
 
 interface NotificationListProps {
   hasMore: boolean;
@@ -13,15 +16,22 @@ interface NotificationListProps {
   workspaceId: string;
 }
 
+type FilterTab = "all" | "unread";
+
 export function NotificationList({
   initialItems,
   hasMore: initialHasMore,
-  total,
+  total: initialTotal,
   workspaceId,
 }: NotificationListProps) {
+  const notificationsCtx = useNotificationsContext();
   const [items, setItems] = useState<NotificationListItem[]>(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [total, setTotal] = useState(initialTotal);
   const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<FilterTab>("all");
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleRead(id: string) {
@@ -31,17 +41,71 @@ export function NotificationList({
   }
 
   function handleMarkAllRead() {
+    // Optimistic: flip every row to read and clear the shared badge right
+    // away, then confirm with the server in the background. Roll back only
+    // if the request actually fails — this is what keeps the count "always
+    // synchronized" instead of waiting on the next poll or a page refresh.
+    const previousItems = items;
+    const previousUnread = notificationsCtx?.unreadCount;
+    setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    notificationsCtx?.setUnreadCount(0);
+
     startTransition(async () => {
       try {
-        await fetch("/api/notifications", {
+        const res = await fetch("/api/notifications", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ workspaceId }),
         });
-        setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
+        if (!res.ok) {
+          throw new Error("Failed to mark all notifications as read");
+        }
         toast.success("All notifications marked as read");
       } catch {
+        setItems(previousItems);
+        if (previousUnread !== undefined) {
+          notificationsCtx?.setUnreadCount(previousUnread);
+        }
         toast.error("Failed to mark all as read");
+      }
+    });
+  }
+
+  function handleClearAll() {
+    const previousItems = items;
+    const previousTotal = total;
+    const previousUnread = notificationsCtx?.unreadCount;
+
+    // Optimistic: empty the list and badge immediately so the empty state
+    // and sidebar count update on this click, not on the next round trip.
+    setItems([]);
+    setTotal(0);
+    setHasMore(false);
+    notificationsCtx?.setUnreadCount(0);
+    setIsClearing(true);
+
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/notifications", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workspaceId }),
+        });
+        if (!res.ok) {
+          throw new Error("Failed to clear notifications");
+        }
+        toast.success("All notifications cleared");
+      } catch {
+        setItems(previousItems);
+        setTotal(previousTotal);
+        setHasMore(initialHasMore);
+        if (previousUnread !== undefined) {
+          notificationsCtx?.setUnreadCount(previousUnread);
+        }
+        toast.error("Failed to clear notifications");
+      } finally {
+        setIsClearing(false);
+        setClearConfirmOpen(false);
       }
     });
   }
@@ -52,7 +116,7 @@ export function NotificationList({
         const nextPage = page + 1;
         const res = await fetch(`/api/notifications?page=${nextPage}&limit=30`);
         if (!res.ok) {
-          throw new Error();
+          throw new Error("Failed to load more notifications");
         }
         const data = await res.json();
         setItems((prev) => [...prev, ...data.notifications]);
@@ -65,6 +129,8 @@ export function NotificationList({
   }
 
   const unreadCount = items.filter((n) => !n.isRead).length;
+  const visibleItems =
+    filter === "unread" ? items.filter((n) => !n.isRead) : items;
 
   // Group notifications by recency (Today / This week / Earlier). Items arrive
   // already sorted newest-first, so each group preserves that order.
@@ -80,7 +146,7 @@ export function NotificationList({
     { label: "This week", items: [] },
     { label: "Earlier", items: [] },
   ];
-  for (const n of items) {
+  for (const n of visibleItems) {
     const t = new Date(n.createdAt).getTime();
     if (t >= startOfToday) {
       groups[0].items.push(n);
@@ -111,21 +177,75 @@ export function NotificationList({
             </p>
           )}
         </div>
-        {unreadCount > 0 && (
-          <button
-            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            disabled={isPending}
-            onClick={handleMarkAllRead}
-            type="button"
-          >
-            Mark all as read
-          </button>
-        )}
       </div>
+
+      {/* Toolbar: filter tabs + bulk actions */}
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-border">
+          <div className="flex items-center gap-1 rounded-md bg-muted/50 p-0.5">
+            <button
+              className={cn(
+                "rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                filter === "all"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setFilter("all")}
+              type="button"
+            >
+              All
+            </button>
+            <button
+              className={cn(
+                "flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                filter === "unread"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setFilter("unread")}
+              type="button"
+            >
+              Unread
+              {unreadCount > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary/15 px-1 text-2xs font-semibold text-primary">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {unreadCount > 0 && (
+              <button
+                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                disabled={isPending}
+                onClick={handleMarkAllRead}
+                type="button"
+              >
+                Mark all as read
+              </button>
+            )}
+            <button
+              className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+              disabled={isPending}
+              onClick={() => setClearConfirmOpen(true)}
+              type="button"
+            >
+              Clear all
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* List */}
       {items.length === 0 ? (
         <NotificationEmptyState />
+      ) : visibleGroups.length === 0 ? (
+        <div className="px-5 py-16 text-center">
+          <p className="text-sm text-muted-foreground">
+            You're all caught up — no unread notifications.
+          </p>
+        </div>
       ) : (
         <div>
           {visibleGroups.map((group) => (
@@ -143,7 +263,7 @@ export function NotificationList({
             </div>
           ))}
 
-          {hasMore && (
+          {hasMore && filter === "all" && (
             <div className="px-5 py-4 text-center">
               <button
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
@@ -157,6 +277,17 @@ export function NotificationList({
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        confirmLabel="Clear All"
+        description={`Remove all ${total} notification${total === 1 ? "" : "s"}? This cannot be undone.`}
+        isPending={isClearing}
+        onConfirm={handleClearAll}
+        onOpenChange={setClearConfirmOpen}
+        open={clearConfirmOpen}
+        title="Clear all notifications"
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -24,6 +24,7 @@ import {
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { LinkedPostsSelector } from "@/components/changelog/linked-posts-selector";
 import { Button } from "@/components/ui/button";
+import { ContentContainer } from "@/components/ui/page";
 import {
   CHANGELOG_LABEL_VALUES,
   getLabelInfo,
@@ -435,7 +436,7 @@ export function ChangelogEditor({
   }
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-8">
+    <ContentContainer className="flex flex-col gap-6">
       {/* Cover image — first, so it can be chosen before the details */}
       <div className="space-y-1.5">
         <label className="text-xs font-semibold uppercase tracking-wide text-ir-heading">
@@ -741,6 +742,6 @@ export function ChangelogEditor({
           )}
         </div>
       </div>
-    </div>
+    </ContentContainer>
   );
 }

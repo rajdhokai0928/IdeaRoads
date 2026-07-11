@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { NotificationsProvider } from "@/components/notifications/notifications-context";
 import { PortalHrefProvider } from "@/components/workspace/open-portal-button";
 import { WorkspaceSidebar } from "@/components/workspace/workspace-sidebar";
 import { WorkspaceSuspendedPage } from "@/components/workspace/workspace-suspended";
@@ -68,26 +69,28 @@ export default async function WorkspaceLayout({
       : null;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden md:flex-row">
-      <WorkspaceSidebar
-        email={email}
-        initialUnreadCount={unreadCount}
-        isAdminOrOwner={isAdminOrOwner}
-        isOrbitAdmin={isOrbitAdmin}
-        userImage={session.user.image ?? null}
-        workspaceLogoUrl={workspace.logoUrl}
-        workspaceName={workspace.name}
-        workspaceSlug={workspace.slug}
-        workspaces={userWorkspaces}
-      />
+    <NotificationsProvider initialUnreadCount={unreadCount}>
+      <div className="fixed inset-0 flex flex-col overflow-hidden md:flex-row">
+        <WorkspaceSidebar
+          email={email}
+          initialUnreadCount={unreadCount}
+          isAdminOrOwner={isAdminOrOwner}
+          isOrbitAdmin={isOrbitAdmin}
+          userImage={session.user.image ?? null}
+          workspaceLogoUrl={workspace.logoUrl}
+          workspaceName={workspace.name}
+          workspaceSlug={workspace.slug}
+          workspaces={userWorkspaces}
+        />
 
-      {/* Main content */}
-      <main
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background"
-        id="main-content"
-      >
-        <PortalHrefProvider href={portalHref}>{children}</PortalHrefProvider>
-      </main>
-    </div>
+        {/* Main content */}
+        <main
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background"
+          id="main-content"
+        >
+          <PortalHrefProvider href={portalHref}>{children}</PortalHrefProvider>
+        </main>
+      </div>
+    </NotificationsProvider>
   );
 }

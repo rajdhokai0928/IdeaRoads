@@ -221,7 +221,7 @@ export function ManualRoadmapBoard({
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-6 md:flex-row md:flex-wrap md:items-start md:overflow-x-auto md:pb-2">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {statuses.map((s) => {
               // Filter for DISPLAY only. performMove always reads the full,
               // unfiltered `cols`, and dragging is off while filtering, so the
@@ -229,10 +229,7 @@ export function ManualRoadmapBoard({
               const columnItems = (cols[s.id] ?? []).filter(matchesQuery);
               const isDropTarget = dropTarget === s.id;
               return (
-                <div
-                  className="flex w-full min-w-0 flex-col md:w-80 md:shrink-0"
-                  key={s.id}
-                >
+                <div className="flex w-full min-w-0 flex-col" key={s.id}>
                   <RoadmapStatusHeader
                     color={s.color}
                     count={columnItems.length}

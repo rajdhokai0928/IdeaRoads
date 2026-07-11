@@ -32,7 +32,7 @@ export function RoadmapColumn({
   const hasMore = posts.length > visibleCount;
 
   return (
-    <div className="flex w-full min-w-0 flex-col md:w-80 md:shrink-0">
+    <div className="flex w-full min-w-0 flex-col">
       <RoadmapStatusHeader color={color} count={posts.length} name={name} />
 
       {/* Post cards */}

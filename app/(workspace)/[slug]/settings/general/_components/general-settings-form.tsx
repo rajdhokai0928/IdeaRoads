@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
+import { ContentContainer } from "@/components/ui/page";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -275,7 +276,7 @@ export function GeneralSettingsForm({
   }
 
   return (
-    <div className="max-w-2xl space-y-10 px-4 py-6 sm:px-8">
+    <ContentContainer className="space-y-10">
       {/* Workspace Info */}
       <section>
         <SectionHeader
@@ -468,6 +469,6 @@ export function GeneralSettingsForm({
           value={deleteConfirmName}
         />
       </ConfirmDialog>
-    </div>
+    </ContentContainer>
   );
 }

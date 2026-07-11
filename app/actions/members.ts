@@ -33,6 +33,7 @@ import {
   createInvite,
   getInviteById,
   listPendingInvites,
+  revokeAllInvites,
   revokeInvite,
 } from "@/lib/workspaces/invites";
 import {
@@ -319,6 +320,52 @@ export async function revokeInviteAction(input: {
   });
 
   return { success: true, data: undefined };
+}
+
+// ─── Revoke All Pending Invites ───────────────────────────────────────────────
+
+export async function revokeAllInvitesAction(input: {
+  workspaceId: string;
+}): Promise<ActionResult<{ count: number }>> {
+  const session = await requireSession();
+
+  const actorMember = await getWorkspaceMember(
+    input.workspaceId,
+    session.user.id
+  );
+  if (!actorMember) {
+    return { success: false, error: "You are not a member of this workspace." };
+  }
+  if (actorMember.role === WORKSPACE_MEMBER) {
+    return {
+      success: false,
+      error: "You don't have permission to revoke invites.",
+    };
+  }
+
+  // Admins can't revoke admin-level invites — same rule as the single-invite
+  // action, applied here as a bulk exclusion instead of a per-row check.
+  const revoked = await revokeAllInvites({
+    workspaceId: input.workspaceId,
+    revokedById: session.user.id,
+    excludeRole: actorMember.role === WORKSPACE_ADMIN ? "admin" : undefined,
+  });
+
+  if (revoked.length === 0) {
+    return { success: true, data: { count: 0 } };
+  }
+
+  audit({
+    action: "invite.revoked_all",
+    actorId: session.user.id,
+    actorEmail: session.user.email,
+    entityType: "workspace",
+    entityId: input.workspaceId,
+    description: `${session.user.email} revoked ${revoked.length} pending invitation${revoked.length === 1 ? "" : "s"}`,
+    metadata: { inviteIds: revoked.map((r) => r.id) },
+  });
+
+  return { success: true, data: { count: revoked.length } };
 }
 
 // ─── Create Shareable Invite Link ─────────────────────────────────────────────

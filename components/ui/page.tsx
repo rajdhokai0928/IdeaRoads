@@ -53,12 +53,13 @@ interface ContentContainerProps {
 }
 
 // The single, consistent reading/form column used across the product — post
-// detail, editors, settings forms, notifications, etc. Left-aligned to line up
-// with the page header. Data-heavy pages (tables, dashboards, kanban) use
-// PageBody instead so they can fill the available width.
+// detail, editors, settings forms, notifications, etc. Centered with a fixed
+// max width so every full-page form lines up at the same width regardless of
+// viewport size. Data-heavy pages (tables, dashboards, kanban) use PageBody
+// instead so they can fill the available width.
 export function ContentContainer({ className, children }: ContentContainerProps) {
   return (
-    <div className={cn("w-full max-w-3xl", PAGE_PADDING, className)}>
+    <div className={cn("mx-auto w-full max-w-5xl", PAGE_PADDING, className)}>
       {children}
     </div>
   );

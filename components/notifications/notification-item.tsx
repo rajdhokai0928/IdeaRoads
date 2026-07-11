@@ -6,8 +6,10 @@ import {
   Bell,
   CornerDownRight,
   FileText,
+  MailOpen,
   Megaphone,
   MessageCircle,
+  Trash2,
   UserCheck,
   UserPlus,
   UserX,
@@ -35,21 +37,23 @@ const REMOVED_MESSAGE =
 interface NotificationItemProps {
   notification: NotificationListItem;
   onRead: (id: string) => void;
+  onRequestClear: (notification: NotificationListItem) => void;
 }
 
 export function NotificationItem({
   notification,
   onRead,
+  onRequestClear,
 }: NotificationItemProps) {
   const Icon = TYPE_ICONS[notification.type as NotificationType] ?? Bell;
   const isRead = notification.isRead;
   const isRemoved = notification.targetMissing;
   const notificationsCtx = useNotificationsContext();
 
-  // Opening a notification always marks it read (persisted best-effort so the
-  // badge/count stay in sync even after navigating away). Decrementing the
-  // shared context here — not just the list's local state — is what makes
-  // the sidebar bell update on the same click instead of the next poll.
+  // Marks read without navigating (used by both opening the notification and
+  // the hover "mark as read" action). Decrementing the shared context here —
+  // not just the list's local state — is what makes the sidebar bell update
+  // on the same click instead of the next poll.
   function markRead() {
     if (!isRead) {
       onRead(notification.id);
@@ -67,16 +71,31 @@ export function NotificationItem({
     toast(REMOVED_MESSAGE);
   }
 
+  // Only opens the confirmation dialog (owned by NotificationList) — the
+  // actual delete happens on confirm, so a mis-click can't silently disappear
+  // a notification with no way to know where it went.
+  function handleRequestClear(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    onRequestClear(notification);
+  }
+
+  function handleMarkReadClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    markRead();
+  }
+
   const timeAgo = formatDistanceToNow(new Date(notification.createdAt), {
     addSuffix: true,
   });
 
-  const rowClass = `flex w-full items-start gap-3 px-5 py-3.5 border-b border-border text-left transition-colors hover:bg-muted/40 ${
-    isRead ? "" : "bg-primary/5"
-  }`;
-
-  const content = (
-    <>
+  return (
+    <div
+      className={`group relative flex w-full items-start gap-3 px-5 py-3.5 border-b border-border transition-colors hover:bg-muted/40 ${
+        isRead ? "" : "bg-primary/5"
+      }`}
+    >
       {/* Unread indicator */}
       <span className="mt-1 shrink-0 flex items-center justify-center size-4">
         {isRead ? (
@@ -97,20 +116,32 @@ export function NotificationItem({
         <Icon className="size-3.5" />
       </span>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
+      {/* Content — the title itself is the single real navigation target,
+          stretched via ::after to cover the whole row so the entire row
+          stays clickable without nesting interactive elements. */}
+      <div className="flex-1 min-w-0 pr-14">
         <div className="flex items-start gap-2">
-          <p
-            className={`text-sm leading-snug ${
-              isRemoved
-                ? "text-muted-foreground"
-                : isRead
+          {isRemoved ? (
+            <button
+              className="text-left text-sm leading-snug text-muted-foreground after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+              onClick={handleRemovedClick}
+              type="button"
+            >
+              {notification.title}
+            </button>
+          ) : (
+            <Link
+              className={`text-sm leading-snug after:absolute after:inset-0 after:content-[''] focus-visible:outline-none ${
+                isRead
                   ? "font-normal text-muted-foreground"
                   : "font-semibold text-foreground"
-            }`}
-          >
-            {notification.title}
-          </p>
+              }`}
+              href={notification.link}
+              onClick={markRead}
+            >
+              {notification.title}
+            </Link>
+          )}
           {isRemoved && (
             <span className="mt-0.5 shrink-0 rounded-full bg-muted px-2 py-0.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground">
               Removed
@@ -129,22 +160,31 @@ export function NotificationItem({
         )}
         <p className="mt-1 text-xs text-muted-foreground/60">{timeAgo}</p>
       </div>
-    </>
-  );
 
-  // Deleted resource: never route the user into a 404 — mark read and explain
-  // inline instead of navigating.
-  if (isRemoved) {
-    return (
-      <button className={rowClass} onClick={handleRemovedClick} type="button">
-        {content}
-      </button>
-    );
-  }
-
-  return (
-    <Link className={rowClass} href={notification.link} onClick={markRead}>
-      {content}
-    </Link>
+      {/* Hover actions — Gmail-style: mark as read (unread only) + clear,
+          layered above the stretched title link so they stay clickable. */}
+      <div className="absolute right-4 top-3.5 z-10 hidden items-center gap-1 group-hover:flex">
+        {!isRead && !isRemoved && (
+          <button
+            aria-label="Mark as read"
+            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={handleMarkReadClick}
+            title="Mark as read"
+            type="button"
+          >
+            <MailOpen className="size-3.5" />
+          </button>
+        )}
+        <button
+          aria-label="Remove notification"
+          className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={handleRequestClear}
+          title="Remove notification"
+          type="button"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      </div>
+    </div>
   );
 }

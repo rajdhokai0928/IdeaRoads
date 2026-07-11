@@ -95,28 +95,35 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  // Pending (unapproved) feedback is visible to members only.
-  if (!post.isApproved && !isMember) {
+  // Hidden/unapproved feedback never appears on the public portal — not even
+  // to a signed-in workspace member/admin. Visibility must not depend on the
+  // viewer's identity; direct URLs to hidden posts always 404 here.
+  if (!post.isApproved) {
+    notFound();
+  }
+
+  const workspaceStatuses = await getActiveWorkspaceStatuses(workspace.id);
+
+  // Statuses an admin has marked "hidden from public feed" (Completed, by
+  // default) are blocked from direct URL access too — a direct link
+  // shouldn't reveal what the public feed hides.
+  const postWorkspaceStatus = workspaceStatuses.find(
+    (s) => s.slug === post.status
+  );
+  if (postWorkspaceStatus && !postWorkspaceStatus.showOnPublicFeed) {
     notFound();
   }
 
   const isAdminOrOwner = !!member && member.role !== WORKSPACE_MEMBER;
 
-  const [
-    votedByUser,
-    workspaceStatuses,
-    categories,
-    statusHistory,
-    allBoards,
-    members,
-  ] = await Promise.all([
-    session ? hasUserVoted(post.id, { userId: session.user.id }) : false,
-    getActiveWorkspaceStatuses(workspace.id),
-    getActiveCategoriesForWorkspace(workspace.id),
-    listStatusHistory(post.id),
-    listBoardsForWorkspace(workspace.id),
-    isMember ? listMembers(workspace.id) : Promise.resolve([]),
-  ]);
+  const [votedByUser, categories, statusHistory, allBoards, members] =
+    await Promise.all([
+      session ? hasUserVoted(post.id, { userId: session.user.id }) : false,
+      getActiveCategoriesForWorkspace(workspace.id),
+      listStatusHistory(post.id),
+      listBoardsForWorkspace(workspace.id),
+      isMember ? listMembers(workspace.id) : Promise.resolve([]),
+    ]);
 
   const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
   const assignees = members.map((m) => ({
@@ -182,6 +189,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
           isAdminOrOwner={isAdminOrOwner}
           isEmbed={isEmbed}
           isMember={isMember}
+          isPublicPortal
           isSignedIn={isSignedIn}
           mergedTarget={mergedTarget}
           post={post}

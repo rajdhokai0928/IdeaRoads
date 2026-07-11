@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  CaretLeft,
+  CaretRight,
   CircleDashed,
   Code,
   Key,
@@ -59,11 +61,13 @@ function NavLink({
   exact = false,
   icon: Icon,
   children,
+  collapsed = false,
 }: {
-  href: string;
+  children: string;
+  collapsed?: boolean;
   exact?: boolean;
+  href: string;
   icon: ComponentType<{ className?: string; weight?: "regular" | "fill" }>;
-  children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
@@ -72,12 +76,14 @@ function NavLink({
   return (
     <Link
       className={cn(
-        "group relative flex cursor-pointer items-center gap-2.5 rounded-ir-sm px-3 py-2 text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+        "group relative flex cursor-pointer items-center gap-2.5 rounded-ir-sm text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+        collapsed ? "justify-center px-0 py-2" : "px-3 py-2",
         isActive
           ? "bg-ir-primary/15 font-medium text-ir-primary-light"
           : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
       )}
       href={href}
+      title={collapsed ? children : undefined}
     >
       {isActive && (
         <motion.span
@@ -94,7 +100,7 @@ function NavLink({
         className="size-4 shrink-0"
         weight={isActive ? "fill" : "regular"}
       />
-      <span className="truncate">{children}</span>
+      {!collapsed && <span className="truncate">{children}</span>}
     </Link>
   );
 }
@@ -114,6 +120,27 @@ export function WorkspaceSidebar({
   const isMobile = useIsMobile();
   const shouldReduceMotion = useReducedMotion();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Desktop-only, persisted across sessions. Read after mount to avoid an
+  // SSR/client markup mismatch (localStorage isn't available on the server).
+  useEffect(() => {
+    if (localStorage.getItem("workspace-sidebar-collapsed") === "1") {
+      setCollapsed(true);
+    }
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("workspace-sidebar-collapsed", next ? "1" : "0");
+      return next;
+    });
+  }
+
+  // The mobile drawer always shows full labels — collapsing only applies to
+  // the persistent desktop rail.
+  const effectiveCollapsed = collapsed && !isMobile;
 
   // Close the mobile drawer whenever the route changes (link clicks navigate
   // without unmounting this layout-persisted client component).
@@ -126,6 +153,7 @@ export function WorkspaceSidebar({
     <>
       {/* Workspace switcher */}
       <WorkspaceSwitcher
+        collapsed={effectiveCollapsed}
         currentLogoUrl={workspaceLogoUrl}
         currentName={workspaceName}
         currentSlug={workspaceSlug}
@@ -134,13 +162,19 @@ export function WorkspaceSidebar({
 
       {/* Navigation */}
       <LayoutGroup id="workspace-nav">
-        <nav className="scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto p-2.5">
+        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2.5">
           {/* Dashboard + Notifications inbox */}
           <div className="space-y-0.5">
-            <NavLink exact href={`/${workspaceSlug}`} icon={SquaresFour}>
+            <NavLink
+              collapsed={effectiveCollapsed}
+              exact
+              href={`/${workspaceSlug}`}
+              icon={SquaresFour}
+            >
               Dashboard
             </NavLink>
             <NotificationBell
+              collapsed={effectiveCollapsed}
               indicatorId={NAV_INDICATOR_ID}
               initialCount={initialUnreadCount}
               workspaceSlug={workspaceSlug}
@@ -149,26 +183,36 @@ export function WorkspaceSidebar({
 
           {/* Feedback */}
           <div className="mt-5 space-y-0.5">
-            <p className="px-3 pt-2 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
-              Feedback
-            </p>
-            <NavLink href={`/${workspaceSlug}/feedback`} icon={Tray}>
+            {!effectiveCollapsed && (
+              <p className="px-3 pt-2 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
+                Feedback
+              </p>
+            )}
+            <NavLink
+              collapsed={effectiveCollapsed}
+              href={`/${workspaceSlug}/feedback`}
+              icon={Tray}
+            >
               All Feedback
             </NavLink>
           </div>
 
           {/* Publish */}
           <div className="mt-5 space-y-0.5">
-            <p className="px-3 pt-2 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
-              Publish
-            </p>
+            {!effectiveCollapsed && (
+              <p className="px-3 pt-2 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
+                Publish
+              </p>
+            )}
             <NavLink
+              collapsed={effectiveCollapsed}
               href={`/${workspaceSlug}/settings/roadmap`}
               icon={MapTrifold}
             >
               Roadmap
             </NavLink>
             <NavLink
+              collapsed={effectiveCollapsed}
               href={`/${workspaceSlug}/settings/changelog`}
               icon={Megaphone}
             >
@@ -179,34 +223,51 @@ export function WorkspaceSidebar({
           {/* Settings */}
           {isAdminOrOwner && (
             <div className="mt-3 space-y-0.5 border-t border-sidebar-border pt-3">
-              <p className="px-3 pt-1 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
-                Settings
-              </p>
-              <NavLink href={`/${workspaceSlug}/settings/members`} icon={Users}>
+              {!effectiveCollapsed && (
+                <p className="px-3 pt-1 pb-1.5 text-2xs font-semibold uppercase tracking-eyebrow text-sidebar-foreground/40">
+                  Settings
+                </p>
+              )}
+              <NavLink
+                collapsed={effectiveCollapsed}
+                href={`/${workspaceSlug}/settings/members`}
+                icon={Users}
+              >
                 Members
               </NavLink>
               <NavLink
+                collapsed={effectiveCollapsed}
                 href={`/${workspaceSlug}/settings/categories`}
                 icon={Tag}
               >
                 Categories
               </NavLink>
               <NavLink
+                collapsed={effectiveCollapsed}
                 href={`/${workspaceSlug}/settings/statuses`}
                 icon={CircleDashed}
               >
                 Statuses
               </NavLink>
-              <NavLink href={`/${workspaceSlug}/settings/api-keys`} icon={Key}>
+              <NavLink
+                collapsed={effectiveCollapsed}
+                href={`/${workspaceSlug}/settings/api-keys`}
+                icon={Key}
+              >
                 API Keys
               </NavLink>
               <NavLink
+                collapsed={effectiveCollapsed}
                 href={`/${workspaceSlug}/settings/webhooks`}
                 icon={WebhooksLogo}
               >
                 Webhooks
               </NavLink>
-              <NavLink href={`/${workspaceSlug}/settings/embed`} icon={Code}>
+              <NavLink
+                collapsed={effectiveCollapsed}
+                href={`/${workspaceSlug}/settings/embed`}
+                icon={Code}
+              >
                 Embed
               </NavLink>
             </div>
@@ -221,13 +282,42 @@ export function WorkspaceSidebar({
             whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
           >
             <Link
-              className="flex cursor-pointer items-center gap-2.5 rounded-ir-sm px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+              className={cn(
+                "flex cursor-pointer items-center gap-2.5 rounded-ir-sm text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+                effectiveCollapsed ? "justify-center px-0 py-2" : "px-3 py-2"
+              )}
               href="/orbit"
+              title={effectiveCollapsed ? "Orbit Admin" : undefined}
             >
               <Shield className="size-3.5 shrink-0" />
-              <span>Orbit Admin</span>
+              {!effectiveCollapsed && <span>Orbit Admin</span>}
             </Link>
           </motion.div>
+        </div>
+      )}
+
+      {/* Collapse / expand toggle — desktop only */}
+      {!isMobile && (
+        <div className="border-t border-sidebar-border px-2.5 py-2">
+          <button
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "flex w-full cursor-pointer items-center gap-2.5 rounded-ir-sm text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+              effectiveCollapsed ? "justify-center px-0 py-2" : "px-3 py-2"
+            )}
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            type="button"
+          >
+            {collapsed ? (
+              <CaretRight className="size-3.5 shrink-0" />
+            ) : (
+              <CaretLeft className="size-3.5 shrink-0" />
+            )}
+            {!effectiveCollapsed && (
+              <span>{collapsed ? "Expand" : "Collapse"}</span>
+            )}
+          </button>
         </div>
       )}
 
@@ -235,6 +325,7 @@ export function WorkspaceSidebar({
           mirror the workspace switcher at the top of the sidebar. */}
       <div className="shrink-0">
         <AccountMenu
+          collapsed={effectiveCollapsed}
           email={email}
           isAdminOrOwner={isAdminOrOwner}
           userImage={userImage}
@@ -282,7 +373,12 @@ export function WorkspaceSidebar({
   }
 
   return (
-    <aside className="flex h-screen w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:w-60">
+    <aside
+      className={cn(
+        "flex h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-150 ease-ir-standard",
+        collapsed ? "w-16" : "w-56 lg:w-60"
+      )}
+    >
       {sidebarContent}
     </aside>
   );

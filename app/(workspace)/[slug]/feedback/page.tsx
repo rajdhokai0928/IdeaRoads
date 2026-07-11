@@ -1,7 +1,10 @@
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PostsPagination } from "@/components/posts/posts-pagination";
 import { PostsTable } from "@/components/posts/posts-table";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
@@ -16,7 +19,6 @@ import {
   getWorkspaceBySlug,
   getWorkspaceMember,
 } from "@/lib/workspaces/queries";
-import { AddFeedbackDialog } from "./_components/add-feedback-dialog";
 import { FeedbackFilters } from "./_components/feedback-filters";
 
 const PAGE_SIZE = 20;
@@ -26,7 +28,6 @@ interface Props {
   searchParams: Promise<{
     category?: string;
     draft?: string;
-    new?: string;
     page?: string;
     q?: string;
     sort?: string;
@@ -41,15 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function FeedbackPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const {
-    category,
-    draft,
-    new: newParam,
-    page,
-    q,
-    sort,
-    status,
-  } = await searchParams;
+  const { category, draft, page, q, sort, status } = await searchParams;
   const session = await requireSession();
 
   const workspace = await getWorkspaceBySlug(slug);
@@ -135,14 +128,12 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
       <PageHeader
         actions={
           board ? (
-            <AddFeedbackDialog
-              boardId={board.id}
-              categories={categories}
-              defaultOpen={newParam === "1"}
-              workspaceId={workspace.id}
-              workspaceSlug={slug}
-              workspaceStatuses={workspaceStatuses}
-            />
+            <Button asChild>
+              <Link href={`/${slug}/feedback/new`}>
+                <PlusIcon data-icon="inline-start" />
+                Add Feedback
+              </Link>
+            </Button>
           ) : undefined
         }
         description={`Every piece of feedback in ${workspace.name}.`}

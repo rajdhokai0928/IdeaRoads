@@ -2,6 +2,8 @@
 
 import {
   ArchiveIcon,
+  EyeIcon,
+  EyeSlashIcon,
   MapTrifoldIcon,
   PencilIcon,
   PlusIcon,
@@ -30,6 +32,7 @@ interface WorkspaceStatus {
   isArchived: boolean;
   isDefault: boolean;
   name: string;
+  showOnPublicFeed: boolean;
   showOnRoadmap: boolean;
   slug: string;
 }
@@ -140,6 +143,26 @@ export function StatusList({
         s.showOnRoadmap
           ? `"${s.name}" hidden from the roadmap`
           : `"${s.name}" now shows on the roadmap`
+      );
+      router.refresh();
+    });
+  }
+
+  function handleTogglePublicFeed(s: WorkspaceStatus) {
+    startTransition(async () => {
+      const result = await updateWorkspaceStatusAction({
+        statusId: s.id,
+        workspaceId,
+        showOnPublicFeed: !s.showOnPublicFeed,
+      });
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(
+        s.showOnPublicFeed
+          ? `"${s.name}" hidden from the public feed`
+          : `"${s.name}" now shows on the public feed`
       );
       router.refresh();
     });
@@ -336,24 +359,48 @@ export function StatusList({
                   )}
 
                   {canManage && (
-                    <button
-                      aria-pressed={s.showOnRoadmap}
-                      className={`ml-auto inline-flex items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
-                        s.showOnRoadmap
-                          ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
-                          : "border-ir-border text-ir-muted hover:text-ir-heading"
-                      }`}
-                      disabled={isPending}
-                      onClick={() => handleToggleRoadmap(s)}
-                      title="Show this status as a column on the roadmap (Sync from Feedback mode)"
-                      type="button"
-                    >
-                      <MapTrifoldIcon className="size-2.5" />
-                      Roadmap
-                      <span className="opacity-70">
-                        {s.showOnRoadmap ? "On" : "Off"}
-                      </span>
-                    </button>
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <button
+                        aria-pressed={s.showOnPublicFeed}
+                        className={`inline-flex items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
+                          s.showOnPublicFeed
+                            ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
+                            : "border-ir-border text-ir-muted hover:text-ir-heading"
+                        }`}
+                        disabled={isPending}
+                        onClick={() => handleTogglePublicFeed(s)}
+                        title="Show posts with this status in the public feedback list (they always stay visible in the admin panel)"
+                        type="button"
+                      >
+                        {s.showOnPublicFeed ? (
+                          <EyeIcon className="size-2.5" />
+                        ) : (
+                          <EyeSlashIcon className="size-2.5" />
+                        )}
+                        Public Feed
+                        <span className="opacity-70">
+                          {s.showOnPublicFeed ? "On" : "Off"}
+                        </span>
+                      </button>
+                      <button
+                        aria-pressed={s.showOnRoadmap}
+                        className={`inline-flex items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
+                          s.showOnRoadmap
+                            ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
+                            : "border-ir-border text-ir-muted hover:text-ir-heading"
+                        }`}
+                        disabled={isPending}
+                        onClick={() => handleToggleRoadmap(s)}
+                        title="Show this status as a column on the roadmap (Sync from Feedback mode)"
+                        type="button"
+                      >
+                        <MapTrifoldIcon className="size-2.5" />
+                        Roadmap
+                        <span className="opacity-70">
+                          {s.showOnRoadmap ? "On" : "Off"}
+                        </span>
+                      </button>
+                    </div>
                   )}
 
                   {canManage && (

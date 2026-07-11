@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SquareAvatar } from "@/components/ui/square-avatar";
+import { cn } from "@/lib/utils";
 
 interface WorkspaceOption {
   logoUrl: string | null;
@@ -21,6 +22,7 @@ interface WorkspaceOption {
 }
 
 interface WorkspaceSwitcherProps {
+  collapsed?: boolean;
   currentLogoUrl: string | null;
   currentName: string;
   currentSlug: string;
@@ -32,6 +34,7 @@ export function WorkspaceSwitcher({
   currentName,
   currentSlug,
   workspaces,
+  collapsed = false,
 }: WorkspaceSwitcherProps) {
   const shouldReduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
@@ -40,7 +43,11 @@ export function WorkspaceSwitcher({
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex h-14 w-full min-w-0 cursor-pointer items-center gap-2.5 border-b border-sidebar-border px-4 text-left transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+          className={cn(
+            "flex h-14 w-full min-w-0 cursor-pointer items-center gap-2.5 border-b border-sidebar-border text-left transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+            collapsed ? "justify-center px-0" : "px-4"
+          )}
+          title={collapsed ? currentName : undefined}
           type="button"
         >
           <SquareAvatar
@@ -53,22 +60,26 @@ export function WorkspaceSwitcher({
             }
             imageUrl={currentLogoUrl}
           />
-          <span
-            className="min-w-0 flex-1 truncate text-sm font-semibold text-sidebar-foreground"
-            title={currentName}
-          >
-            {currentName}
-          </span>
-          <motion.span
-            animate={{ rotate: open ? 180 : 0 }}
-            className="shrink-0 text-sidebar-foreground/40"
-            transition={{
-              duration: shouldReduceMotion ? 0 : 0.15,
-              ease: "easeOut",
-            }}
-          >
-            <CaretUpDown className="size-4" />
-          </motion.span>
+          {!collapsed && (
+            <>
+              <span
+                className="min-w-0 flex-1 truncate text-sm font-semibold text-sidebar-foreground"
+                title={currentName}
+              >
+                {currentName}
+              </span>
+              <motion.span
+                animate={{ rotate: open ? 180 : 0 }}
+                className="shrink-0 text-sidebar-foreground/40"
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.15,
+                  ease: "easeOut",
+                }}
+              >
+                <CaretUpDown className="size-4" />
+              </motion.span>
+            </>
+          )}
         </button>
       </DropdownMenuTrigger>
 
@@ -91,12 +102,16 @@ export function WorkspaceSwitcher({
                 key={ws.slug}
               >
                 <Link href={`/${ws.slug}`}>
-                  {/* Pin the avatar's letter colour so the DropdownMenuItem's
-                      focus rule can't recolour the fallback letter to
-                      dark-on-dark and hide it on hover. */}
+                  {/* Let the fallback letter use SquareAvatar's own muted
+                      color against its light idle background — the item's
+                      universal focus rule (**:text-ir-primary) recolors it on
+                      hover, same as every other dropdown in the app. Forcing
+                      it to text-sidebar-foreground (meant for the dark
+                      sidebar trigger) made it invisible here: near-white text
+                      on the avatar's light bg-ir-muted-surface square. */}
                   <SquareAvatar
                     alt={ws.name}
-                    className="size-5 shrink-0 text-2xs font-semibold text-sidebar-foreground!"
+                    className="size-5 shrink-0 text-2xs font-semibold"
                     fallback={ws.name.charAt(0).toUpperCase()}
                     imageUrl={ws.logoUrl}
                   />

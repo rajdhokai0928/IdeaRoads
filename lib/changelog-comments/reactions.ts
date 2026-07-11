@@ -38,6 +38,45 @@ export async function getReactionsForEntry(
   }));
 }
 
+/** Batched version of getReactionsForEntry for a list of entries (e.g. the
+ * public changelog index) — one grouped query instead of one per entry. */
+export async function getReactionsForEntries(
+  changelogEntryIds: string[],
+  userId?: string | null
+): Promise<Map<string, ReactionGroup[]>> {
+  if (changelogEntryIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .select({
+      changelogEntryId: changelogEntryReactions.changelogEntryId,
+      emoji: changelogEntryReactions.emoji,
+      count: sql<number>`count(*)::int`,
+      hasReacted: userId
+        ? sql<boolean>`bool_or(${changelogEntryReactions.userId} = ${userId})`
+        : sql<boolean>`false`,
+    })
+    .from(changelogEntryReactions)
+    .where(inArray(changelogEntryReactions.changelogEntryId, changelogEntryIds))
+    .groupBy(
+      changelogEntryReactions.changelogEntryId,
+      changelogEntryReactions.emoji
+    );
+
+  const grouped = new Map<string, ReactionGroup[]>();
+  for (const row of rows) {
+    const list = grouped.get(row.changelogEntryId) ?? [];
+    list.push({
+      emoji: row.emoji,
+      count: row.count,
+      hasReacted: row.hasReacted,
+    });
+    grouped.set(row.changelogEntryId, list);
+  }
+  return grouped;
+}
+
 export async function toggleEntryReaction(
   changelogEntryId: string,
   emoji: string,

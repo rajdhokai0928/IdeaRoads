@@ -193,15 +193,15 @@ export function MembersTable({
                     <DropdownMenuTrigger asChild>
                       <Button
                         aria-label={`Actions for ${member.user.name ?? member.user.email}`}
-                        className="size-8 cursor-pointer p-0 text-ir-muted hover:text-ir-heading"
+                        className="text-ir-muted hover:text-ir-heading"
                         disabled={loadingId === member.id}
-                        size="sm"
+                        size="icon-xs"
                         variant="ghost"
                       >
                         {loadingId === member.id ? (
                           <SpinnerIcon className="size-4 animate-spin" />
                         ) : (
-                          <DotsThreeIcon className="size-5" weight="bold" />
+                          <DotsThreeIcon className="size-4" weight="bold" />
                         )}
                       </Button>
                     </DropdownMenuTrigger>
@@ -269,7 +269,7 @@ export function MembersTable({
                       )}
                       {canRemove && (
                         <DropdownMenuItem
-                          className="cursor-pointer text-ir-danger focus:text-ir-danger"
+                          className="cursor-pointer"
                           onClick={() =>
                             setPendingConfirm({
                               title: "Remove Member",
@@ -284,6 +284,7 @@ export function MembersTable({
                               successMessage: "Member removed successfully",
                             })
                           }
+                          variant="destructive"
                         >
                           Remove member
                         </DropdownMenuItem>

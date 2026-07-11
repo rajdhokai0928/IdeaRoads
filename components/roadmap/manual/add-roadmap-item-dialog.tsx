@@ -11,6 +11,7 @@ import {
   uploadRoadmapCoverImageAction,
 } from "@/app/actions/roadmap";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -276,11 +277,10 @@ export function AddRoadmapItemDialog({
                 >
                   Launch Date
                 </label>
-                <input
-                  className={inputClass}
+                <DatePicker
                   id="ri-date"
-                  onChange={(e) => setLaunchDate(e.target.value)}
-                  type="date"
+                  onChange={setLaunchDate}
+                  placeholder="No launch date"
                   value={launchDate}
                 />
               </div>

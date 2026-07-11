@@ -29,6 +29,13 @@ export const workspaceStatuses = pgTable(
     // set to true become roadmap columns. Intake/internal statuses (Open, Under
     // Review, Closed, Draft…) stay false so they never appear on the roadmap.
     showOnRoadmap: boolean("show_on_roadmap").notNull().default(false),
+    // Whether posts with this status appear in the public feedback list/board
+    // and are reachable at their public URL — independent of showOnRoadmap, so
+    // a status can still show as a roadmap column while being hidden from the
+    // public feed. Defaults to true; Completed is seeded/backfilled to false
+    // so shipped items don't clutter the public feed. Never affects the admin
+    // panel, where every status stays fully visible.
+    showOnPublicFeed: boolean("show_on_public_feed").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -104,7 +104,7 @@ export function AdminSidebar({
 
       {/* Navigation */}
       <LayoutGroup id="orbit-nav">
-        <nav className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2.5 py-5">
+        <nav className="min-h-0 flex-1 overflow-y-auto px-2.5 py-5">
           <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-ui text-sidebar-foreground/30">
             Navigation
           </p>

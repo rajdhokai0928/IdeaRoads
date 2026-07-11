@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChangelogCommentSection } from "@/components/changelog/changelog-comment-section";
 import { ChangelogEditor } from "@/components/changelog/changelog-editor";
+import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { listChangelogLabels } from "@/lib/changelog/labels";
@@ -75,7 +76,7 @@ export default async function EditChangelogEntryPage({ params }: Props) {
           workspaceId={workspace.id}
           workspaceSlug={slug}
         />
-        <div className="w-full max-w-3xl px-4 pb-10 sm:px-8">
+        <ContentContainer className="pb-10">
           <div className="border-t border-ir-border pt-8">
             <ChangelogCommentSection
               canModerate={true}
@@ -84,7 +85,7 @@ export default async function EditChangelogEntryPage({ params }: Props) {
               isSignedIn={true}
             />
           </div>
-        </div>
+        </ContentContainer>
       </div>
     </div>
   );

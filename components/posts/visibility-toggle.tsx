@@ -9,6 +9,7 @@ import { approvePostAction, unapprovePostAction } from "@/app/actions/posts";
 interface VisibilityToggleProps {
   canEdit: boolean;
   isApproved: boolean;
+  isDraft?: boolean;
   postId: string;
   workspaceId: string;
 }
@@ -20,6 +21,7 @@ export default function VisibilityToggle({
   postId,
   workspaceId,
   isApproved,
+  isDraft = false,
   canEdit,
 }: VisibilityToggleProps) {
   const router = useRouter();
@@ -39,6 +41,20 @@ export default function VisibilityToggle({
       }
       router.refresh();
     });
+  }
+
+  // Drafts are never public regardless of the approval flag — always show
+  // Hidden here and skip the toggle, since flipping approval wouldn't make an
+  // unpublished draft visible anyway.
+  if (isDraft) {
+    return (
+      <EyeSlashIcon
+        aria-label="Hidden (draft)"
+        className="size-4 text-ir-muted"
+      >
+        <title>Hidden — drafts aren't public until published</title>
+      </EyeSlashIcon>
+    );
   }
 
   if (!canEdit) {

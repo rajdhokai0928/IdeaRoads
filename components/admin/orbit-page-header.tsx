@@ -8,7 +8,7 @@ export function OrbitPageHeader({
   description?: string;
 }) {
   return (
-    <div className="mb-8 border-b border-border pb-5">
+    <div className="sticky top-0 z-10 mb-8 border-b border-border bg-page pb-5">
       {eyebrow && (
         <p className="mb-2 font-bold text-xs text-success uppercase tracking-eyebrow">
           {eyebrow}

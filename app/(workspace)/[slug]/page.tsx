@@ -1,7 +1,3 @@
-import {
-  PlusIcon as Plus,
-  UsersThreeIcon as UsersThree,
-} from "@phosphor-icons/react/dist/ssr";
 import { count, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -13,7 +9,6 @@ import { RoadmapPreviewCard } from "@/components/dashboard/roadmap-preview-card"
 import { StatCard } from "@/components/dashboard/stat-card";
 import { WorkspaceOverviewCard } from "@/components/dashboard/workspace-overview-card";
 import { PostsTable } from "@/components/posts/posts-table";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { workspaceMembers } from "@/db/schema";
@@ -135,21 +130,21 @@ export default async function WorkspaceDashboardPage({
     previousSnapshot?.statusCounts.completed ?? null;
   const previousClosedPosts = previousSnapshot?.statusCounts.closed ?? null;
 
-  const addFeedbackHref = board ? `/${slug}/feedback?new=1` : null;
+  const addFeedbackHref = board ? `/${slug}/feedback/new` : null;
 
   return (
     <div className="flex flex-col">
       <PageHeader
-        actions={
-          addFeedbackHref ? (
-            <Button asChild>
-              <Link href={addFeedbackHref}>
-                <Plus data-icon="inline-start" />
-                Add Feedback
-              </Link>
-            </Button>
-          ) : undefined
-        }
+        // actions={
+        //   addFeedbackHref ? (
+        //     <Button asChild>
+        //       <Link href={addFeedbackHref}>
+        //         <Plus data-icon="inline-start" />
+        //         Add Feedback
+        //       </Link>
+        //     </Button>
+        //   ) : undefined
+        // }
         description={workspace.description || undefined}
         title={workspace.name}
       />
@@ -279,7 +274,7 @@ export default async function WorkspaceDashboardPage({
         </div>
 
         {/* Getting started */}
-        {memberCount === 1 && (
+        {/* {memberCount === 1 && (
           <div className="rounded-ir-card border border-ir-border bg-ir-muted-surface px-6 py-5">
             <div className="flex items-start gap-4">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-ir-sm border border-ir-border bg-ir-surface">
@@ -295,7 +290,7 @@ export default async function WorkspaceDashboardPage({
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

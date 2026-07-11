@@ -11,7 +11,6 @@ import type { BoardItem } from "@/components/roadmap/manual/manual-roadmap-card"
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
 import { Button } from "@/components/ui/button";
 import { PortalHeader } from "@/components/workspace/portal-header";
-import { WORKSPACE_MEMBER } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
@@ -57,7 +56,6 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
     : null;
   const isSignedIn = !!session;
   const isMember = !!member;
-  const isAdmin = !!member && member.role !== WORKSPACE_MEMBER;
 
   // When the roadmap is private it appears not to exist for non-members.
   if (!workspace.roadmapPublic && !isMember) {
@@ -73,7 +71,11 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
   const [derivedColumns, manual, allBoards, categories] = await Promise.all([
     syncEnabled
       ? getDerivedRoadmap(workspace.id, {
-          isAdmin,
+          // Fixed `false` on this public route — hidden posts and
+          // private-board items must never surface here, even for a
+          // signed-in workspace admin. Admins review those from
+          // /settings/roadmap instead.
+          isAdmin: false,
           userId: session?.user.id,
           categoryId: validCategoryId || undefined,
           search: searchQuery || undefined,
@@ -171,7 +173,7 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
             <div className="flex-1">
               <RoadmapBoard
                 columns={derivedColumns}
-                isAdmin={isAdmin}
+                isAdmin={false}
                 isSignedIn={isSignedIn}
                 workspaceSlug={slug}
               />

@@ -35,7 +35,7 @@ export function ParamSelect({ paramName, value, options }: ParamSelectProps) {
 
   return (
     <Select onValueChange={handleChange} value={value}>
-      <SelectTrigger className="text-xs text-ir-muted" size="sm">
+      <SelectTrigger size="sm">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

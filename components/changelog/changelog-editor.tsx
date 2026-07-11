@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon, PencilIcon, XIcon } from "@phosphor-icons/react";
+import { ImageIcon, PencilIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -24,6 +24,14 @@ import {
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { LinkedPostsSelector } from "@/components/changelog/linked-posts-selector";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ContentContainer } from "@/components/ui/page";
 import {
   CHANGELOG_LABEL_VALUES,
@@ -100,7 +108,9 @@ export function ChangelogEditor({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [label, setLabel] = useState(initialEntry?.label ?? "new_feature");
   const [newLabel, setNewLabel] = useState("");
-  // Persisted custom labels (workspace-scoped). Managed inline below.
+  const [labelModalOpen, setLabelModalOpen] = useState(false);
+  // Persisted custom labels (workspace-scoped). Created from the "+" modal;
+  // renamed/deleted inline on their chip below.
   const [labels, setLabels] = useState<ChangelogLabel[]>(initialLabels);
   const [labelBusy, setLabelBusy] = useState(false);
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
@@ -137,12 +147,14 @@ export function ChangelogEditor({
     if (builtinMatch) {
       setLabel(builtinMatch);
       setNewLabel("");
+      setLabelModalOpen(false);
       return;
     }
     const existing = labels.find((l) => l.name.toLowerCase() === lower);
     if (existing) {
       setLabel(existing.name);
       setNewLabel("");
+      setLabelModalOpen(false);
       return;
     }
     setLabelBusy(true);
@@ -155,6 +167,14 @@ export function ChangelogEditor({
     setLabels((prev) => [...prev, res.data]);
     setLabel(res.data.name);
     setNewLabel("");
+    setLabelModalOpen(false);
+  }
+
+  function handleLabelModalOpenChange(open: boolean) {
+    setLabelModalOpen(open);
+    if (!open) {
+      setNewLabel("");
+    }
   }
 
   async function renameLabel(id: string) {
@@ -521,12 +541,9 @@ export function ChangelogEditor({
         />
       </div>
 
-      {/* Label — built-in labels plus a create-your-own field */}
+      {/* Label — built-in labels, custom label chips, and an "Add label" modal */}
       <div className="space-y-1.5">
-        <label
-          className="text-xs font-semibold uppercase tracking-wide text-ir-heading"
-          htmlFor="new-label"
-        >
+        <label className="text-xs font-semibold uppercase tracking-wide text-ir-heading">
           Label
         </label>
         <div className="flex flex-wrap items-center gap-2">
@@ -648,38 +665,74 @@ export function ChangelogEditor({
               {orphanLabel}
             </span>
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            className="w-full max-w-xs rounded-ir-input border border-ir-border bg-ir-surface px-3 py-1.5 text-xs text-ir-body placeholder:text-ir-muted focus:ring-2 focus:ring-ir-primary/40 focus:outline-none"
-            id="new-label"
-            maxLength={40}
-            onChange={(e) => setNewLabel(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addCustomLabel();
-              }
-            }}
-            placeholder="Create a new label…"
-            type="text"
-            value={newLabel}
-          />
-          <Button
-            className="shrink-0"
-            disabled={!newLabel.trim() || labelBusy}
-            onClick={addCustomLabel}
-            size="sm"
+
+          <button
+            aria-label="Add label"
+            className="inline-flex items-center justify-center rounded-ir-sm border border-dashed border-ir-border p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+            onClick={() => setLabelModalOpen(true)}
+            title="Add label"
             type="button"
-            variant="outline"
           >
-            {labelBusy ? "Saving…" : "Add"}
-          </Button>
+            <PlusIcon className="size-3.5" />
+          </button>
         </div>
         <div className="mt-1">
           <ChangelogLabelBadge label={label} size="md" />
         </div>
       </div>
+
+      <Dialog onOpenChange={handleLabelModalOpenChange} open={labelModalOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add Label</DialogTitle>
+            <DialogDescription>
+              Create a custom label for this workspace's changelog entries.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <label
+              className="text-xs font-medium text-ir-heading"
+              htmlFor="new-label"
+            >
+              Name
+            </label>
+            <input
+              autoFocus
+              className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-sm text-ir-body placeholder:text-ir-muted focus:outline-none focus:ring-2 focus:ring-ir-primary/40"
+              disabled={labelBusy}
+              id="new-label"
+              maxLength={40}
+              onChange={(e) => setNewLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCustomLabel();
+                }
+              }}
+              placeholder="e.g. Security Fix"
+              type="text"
+              value={newLabel}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={labelBusy}
+              onClick={() => handleLabelModalOpenChange(false)}
+              type="button"
+              variant="ghost"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!newLabel.trim() || labelBusy}
+              onClick={addCustomLabel}
+              type="button"
+            >
+              {labelBusy ? "Creating…" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Linked Posts */}
       <div className="space-y-1.5">

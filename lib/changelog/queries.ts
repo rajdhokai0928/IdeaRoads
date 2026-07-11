@@ -1,6 +1,6 @@
 import { and, count, desc, eq, ilike, sql } from "drizzle-orm";
 import { cache } from "react";
-import { changelogEntries, changelogPosts, posts } from "@/db/schema";
+import { changelogEntries, changelogPosts, posts, votes } from "@/db/schema";
 import { CHANGELOG_LABEL_VALUES } from "@/lib/changelog/constants";
 import { db } from "@/lib/db";
 
@@ -43,6 +43,9 @@ export type LinkedPost = {
   upvotes: number;
   boardSlug: string;
   boardName: string;
+  boardIsArchived: boolean;
+  isLocked: boolean;
+  hasVoted: boolean;
 };
 
 export type ChangelogEntryWithPosts = ChangelogEntryRow & {
@@ -121,7 +124,7 @@ export const getChangelogEntryById = cache(
   async (
     entryId: string,
     workspaceId: string,
-    opts: { publicOnly?: boolean } = {}
+    opts: { publicOnly?: boolean; userId?: string | null } = {}
   ): Promise<ChangelogEntryWithPosts | null> => {
     const [entry] = await db
       .select()
@@ -152,7 +155,7 @@ export const getChangelogEntryById = cache(
 
 export async function getLinkedPosts(
   entryId: string,
-  opts: { publicOnly?: boolean } = {}
+  opts: { publicOnly?: boolean; userId?: string | null } = {}
 ): Promise<LinkedPost[]> {
   const { boards } = await import("@/db/schema/boards");
 
@@ -168,16 +171,39 @@ export async function getLinkedPosts(
     );
   }
 
+  const baseColumns = {
+    id: posts.id,
+    title: posts.title,
+    slug: posts.slug,
+    status: posts.status,
+    upvotes: posts.upvotes,
+    boardSlug: boards.slug,
+    boardName: boards.name,
+    boardIsArchived: boards.isArchived,
+    isLocked: posts.isLocked,
+  };
+
+  if (opts.userId) {
+    const userVoteAlias = db
+      .select({ postId: votes.postId, id: votes.id })
+      .from(votes)
+      .where(eq(votes.userId, opts.userId))
+      .as("user_vote");
+
+    return db
+      .select({
+        ...baseColumns,
+        hasVoted: sql<boolean>`${userVoteAlias.id} IS NOT NULL`,
+      })
+      .from(changelogPosts)
+      .innerJoin(posts, eq(changelogPosts.postId, posts.id))
+      .innerJoin(boards, eq(posts.boardId, boards.id))
+      .leftJoin(userVoteAlias, eq(posts.id, userVoteAlias.postId))
+      .where(and(...conditions));
+  }
+
   return db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      slug: posts.slug,
-      status: posts.status,
-      upvotes: posts.upvotes,
-      boardSlug: boards.slug,
-      boardName: boards.name,
-    })
+    .select({ ...baseColumns, hasVoted: sql<boolean>`false` })
     .from(changelogPosts)
     .innerJoin(posts, eq(changelogPosts.postId, posts.id))
     .innerJoin(boards, eq(posts.boardId, boards.id))

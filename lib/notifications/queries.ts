@@ -112,6 +112,22 @@ export async function markNotificationAsRead(
     );
 }
 
+// ─── Delete Single ────────────────────────────────────────────────────────────
+
+export async function deleteNotification(
+  notificationId: string,
+  userId: string
+): Promise<void> {
+  await db
+    .delete(notifications)
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId)
+      )
+    );
+}
+
 // ─── Mark All As Read ─────────────────────────────────────────────────────────
 
 export async function markAllNotificationsAsRead(

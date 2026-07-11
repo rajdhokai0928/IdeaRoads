@@ -24,8 +24,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SquareAvatar } from "@/components/ui/square-avatar";
+import { cn } from "@/lib/utils";
 
 interface AccountMenuProps {
+  collapsed?: boolean;
   email: string;
   isAdminOrOwner: boolean;
   userImage: string | null;
@@ -37,6 +39,7 @@ export function AccountMenu({
   isAdminOrOwner,
   userImage,
   workspaceSlug,
+  collapsed = false,
 }: AccountMenuProps) {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
@@ -49,7 +52,11 @@ export function AccountMenu({
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex h-14 w-full min-w-0 cursor-pointer items-center gap-2.5 border-t border-sidebar-border px-4 text-left transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+          className={cn(
+            "flex h-14 w-full min-w-0 cursor-pointer items-center gap-2.5 border-t border-sidebar-border text-left transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+            collapsed ? "justify-center px-0" : "px-4"
+          )}
+          title={collapsed ? email : undefined}
           type="button"
         >
           <SquareAvatar
@@ -58,22 +65,26 @@ export function AccountMenu({
             fallback={email.charAt(0).toUpperCase()}
             imageUrl={userImage}
           />
-          <span
-            className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground"
-            title={email}
-          >
-            {email}
-          </span>
-          <motion.span
-            animate={{ rotate: open ? 180 : 0 }}
-            className="shrink-0 text-sidebar-foreground/40"
-            transition={{
-              duration: shouldReduceMotion ? 0 : 0.15,
-              ease: "easeOut",
-            }}
-          >
-            <CaretUpDown className="size-4" />
-          </motion.span>
+          {!collapsed && (
+            <>
+              <span
+                className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground"
+                title={email}
+              >
+                {email}
+              </span>
+              <motion.span
+                animate={{ rotate: open ? 180 : 0 }}
+                className="shrink-0 text-sidebar-foreground/40"
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.15,
+                  ease: "easeOut",
+                }}
+              >
+                <CaretUpDown className="size-4" />
+              </motion.span>
+            </>
+          )}
         </button>
       </DropdownMenuTrigger>
 

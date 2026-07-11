@@ -1,19 +1,18 @@
 "use client";
 
-import { PlusIcon, SlidersIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   deleteRoadmapItemAction,
   moveRoadmapItemAction,
 } from "@/app/actions/roadmap";
+import { useManualRoadmapControls } from "@/components/roadmap/manual/manual-roadmap-search-context";
 import { RoadmapEmptyState } from "@/components/roadmap/roadmap-empty-state";
 import { RoadmapStatusHeader } from "@/components/roadmap/roadmap-status-header";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { SearchInput } from "@/components/ui/search-input";
 import { AddRoadmapItemDialog } from "./add-roadmap-item-dialog";
 import { ManualItemDetailDialog } from "./manual-item-detail-dialog";
 import { type BoardItem, ManualRoadmapCard } from "./manual-roadmap-card";
@@ -33,6 +32,10 @@ interface ManualRoadmapBoardProps {
   canManage: boolean;
   items: BoardItem[];
   statuses: BoardStatus[];
+  // Rendered where the search bar used to sit — the search input itself now
+  // lives in the page header (see ManualRoadmapSearchProvider/-Input) since
+  // this slot is where the Sync-from-Feedback toggle moved to.
+  syncToggle?: ReactNode;
   workspaceId: string;
 }
 
@@ -59,6 +62,7 @@ export function ManualRoadmapBoard({
   statuses,
   items,
   canManage,
+  syncToggle,
 }: ManualRoadmapBoardProps) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
@@ -66,14 +70,20 @@ export function ManualRoadmapBoard({
   const [drag, setDrag] = useState<BoardItem | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
-  const [addOpen, setAddOpen] = useState(false);
-  const [addStatusId, setAddStatusId] = useState<string | undefined>();
-  const [editItem, setEditItem] = useState<BoardItem | null>(null);
+  const {
+    query,
+    manageOpen,
+    setManageOpen,
+    addOpen,
+    setAddOpen,
+    addStatusId,
+    setAddStatusId,
+    editItem,
+    setEditItem,
+  } = useManualRoadmapControls();
   const [viewItem, setViewItem] = useState<BoardItem | null>(null);
-  const [manageOpen, setManageOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BoardItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [query, setQuery] = useState("");
 
   // Client-side filter over the loaded items (title + description). Dragging is
   // disabled while a filter is active so a reorder can never renumber a column
@@ -164,45 +174,17 @@ export function ManualRoadmapBoard({
 
   return (
     <div className="flex flex-col">
-      {canManage && (
+      {(canManage || syncToggle) && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-6 pt-2 pb-4">
-          <p className="text-xs text-ir-muted">
-            Manual roadmap · {totalItems} item{totalItems === 1 ? "" : "s"} ·
-            drag cards between columns
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setManageOpen(true)}
-              size="sm"
-              variant="outline"
-            >
-              <SlidersIcon data-icon="inline-start" />
-              Manage columns
-            </Button>
-            <Button
-              disabled={statuses.length === 0}
-              onClick={() => {
-                setAddStatusId(undefined);
-                setEditItem(null);
-                setAddOpen(true);
-              }}
-              size="sm"
-            >
-              <PlusIcon data-icon="inline-start" />
-              Add Roadmap Item
-            </Button>
+          <div className="flex justify-start">{syncToggle}</div>
+          <div className="flex justify-end">
+            {canManage && (
+              <p className="text-xs text-ir-muted">
+                Manual roadmap · {totalItems} item
+                {totalItems === 1 ? "" : "s"} · drag cards between columns
+              </p>
+            )}
           </div>
-        </div>
-      )}
-
-      {statuses.length > 0 && (
-        <div className="px-6 pb-4 mt-2">
-          <SearchInput
-            aria-label="Search roadmap items"
-            className="h-9 min-w-50 max-w-md"
-            onSearch={setQuery}
-            placeholder="Search roadmap items"
-          />
         </div>
       )}
 

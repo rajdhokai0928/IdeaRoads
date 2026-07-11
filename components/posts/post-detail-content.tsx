@@ -84,6 +84,10 @@ interface PostDetailContentProps {
   isAdminOrOwner: boolean;
   isEmbed?: boolean;
   isMember: boolean;
+  // The public route stacks this under its own sticky PortalHeader (h-16);
+  // the admin route has no header above it, so this bar sticks to the very
+  // top instead.
+  isPublicPortal?: boolean;
   isSignedIn: boolean;
   mergedTarget: { href: string; title: string } | null;
   post: PostDetailPost;
@@ -106,6 +110,7 @@ export function PostDetailContent({
   isEmbed = false,
   isSignedIn,
   isMember,
+  isPublicPortal = false,
   isAdminOrOwner,
   votedByUser,
   workspaceStatuses,
@@ -123,9 +128,15 @@ export function PostDetailContent({
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col">
-      {/* Back nav — hidden in embed mode (no navigation chrome) */}
+      {/* Back nav — hidden in embed mode (no navigation chrome). Sticky so it
+        stays reachable while scrolling the post; offset below the public
+        portal's own sticky header when this renders there. */}
       {!isEmbed && (
-        <div className="border-b border-ir-border px-4 py-4 sm:px-8">
+        <div
+          className={`sticky z-10 border-b border-ir-border px-4 py-4 sm:px-8 ${
+            isPublicPortal ? "top-16 bg-ir-background" : "top-0 bg-background"
+          }`}
+        >
           <Link
             className="inline-flex items-center gap-1.5 text-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             href={boardHref}

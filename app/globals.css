@@ -21,22 +21,29 @@ body {
   background-size: 32px 32px;
 }
 
-/* Thin, theme-matched scrollbar for compact panels like the sidebar nav */
-.scrollbar-thin {
+/* Single global scrollbar style — the sidebar nav's thin scrollbar, applied
+   to every scrollable element in the app (tables, modals, dropdowns,
+   popovers, command lists, etc.) so nothing needs its own per-component
+   scrollbar styling. `scrollbar-color`/`scrollbar-width` are the standard
+   properties (Firefox); the `::-webkit-scrollbar*` pseudo-elements cover
+   Chrome/Edge/Safari. Browsers that support neither (e.g. older Safari)
+   simply fall back to their native scrollbar. */
+* {
   scrollbar-color: var(--sidebar-border) transparent;
   scrollbar-width: thin;
 }
-.scrollbar-thin::-webkit-scrollbar {
+*::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
-.scrollbar-thin::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
 }
-.scrollbar-thin::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background-color: var(--sidebar-border);
   border-radius: 9999px;
 }
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background-color: var(--sidebar-ring);
 }
 

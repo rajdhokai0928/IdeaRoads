@@ -114,6 +114,7 @@ export default function StatusSelect({
     >
       <SelectTrigger
         className="h-auto gap-1.5 rounded-ir-full border-0 bg-ir-muted-surface px-2.5 py-1 text-xs font-medium text-ir-heading"
+        showChevron={false}
         size="sm"
       >
         <SelectValue />

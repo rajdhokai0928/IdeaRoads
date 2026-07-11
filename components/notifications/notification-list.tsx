@@ -32,12 +32,48 @@ export function NotificationList({
   const [filter, setFilter] = useState<FilterTab>("all");
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [clearTarget, setClearTarget] = useState<NotificationListItem | null>(
+    null
+  );
+  const [isClearingOne, setIsClearingOne] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleRead(id: string) {
     setItems((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
+  }
+
+  // Deleting a single notification is irreversible and easy to trigger by
+  // mistake with a stray hover-click, so it's confirmed here rather than
+  // removed the instant the row's icon is clicked.
+  function handleConfirmClearOne() {
+    if (!clearTarget) {
+      return;
+    }
+    const target = clearTarget;
+    setIsClearingOne(true);
+
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/notifications/${target.id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to remove notification");
+        }
+        setItems((prev) => prev.filter((n) => n.id !== target.id));
+        setTotal((prev) => Math.max(0, prev - 1));
+        if (!target.isRead) {
+          notificationsCtx?.decrementUnread(1);
+        }
+      } catch {
+        toast.error("Failed to remove notification");
+      } finally {
+        setIsClearingOne(false);
+        setClearTarget(null);
+      }
+    });
   }
 
   function handleMarkAllRead() {
@@ -160,82 +196,86 @@ export function NotificationList({
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">
-            Notifications
-          </h1>
-          {total > 0 && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {total} notification{total === 1 ? "" : "s"}
-              {unreadCount > 0 && (
-                <span className="ml-1.5 text-primary font-medium">
-                  · {unreadCount} unread
-                </span>
-              )}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Toolbar: filter tabs + bulk actions */}
-      {items.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-border">
-          <div className="flex items-center gap-1 rounded-md bg-muted/50 p-0.5">
-            <button
-              className={cn(
-                "rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
-                filter === "all"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => setFilter("all")}
-              type="button"
-            >
-              All
-            </button>
-            <button
-              className={cn(
-                "flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
-                filter === "unread"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => setFilter("unread")}
-              type="button"
-            >
-              Unread
-              {unreadCount > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary/15 px-1 text-2xs font-semibold text-primary">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+      {/* Header + toolbar stick together as one unit while the list scrolls
+          beneath them. */}
+      <div className="sticky top-0 z-10 bg-background">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">
+              Notifications
+            </h1>
+            {total > 0 && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {total} notification{total === 1 ? "" : "s"}
+                {unreadCount > 0 && (
+                  <span className="ml-1.5 text-primary font-medium">
+                    · {unreadCount} unread
+                  </span>
+                )}
+              </p>
+            )}
           </div>
+        </div>
 
-          <div className="flex items-center gap-4">
-            {unreadCount > 0 && (
+        {/* Toolbar: filter tabs + bulk actions */}
+        {items.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-border">
+            <div className="flex items-center gap-1 rounded-md bg-muted/50 p-0.5">
               <button
-                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                disabled={isPending}
-                onClick={handleMarkAllRead}
+                className={cn(
+                  "rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                  filter === "all"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setFilter("all")}
                 type="button"
               >
-                Mark all as read
+                All
               </button>
-            )}
-            <button
-              className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
-              disabled={isPending}
-              onClick={() => setClearConfirmOpen(true)}
-              type="button"
-            >
-              Clear all
-            </button>
+              <button
+                className={cn(
+                  "flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                  filter === "unread"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setFilter("unread")}
+                type="button"
+              >
+                Unread
+                {unreadCount > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary/15 px-1 text-2xs font-semibold text-primary">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {unreadCount > 0 && (
+                <button
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  disabled={isPending}
+                  onClick={handleMarkAllRead}
+                  type="button"
+                >
+                  Mark all as read
+                </button>
+              )}
+              <button
+                className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+                disabled={isPending}
+                onClick={() => setClearConfirmOpen(true)}
+                type="button"
+              >
+                Clear all
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* List */}
       {items.length === 0 ? (
@@ -258,6 +298,7 @@ export function NotificationList({
                   key={notification.id}
                   notification={notification}
                   onRead={handleRead}
+                  onRequestClear={setClearTarget}
                 />
               ))}
             </div>
@@ -286,6 +327,17 @@ export function NotificationList({
         onOpenChange={setClearConfirmOpen}
         open={clearConfirmOpen}
         title="Clear all notifications"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        confirmLabel="Remove"
+        description={`Remove "${clearTarget?.title}"? This cannot be undone.`}
+        isPending={isClearingOne}
+        onConfirm={handleConfirmClearOne}
+        onOpenChange={(open) => !open && setClearTarget(null)}
+        open={!!clearTarget}
+        title="Remove notification"
         variant="destructive"
       />
     </div>

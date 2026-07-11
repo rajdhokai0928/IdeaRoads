@@ -14,10 +14,11 @@ import {
   getWorkspaceBySlug,
   getWorkspaceMember,
 } from "@/lib/workspaces/queries";
+import { ChangelogStatusFilter } from "./_components/changelog-status-filter";
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -31,8 +32,12 @@ export default async function WorkspaceChangelogPage({
   searchParams,
 }: Props) {
   const { slug } = await params;
-  const { q } = await searchParams;
+  const { q, status: statusParam } = await searchParams;
   const searchQuery = q ?? "";
+  const status: "all" | "draft" | "published" =
+    statusParam === "draft" || statusParam === "published"
+      ? statusParam
+      : "all";
 
   const session = await requireSession();
 
@@ -56,19 +61,31 @@ export default async function WorkspaceChangelogPage({
 
   const drafts = isAdmin ? entries.filter((e) => !e.isPublished) : [];
   const published = entries.filter((e) => e.isPublished);
+  const showDrafts = isAdmin && (status === "all" || status === "draft");
+  const showPublished = status === "all" || status === "published";
 
   return (
     <div className="flex flex-col">
       <PageHeader
         actions={
           isAdmin ? (
-            <Button asChild>
-              <Link href={`/${slug}/settings/changelog/new`}>
-                <PlusIcon data-icon="inline-start" />
-                New entry
-              </Link>
-            </Button>
+            <>
+              <ChangelogStatusFilter activeStatus={status} />
+              <Button asChild>
+                <Link href={`/${slug}/settings/changelog/new`}>
+                  <PlusIcon data-icon="inline-start" />
+                  New entry
+                </Link>
+              </Button>
+            </>
           ) : undefined
+        }
+        beforeActions={
+          <ListSearch
+            className=""
+            defaultValue={searchQuery}
+            placeholder="Search updates"
+          />
         }
         description={
           published.length === 0 && drafts.length === 0
@@ -80,12 +97,10 @@ export default async function WorkspaceChangelogPage({
         title="Changelog"
       />
 
-      <ListSearch defaultValue={searchQuery} placeholder="Search updates" />
-
       {/* Content */}
       <div className="px-4 py-6 sm:px-8">
         {/* Drafts (admin only) */}
-        {isAdmin && drafts.length > 0 && (
+        {showDrafts && drafts.length > 0 && (
           <div className="mb-8">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ir-muted">
               Drafts ({drafts.length})
@@ -104,36 +119,9 @@ export default async function WorkspaceChangelogPage({
         )}
 
         {/* Published entries */}
-        {published.length === 0 ? (
-          searchQuery && drafts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-sm font-medium text-ir-heading">
-                No updates match “{searchQuery}”
-              </p>
-              <p className="mt-1 text-xs text-ir-muted">
-                Try a different search term.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-sm font-medium text-ir-heading">
-                Nothing here yet
-              </p>
-              <p className="mt-1 text-xs text-ir-muted">
-                Check back soon for product updates and announcements.
-              </p>
-              {isAdmin && (
-                <Button asChild className="mt-4">
-                  <Link href={`/${slug}/settings/changelog/new`}>
-                    Create your first entry
-                  </Link>
-                </Button>
-              )}
-            </div>
-          )
-        ) : (
+        {showPublished && published.length > 0 && (
           <div>
-            {isAdmin && drafts.length > 0 && (
+            {showDrafts && drafts.length > 0 && (
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ir-muted">
                 Published ({published.length})
               </h2>
@@ -162,6 +150,36 @@ export default async function WorkspaceChangelogPage({
             )}
           </div>
         )}
+
+        {/* Empty state — nothing visible under the current filter/search */}
+        {(!showDrafts || drafts.length === 0) &&
+          (!showPublished || published.length === 0) && (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <p className="text-sm font-medium text-ir-heading">
+                {searchQuery
+                  ? `No updates match “${searchQuery}”`
+                  : status === "draft"
+                    ? "No drafts"
+                    : status === "published"
+                      ? "No published updates"
+                      : "Nothing here yet"}
+              </p>
+              <p className="mt-1 text-xs text-ir-muted">
+                {searchQuery
+                  ? "Try a different search term."
+                  : status === "all"
+                    ? "Check back soon for product updates and announcements."
+                    : "Try a different filter."}
+              </p>
+              {isAdmin && !searchQuery && status !== "published" && (
+                <Button asChild className="mt-4">
+                  <Link href={`/${slug}/settings/changelog/new`}>
+                    Create your first entry
+                  </Link>
+                </Button>
+              )}
+            </div>
+          )}
       </div>
     </div>
   );

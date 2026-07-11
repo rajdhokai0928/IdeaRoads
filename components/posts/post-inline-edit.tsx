@@ -35,13 +35,19 @@ const ALLOWED_IMAGE_TYPES = new Set([
 // so every field is editable — those three the moment you pick a value, and
 // title/description/image when you press Save.
 
+// Title and description edit independently — clicking one must not also flip
+// the other into edit mode. The explicit "Edit" control (EditPostControls)
+// still opens both at once, sharing the one Save/Cancel bar under the
+// description; a title-only edit gets its own compact Save/Cancel instead.
+type EditTarget = "body" | "both" | "title" | null;
+
 interface PostEditContextValue {
+  bodyEditing: boolean;
   cancel: () => void;
   canEdit: boolean;
   currentImage: string | null;
   draftBody: string;
   draftTitle: string;
-  editing: boolean;
   error: string | null;
   handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   imageError: string | null;
@@ -51,6 +57,10 @@ interface PostEditContextValue {
   setDraftBody: (value: string) => void;
   setDraftTitle: (value: string) => void;
   startEdit: () => void;
+  startEditBody: () => void;
+  startEditTitle: () => void;
+  titleEditing: boolean;
+  titleOnlyEditing: boolean;
 }
 
 const PostEditContext = createContext<PostEditContextValue | null>(null);
@@ -86,7 +96,12 @@ export function PostEditProvider({
 }: PostEditProviderProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [editing, setEditing] = useState(defaultEditing && canEdit);
+  const [editTarget, setEditTarget] = useState<EditTarget>(
+    defaultEditing && canEdit ? "both" : null
+  );
+  const titleEditing = editTarget === "title" || editTarget === "both";
+  const bodyEditing = editTarget === "body" || editTarget === "both";
+  const titleOnlyEditing = editTarget === "title";
   const [draftTitle, setDraftTitle] = useState(initialTitle);
   const [draftBody, setDraftBody] = useState(initialBody ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -137,18 +152,30 @@ export function PostEditProvider({
     setImageRemoved(true);
   }
 
-  function startEdit() {
+  function startEditWith(target: EditTarget) {
     setDraftTitle(initialTitle);
     setDraftBody(initialBody ?? "");
     setError(null);
     resetImage();
-    setEditing(true);
+    setEditTarget(target);
+  }
+
+  function startEdit() {
+    startEditWith("both");
+  }
+
+  function startEditTitle() {
+    startEditWith("title");
+  }
+
+  function startEditBody() {
+    startEditWith("body");
   }
 
   function cancel() {
     setError(null);
     resetImage();
-    setEditing(false);
+    setEditTarget(null);
   }
 
   function save() {
@@ -186,7 +213,7 @@ export function PostEditProvider({
       if (result.success) {
         toast.success("Feedback updated");
         resetImage();
-        setEditing(false);
+        setEditTarget(null);
         router.refresh();
       } else {
         setError(result.error ?? "Failed to update feedback.");
@@ -198,7 +225,9 @@ export function PostEditProvider({
     <PostEditContext.Provider
       value={{
         canEdit,
-        editing,
+        titleEditing,
+        bodyEditing,
+        titleOnlyEditing,
         draftTitle,
         draftBody,
         error,
@@ -210,6 +239,8 @@ export function PostEditProvider({
         handleImageChange,
         removeImage,
         startEdit,
+        startEditTitle,
+        startEditBody,
         cancel,
         save,
       }}
@@ -219,7 +250,12 @@ export function PostEditProvider({
   );
 }
 
-// Renders the title as a heading, or a text input when editing.
+// Renders the title as a heading, or a text input when editing. When
+// editable, the heading itself is a click (or Enter/Space) target that opens
+// edit mode — the explicit Edit button below is still there too, but this is
+// the faster path most people reach for first. Clicking the title only ever
+// edits the title: the description stays a plain read view until it's
+// clicked on its own (see EditablePostContent).
 export function EditableTitle({
   title,
   className,
@@ -227,21 +263,87 @@ export function EditableTitle({
   className?: string;
   title: string;
 }) {
-  const { editing, draftTitle, setDraftTitle, isPending } = usePostEdit();
+  const {
+    titleEditing,
+    titleOnlyEditing,
+    draftTitle,
+    setDraftTitle,
+    isPending,
+    error,
+    canEdit,
+    startEditTitle,
+    cancel,
+    save,
+  } = usePostEdit();
 
-  if (!editing) {
-    return <h1 className={className}>{title}</h1>;
+  if (!titleEditing) {
+    if (!canEdit) {
+      return <h1 className={className}>{title}</h1>;
+    }
+    return (
+      <h1 className={className}>
+        <button
+          className="-mx-1.5 -my-0.5 rounded-ir-sm px-1.5 py-0.5 text-left transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+          onClick={startEditTitle}
+          title="Click to edit"
+          type="button"
+        >
+          {title}
+        </button>
+      </h1>
+    );
+  }
+
+  // The title-only session (clicked the heading directly) gets its own
+  // compact Save/Cancel plus Enter/Escape; the "edit everything" session
+  // (explicit Edit button) defers to the shared bar under the description.
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!titleOnlyEditing) {
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      save();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancel();
+    }
   }
 
   return (
-    <input
-      aria-label="Feedback title"
-      className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-lg font-semibold text-ir-heading focus:outline-none focus:ring-2 focus:ring-ir-primary/40 disabled:opacity-50"
-      disabled={isPending}
-      maxLength={150}
-      onChange={(e) => setDraftTitle(e.target.value)}
-      value={draftTitle}
-    />
+    <div className="space-y-1.5">
+      <input
+        aria-label="Feedback title"
+        className="w-full rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-lg font-semibold text-ir-heading focus:outline-none focus:ring-2 focus:ring-ir-primary/40 disabled:opacity-50"
+        disabled={isPending}
+        maxLength={150}
+        onChange={(e) => setDraftTitle(e.target.value)}
+        onKeyDown={handleKeyDown}
+        value={draftTitle}
+      />
+      {titleOnlyEditing && (
+        <>
+          {error && <p className="text-xs text-ir-danger">{error}</p>}
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              disabled={isPending}
+              onClick={cancel}
+              size="sm"
+              variant="ghost"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={isPending || draftTitle.trim().length < 3}
+              onClick={save}
+              size="sm"
+            >
+              {isPending ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -257,7 +359,7 @@ export function EditablePostContent({
   imageUrl: string | null;
 }) {
   const {
-    editing,
+    bodyEditing,
     draftBody,
     setDraftBody,
     isPending,
@@ -269,15 +371,61 @@ export function EditablePostContent({
     removeImage,
     save,
     cancel,
+    canEdit,
+    startEditBody,
   } = usePostEdit();
 
-  if (!editing) {
+  // The body can contain real links (Quill's link tool), so it can't be
+  // wrapped in a <button> — a click anywhere that isn't a link opens edit
+  // mode instead, and links keep navigating normally. This only ever opens
+  // the description's own edit mode — the title stays a plain heading.
+  function handleBodyClick(e: React.MouseEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest("a")) {
+      return;
+    }
+    startEditBody();
+  }
+
+  function handleBodyKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      startEditBody();
+    }
+  }
+
+  if (!bodyEditing) {
     return (
       <>
-        {body && (
+        {body ? (
           <div className="mt-6 border-t border-ir-border pt-6">
-            <FeedbackBody body={body} className={className} />
+            {canEdit ? (
+              // biome-ignore lint/a11y/useSemanticElements: can't be a <button> — the body renders sanitized rich HTML that may contain real <a> links, which HTML forbids nesting inside a button
+              <div
+                className="-mx-1.5 -my-1 cursor-pointer rounded-ir-sm px-1.5 py-1 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                onClick={handleBodyClick}
+                onKeyDown={handleBodyKeyDown}
+                role="button"
+                tabIndex={0}
+                title="Click to edit"
+              >
+                <FeedbackBody body={body} className={className} />
+              </div>
+            ) : (
+              <FeedbackBody body={body} className={className} />
+            )}
           </div>
+        ) : (
+          canEdit && (
+            <div className="mt-6 border-t border-ir-border pt-6">
+              <button
+                className="-mx-1.5 rounded-ir-sm px-1.5 py-1 text-left text-sm text-ir-muted italic transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                onClick={startEditBody}
+                type="button"
+              >
+                Add a description…
+              </button>
+            </div>
+          )
         )}
         {imageUrl && (
           <div
@@ -373,9 +521,9 @@ export function EditablePostContent({
 
 // The "Edit" affordance shown in the detail actions row (view mode only).
 export function EditPostControls() {
-  const { canEdit, editing, startEdit } = usePostEdit();
+  const { canEdit, titleEditing, bodyEditing, startEdit } = usePostEdit();
 
-  if (!canEdit || editing) {
+  if (!canEdit || titleEditing || bodyEditing) {
     return null;
   }
 

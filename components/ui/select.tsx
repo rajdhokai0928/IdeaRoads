@@ -35,8 +35,10 @@ function SelectTrigger({
   className,
   size = "default",
   children,
+  showChevron = true,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
+  showChevron?: boolean
   size?: "sm" | "default"
 }) {
   return (
@@ -50,9 +52,11 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon asChild>
-        <CaretDownIcon className="pointer-events-none size-3.5 text-ir-muted" />
-      </SelectPrimitive.Icon>
+      {showChevron && (
+        <SelectPrimitive.Icon asChild>
+          <CaretDownIcon className="pointer-events-none size-3.5 text-ir-muted" />
+        </SelectPrimitive.Icon>
+      )}
     </SelectPrimitive.Trigger>
   )
 }

@@ -1,4 +1,14 @@
-import { and, count, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  notInArray,
+  sql,
+} from "drizzle-orm";
 import { boards, postStatusChanges, posts, votes } from "@/db/schema";
 import { db } from "@/lib/db";
 import { POST_STATUSES, type PostStatus } from "@/lib/posts/constants";
@@ -58,6 +68,7 @@ export async function listBoardPosts(
     myVotes?: boolean;
     onlyMine?: boolean;
     includeUnapproved?: boolean;
+    excludeStatuses?: string[];
     limit?: number;
     offset?: number;
   } = {}
@@ -71,6 +82,7 @@ export async function listBoardPosts(
     myVotes,
     onlyMine,
     includeUnapproved = false,
+    excludeStatuses,
     limit,
     offset = 0,
   } = opts;
@@ -89,6 +101,13 @@ export async function listBoardPosts(
   // (Feature 05). Callers opt in to pending posts via `includeUnapproved`.
   if (!includeUnapproved) {
     conditions.push(eq(posts.isApproved, true));
+  }
+
+  // Statuses with showOnPublicFeed = false (e.g. Completed, by default) are
+  // excluded from the public feed only — callers pass this in from the
+  // workspace's status config; the admin panel never sets it.
+  if (excludeStatuses && excludeStatuses.length > 0) {
+    conditions.push(notInArray(posts.status, excludeStatuses));
   }
 
   if (status) {
@@ -222,6 +241,7 @@ export async function countBoardPostsFiltered(
     myVotes?: boolean;
     onlyMine?: boolean;
     includeUnapproved?: boolean;
+    excludeStatuses?: string[];
   } = {}
 ): Promise<number> {
   const {
@@ -232,6 +252,7 @@ export async function countBoardPostsFiltered(
     myVotes,
     onlyMine,
     includeUnapproved = false,
+    excludeStatuses,
   } = opts;
 
   const conditions = [
@@ -241,6 +262,9 @@ export async function countBoardPostsFiltered(
   ];
   if (!includeUnapproved) {
     conditions.push(eq(posts.isApproved, true));
+  }
+  if (excludeStatuses && excludeStatuses.length > 0) {
+    conditions.push(notInArray(posts.status, excludeStatuses));
   }
   if (status) {
     conditions.push(eq(posts.status, status));

@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext } from "react";
 
 // The current workspace's public-portal URL, resolved once in the workspace
@@ -27,19 +28,42 @@ export function usePortalHref() {
   return useContext(PortalHrefContext);
 }
 
+// The Roadmap and Changelog admin pages (and their sub-routes, e.g. New Entry
+// / Edit Entry) always open THEIR OWN public page — not whatever the
+// workspace-wide default resolves to — so "Open Public Portal" previews what
+// you're actually editing. This works regardless of that section's own
+// public/private toggle, the same way an admin can preview a hidden post
+// themselves: the public route's own member bypass lets it render for them.
+function useSectionPortalHref(): string | null {
+  const pathname = usePathname();
+  const [slug, area, section] = pathname.split("/").filter(Boolean);
+  if (!slug || area !== "settings") {
+    return null;
+  }
+  if (section === "roadmap") {
+    return `/${slug}/roadmap`;
+  }
+  if (section === "changelog") {
+    return `/${slug}/changelog`;
+  }
+  return null;
+}
+
 // Opens the workspace's public portal in a new tab. Rendered inside PageHeader,
 // so it shows up automatically on every admin page that uses the shared header.
 // Renders nothing when there's no public surface to open. The label collapses
 // to an icon-only control on mobile to stay compact in the header.
 export function OpenPortalButton() {
-  const href = usePortalHref();
+  const defaultHref = usePortalHref();
+  const sectionHref = useSectionPortalHref();
+  const href = sectionHref ?? defaultHref;
   if (!href) {
     return null;
   }
   return (
     <a
       aria-label="Open Public Portal"
-      className="flex items-center gap-1.5 rounded-ir-button border border-ir-border px-3 py-2 text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 sm:px-3.5"
+      className="flex shrink-0 items-center gap-1.5 rounded-ir-button border border-ir-border px-3 py-2 text-sm font-medium whitespace-nowrap text-ir-heading transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 sm:px-3.5"
       href={href}
       rel="noopener noreferrer"
       target="_blank"

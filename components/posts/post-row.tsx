@@ -85,7 +85,7 @@ export function PostRow({
         />
       </td>
       <td className="max-w-64 px-4 py-3 align-top">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {post.isPinned && (
             <span
               className="inline-flex shrink-0 items-center text-ir-primary"
@@ -96,8 +96,9 @@ export function PostRow({
             </span>
           )}
           <Link
-            className="font-medium text-ir-heading transition-colors duration-150 ease-ir-standard hover:text-ir-primary hover:underline focus-visible:outline-none focus-visible:underline"
+            className="min-w-0 truncate font-medium text-ir-heading transition-colors duration-150 ease-ir-standard hover:text-ir-primary hover:underline focus-visible:outline-none focus-visible:underline"
             href={href}
+            title={post.title}
           >
             {post.title}
           </Link>
@@ -158,6 +159,7 @@ export function PostRow({
         <VisibilityToggle
           canEdit={isAdminOrOwner}
           isApproved={post.isApproved}
+          isDraft={post.isDraft}
           postId={post.id}
           workspaceId={workspaceId}
         />

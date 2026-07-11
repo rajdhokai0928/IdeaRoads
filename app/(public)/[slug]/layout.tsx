@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { NamePromptModal } from "@/components/portal/name-prompt-modal";
 import { WorkspaceSuspendedPage } from "@/components/workspace/workspace-suspended";
 import { getWorkspaceBySlug } from "@/lib/workspaces/queries";
 
@@ -19,5 +20,10 @@ export default async function PublicSlugLayout({ children, params }: Props) {
     return <WorkspaceSuspendedPage />;
   }
 
-  return children;
+  return (
+    <>
+      <NamePromptModal />
+      {children}
+    </>
+  );
 }

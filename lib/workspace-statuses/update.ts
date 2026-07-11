@@ -11,6 +11,7 @@ export async function updateWorkspaceStatus(
     isDefault?: boolean;
     isArchived?: boolean;
     showOnRoadmap?: boolean;
+    showOnPublicFeed?: boolean;
   }
 ) {
   await db

@@ -8,6 +8,7 @@ import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badg
 import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
@@ -68,8 +69,12 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
     notFound();
   }
 
+  // Linked feedback posts always use the public-visibility filter here,
+  // regardless of the viewer's workspace role — hidden/unapproved posts must
+  // never surface on the public portal, even to a signed-in admin.
   const entry = await getChangelogEntryById(entryId, workspace.id, {
-    publicOnly: !member,
+    publicOnly: true,
+    userId: session?.user.id ?? null,
   });
   if (!entry?.isPublished) {
     notFound();
@@ -173,23 +178,38 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
             </h2>
             <div className="space-y-2">
               {entry.linkedPosts.map((post) => (
-                <Link
-                  className="group flex flex-col gap-2 rounded-ir-sm border border-ir-border px-4 py-3 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-                  href={`/${slug}/b/${post.boardSlug}/p/${post.slug}`}
+                // Stretched-link pattern: the row is a plain div (not a real
+                // anchor) so the vote button can be a genuine interactive
+                // element beside it — nesting a <button> inside an <a> is
+                // invalid HTML. The title link's after:absolute overlay
+                // stretches its hit-area to the whole row; the vote button
+                // sits in a relative z-10 sibling so it intercepts clicks
+                // above that overlay.
+                <div
+                  className="group relative flex flex-col gap-2 rounded-ir-sm border border-ir-border px-4 py-3 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   key={post.id}
                 >
-                  <span className="min-w-0 flex-1 text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard group-hover:text-ir-primary">
+                  <Link
+                    className="relative min-w-0 flex-1 text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard after:absolute after:inset-0 after:content-[''] group-hover:text-ir-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                    href={`/${slug}/b/${post.boardSlug}/p/${post.slug}`}
+                  >
                     {post.title}
-                  </span>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-xs text-ir-muted">
-                      ↑ {post.upvotes}
-                    </span>
+                  </Link>
+                  <div className="relative z-10 flex shrink-0 items-center gap-3">
+                    <VoteButton
+                      compact
+                      initialCount={post.upvotes}
+                      initialHasVoted={post.hasVoted}
+                      isArchived={post.boardIsArchived}
+                      isLocked={post.isLocked}
+                      isSignedIn={isSignedIn}
+                      postId={post.id}
+                    />
                     <span className="rounded-ir-sm bg-ir-muted-surface px-2 py-0.5 text-[11px] font-semibold text-ir-muted">
                       {post.status.replace(/_/g, " ")}
                     </span>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>

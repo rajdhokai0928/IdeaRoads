@@ -158,6 +158,8 @@ export default function QuillEditor({
       }
 
       const withImages = !!uploadImageRef.current;
+      // No "clean" (clear formatting) — not part of our editor requirements.
+      // Everything else stays, including the list buttons.
       const toolbarContainer = [
         ["bold", "italic", "underline", "strike"],
         ["blockquote", "code-block"],
@@ -165,7 +167,6 @@ export default function QuillEditor({
         [{ indent: "-1" }, { indent: "+1" }],
         ["link"],
         ...(withImages ? [["image"]] : []),
-        ["clean"],
       ];
 
       const quill = new Quill(editorDiv, {
@@ -197,13 +198,22 @@ export default function QuillEditor({
 
       // Enter-to-submit: capture phase so we beat Quill's own newline handler.
       // Shift+Enter (and IME composition) fall through to the default newline.
+      // Inside a list, Enter is left alone entirely — Quill's own default
+      // handling creates the next item, or exits the list on an empty item,
+      // exactly as it does in every other QuillEditor that has no onSubmit
+      // (e.g. the changelog editor) — only outside of a list does Enter submit.
       if (onSubmitRef.current) {
         const onKeyDown = (e: KeyboardEvent) => {
-          if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
-            e.preventDefault();
-            e.stopPropagation();
-            onSubmitRef.current?.();
+          if (e.key !== "Enter" || e.shiftKey || e.isComposing) {
+            return;
           }
+          const range = quill.getSelection();
+          if (range && quill.getFormat(range.index).list) {
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          onSubmitRef.current?.();
         };
         quill.root.addEventListener("keydown", onKeyDown, true);
         cleanups.push(() =>

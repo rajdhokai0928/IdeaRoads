@@ -5,6 +5,12 @@ import {
   ManualRoadmapBoard,
 } from "@/components/roadmap/manual/manual-roadmap-board";
 import type { BoardItem } from "@/components/roadmap/manual/manual-roadmap-card";
+import {
+  ManualRoadmapAddItemButton,
+  ManualRoadmapManageColumnsButton,
+  ManualRoadmapProvider,
+  ManualRoadmapSearchInput,
+} from "@/components/roadmap/manual/manual-roadmap-search-context";
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
 import { RoadmapSyncToggle } from "@/components/roadmap/roadmap-sync-toggle";
 import { PageHeader } from "@/components/ui/page";
@@ -74,27 +80,40 @@ export default async function WorkspaceRoadmapPage({
     const totalItems = items.length;
 
     return (
-      <div className="flex flex-col">
-        <PageHeader
-          actions={
-            isAdmin ? (
-              <RoadmapSyncToggle enabled={false} workspaceId={workspace.id} />
-            ) : undefined
-          }
-          description={
-            totalItems === 0
-              ? "No items on the roadmap yet."
-              : `${totalItems} item${totalItems === 1 ? "" : "s"} across all columns`
-          }
-          title="Roadmap"
-        />
-        <ManualRoadmapBoard
-          canManage={isAdmin}
-          items={items}
-          statuses={statuses}
-          workspaceId={workspace.id}
-        />
-      </div>
+      <ManualRoadmapProvider>
+        <div className="flex flex-col">
+          <PageHeader
+            actions={
+              isAdmin ? (
+                <>
+                  <ManualRoadmapManageColumnsButton />
+                  <ManualRoadmapAddItemButton
+                    disabled={statuses.length === 0}
+                  />
+                </>
+              ) : undefined
+            }
+            beforeActions={<ManualRoadmapSearchInput />}
+            description={
+              totalItems === 0
+                ? "No items on the roadmap yet."
+                : `${totalItems} item${totalItems === 1 ? "" : "s"} across all columns`
+            }
+            title="Roadmap"
+          />
+          <ManualRoadmapBoard
+            canManage={isAdmin}
+            items={items}
+            statuses={statuses}
+            syncToggle={
+              isAdmin ? (
+                <RoadmapSyncToggle enabled={false} workspaceId={workspace.id} />
+              ) : undefined
+            }
+            workspaceId={workspace.id}
+          />
+        </div>
+      </ManualRoadmapProvider>
     );
   }
 
@@ -109,10 +128,12 @@ export default async function WorkspaceRoadmapPage({
   return (
     <div className="flex flex-col">
       <PageHeader
-        actions={
-          isAdmin ? (
-            <RoadmapSyncToggle enabled={true} workspaceId={workspace.id} />
-          ) : undefined
+        beforeActions={
+          <ListSearch
+            className=""
+            defaultValue={searchQuery}
+            placeholder="Search roadmap"
+          />
         }
         description={
           totalPosts === 0
@@ -123,7 +144,11 @@ export default async function WorkspaceRoadmapPage({
         }
         title="Roadmap"
       />
-      <ListSearch defaultValue={searchQuery} placeholder="Search roadmap" />
+      {isAdmin && (
+        <div className="border-border px-4 py-4 sm:px-8">
+          <RoadmapSyncToggle enabled={true} workspaceId={workspace.id} />
+        </div>
+      )}
       <div className="flex-1">
         <RoadmapBoard
           columns={columns}

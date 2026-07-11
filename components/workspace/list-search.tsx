@@ -5,6 +5,9 @@ import { useCallback, useTransition } from "react";
 import { SearchInput } from "@/components/ui/search-input";
 
 interface ListSearchProps {
+  // Overrides the default block-level row wrapper — used when this is placed
+  // inline elsewhere (e.g. a page header's actions) instead of its own row.
+  className?: string;
   defaultValue: string;
   placeholder?: string;
 }
@@ -15,6 +18,7 @@ interface ListSearchProps {
 export function ListSearch({
   defaultValue,
   placeholder = "Search",
+  className,
 }: ListSearchProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -38,7 +42,7 @@ export function ListSearch({
   );
 
   return (
-    <div className="border-border px-4 py-4 sm:px-8">
+    <div className={className ?? "border-border px-4 py-4 sm:px-8"}>
       <SearchInput
         aria-label={placeholder}
         className="h-9 min-w-50 max-w-md"

@@ -3,12 +3,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
+import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
+import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { truncateHtmlToText } from "@/lib/changelog/html";
 import { listChangelogEntries } from "@/lib/changelog/queries";
+import { getReactionsForEntries } from "@/lib/changelog-comments/reactions";
 import { getNotificationPreferences } from "@/lib/notifications/queries";
 import { portalBaseUrl } from "@/lib/urls";
 import {
@@ -77,8 +80,13 @@ export default async function PublicChangelogIndexPage({
     session ? getNotificationPreferences(session.user.id) : null,
   ]);
   const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
+  const reactionsByEntry = await getReactionsForEntries(
+    entries.map((e) => e.id),
+    session?.user.id ?? null
+  );
 
   const isSignedIn = !!session;
+  const baseUrl = portalBaseUrl();
 
   return (
     <div className="min-h-screen bg-ir-background">
@@ -174,12 +182,26 @@ export default async function PublicChangelogIndexPage({
                   <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ir-muted">
                     {truncateHtmlToText(entry.body, 240)}
                   </p>
-                  <Link
-                    className="mt-3 inline-block text-sm font-medium text-ir-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-                    href={`/${slug}/changelog/${entry.id}`}
-                  >
-                    Read more →
-                  </Link>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-ir-border pt-4">
+                    <ChangelogReactions
+                      changelogEntryId={entry.id}
+                      initialReactions={reactionsByEntry.get(entry.id) ?? []}
+                      isSignedIn={isSignedIn}
+                    />
+                    <div className="flex shrink-0 items-center gap-3">
+                      <Link
+                        className="text-sm font-medium text-ir-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        href={`/${slug}/changelog/${entry.id}`}
+                      >
+                        Read more →
+                      </Link>
+                      <ChangelogShareButton
+                        title={entry.title}
+                        url={`${baseUrl}/${slug}/changelog/${entry.id}`}
+                      />
+                    </div>
+                  </div>
                 </div>
               </article>
             ))}

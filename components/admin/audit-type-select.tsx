@@ -30,10 +30,7 @@ export function AuditTypeSelect({
     <>
       <input name={name} type="hidden" value={value === "all" ? "" : value} />
       <Select onValueChange={setValue} value={value}>
-        <SelectTrigger
-          className="h-8 border border-border bg-background px-2.5"
-          size="sm"
-        >
+        <SelectTrigger size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

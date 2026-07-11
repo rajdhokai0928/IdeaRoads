@@ -198,13 +198,14 @@ export function PostActionsMenu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
+          <Button
             aria-label="Feedback actions"
-            className="flex size-7 items-center justify-center rounded-ir-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-            type="button"
+            className="text-ir-muted hover:text-ir-heading"
+            size="icon-xs"
+            variant="ghost"
           >
             <DotsThreeIcon className="size-4" weight="bold" />
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           {isDraft && (

@@ -108,9 +108,29 @@ export default async function BoardPage({ params, searchParams }: Props) {
   const PAGE_SIZE = 20;
   const currentPage = Math.max(1, Number(page ?? 1));
 
+  const [workspaceStatuses, categories, allBoards] = await Promise.all([
+    getActiveWorkspaceStatuses(workspace.id),
+    getActiveCategoriesForWorkspace(workspace.id),
+    listBoardsForWorkspace(workspace.id),
+  ]);
+
+  // Statuses an admin has marked "hidden from public feed" (Completed, by
+  // default) are excluded here only — the admin panel's own post lists never
+  // apply this filter.
+  const excludeStatuses = workspaceStatuses
+    .filter((s) => !s.showOnPublicFeed)
+    .map((s) => s.slug);
+  // Same exclusion for the status filter dropdown, so visitors can't select a
+  // status that would always return zero results.
+  const publicWorkspaceStatuses = workspaceStatuses.filter(
+    (s) => s.showOnPublicFeed
+  );
+
   // Shared filter set for the page query and its matching count.
-  // Team (Brand Admin + Team Member) sees moderation-held posts; the public
-  // sees approved feedback only.
+  // Hidden/unapproved posts never appear on the public portal, regardless of
+  // whether the viewer is signed in as a workspace member/admin — visibility
+  // must not depend on who happens to be looking. Team members review
+  // moderation-held posts from the workspace app, not this public route.
   const filterOpts = {
     status: validStatus || undefined,
     categoryId: validCategoryId || undefined,
@@ -118,22 +138,19 @@ export default async function BoardPage({ params, searchParams }: Props) {
     userId: session?.user.id,
     myVotes: myVotesActive,
     onlyMine: mineActive,
-    includeUnapproved: isMember,
+    includeUnapproved: false,
+    excludeStatuses,
   };
 
-  const [boardPosts, totalCount, workspaceStatuses, categories, allBoards] =
-    await Promise.all([
-      listBoardPosts(board.id, {
-        sort: validSort,
-        ...filterOpts,
-        limit: PAGE_SIZE,
-        offset: (currentPage - 1) * PAGE_SIZE,
-      }),
-      countBoardPostsFiltered(board.id, filterOpts),
-      getActiveWorkspaceStatuses(workspace.id),
-      getActiveCategoriesForWorkspace(workspace.id),
-      listBoardsForWorkspace(workspace.id),
-    ]);
+  const [boardPosts, totalCount] = await Promise.all([
+    listBoardPosts(board.id, {
+      sort: validSort,
+      ...filterOpts,
+      limit: PAGE_SIZE,
+      offset: (currentPage - 1) * PAGE_SIZE,
+    }),
+    countBoardPostsFiltered(board.id, filterOpts),
+  ]);
 
   // Build a category map for quick lookup
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
@@ -235,7 +252,7 @@ export default async function BoardPage({ params, searchParams }: Props) {
               activeStatus={validStatus}
               myVotesActive={myVotesActive}
               showMyVotes={isSignedIn}
-              workspaceStatuses={workspaceStatuses}
+              workspaceStatuses={publicWorkspaceStatuses}
             />
 
             {/* Post list */}

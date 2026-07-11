@@ -103,6 +103,7 @@ const updateStatusSchema = z.object({
     .optional(),
   isArchived: z.boolean().optional(),
   showOnRoadmap: z.boolean().optional(),
+  showOnPublicFeed: z.boolean().optional(),
 });
 
 export async function updateWorkspaceStatusAction(input: {
@@ -112,6 +113,7 @@ export async function updateWorkspaceStatusAction(input: {
   color?: string;
   isArchived?: boolean;
   showOnRoadmap?: boolean;
+  showOnPublicFeed?: boolean;
 }): Promise<ActionResult<undefined>> {
   const session = await requireSession();
 
@@ -142,6 +144,7 @@ export async function updateWorkspaceStatusAction(input: {
     color: parsed.data.color,
     isArchived: parsed.data.isArchived,
     showOnRoadmap: parsed.data.showOnRoadmap,
+    showOnPublicFeed: parsed.data.showOnPublicFeed,
   });
 
   return { success: true, data: undefined };

@@ -1,6 +1,6 @@
 "use client";
 
-import { SpinnerIcon, XIcon } from "@phosphor-icons/react";
+import { EnvelopeIcon, SpinnerIcon, XIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import {
 } from "@/app/actions/members";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SquareAvatar } from "@/components/ui/square-avatar";
 import { workspaceRoleLabel } from "@/config/platform";
 
 interface PendingInvite {
@@ -138,17 +139,27 @@ export function PendingInvitesList({
                 canManage && (actorRole === "owner" || invite.role !== "admin");
               return (
                 <div
-                  className="flex flex-col gap-2 bg-ir-surface px-6 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
+                  className="flex flex-col gap-3 bg-ir-surface px-6 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
                   key={invite.id}
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ir-heading">
-                      {invite.email}
-                    </p>
-                    <p className="text-xs text-ir-muted">
-                      {workspaceRoleLabel(invite.role)} ·{" "}
-                      {formatExpiry(invite.expiresAt)}
-                    </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <SquareAvatar
+                      alt=""
+                      className="size-9 bg-ir-warning/10 text-ir-warning"
+                      fallback={
+                        <EnvelopeIcon className="size-4" weight="bold" />
+                      }
+                      imageUrl={null}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ir-heading">
+                        {invite.email}
+                      </p>
+                      <p className="text-xs text-ir-muted">
+                        {workspaceRoleLabel(invite.role)} ·{" "}
+                        {formatExpiry(invite.expiresAt)}
+                      </p>
+                    </div>
                   </div>
                   {canRevoke && (
                     <Button

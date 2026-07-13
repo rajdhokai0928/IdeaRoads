@@ -70,7 +70,7 @@ export function CreateLinkForm({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-ir-heading">
+      <h3 className="text-sm font-semibold tracking-eyebrow text-ir-muted uppercase">
         Generate invite link
       </h3>
       <form className="flex flex-wrap gap-3" onSubmit={onSubmit}>

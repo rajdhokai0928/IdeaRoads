@@ -30,6 +30,10 @@ interface WorkspaceStatus {
 }
 
 interface BulkActionBarProps {
+  // Only enough per-post data to decide which bulk actions apply — draft
+  // status for the Publish button. Structurally compatible with the fuller
+  // PostsTableRow the caller already has.
+  posts: { id: string; isDraft: boolean }[];
   workspaceId: string;
   workspaceStatuses: WorkspaceStatus[];
 }
@@ -38,6 +42,7 @@ interface BulkActionBarProps {
 // selected row — no new API surface, just client-side orchestration over the
 // already-supported publish/status/delete flows (same as each row's own menu).
 export function BulkActionBar({
+  posts,
   workspaceId,
   workspaceStatuses,
 }: BulkActionBarProps) {
@@ -51,17 +56,25 @@ export function BulkActionBar({
   const ids = bulk?.selectedIds ?? [];
   const clearSelection = bulk?.clear ?? (() => {});
 
+  // Publish only applies to drafts — hide it entirely when every selected
+  // post is already published, and only act on the draft ones so the count
+  // reported back reflects what was actually changed.
+  const draftIds = ids.filter((id) => posts.find((p) => p.id === id)?.isDraft);
+
   function handlePublish() {
+    if (draftIds.length === 0) {
+      return;
+    }
     startTransition(async () => {
       const results = await Promise.all(
-        ids.map((postId) => publishPostAction({ postId, workspaceId }))
+        draftIds.map((postId) => publishPostAction({ postId, workspaceId }))
       );
       const okCount = results.filter((r) => r.success).length;
       if (okCount > 0) {
-        toast.success(`Published ${okCount} of ${ids.length}`);
+        toast.success(`Published ${okCount} of ${draftIds.length}`);
       }
-      if (okCount < ids.length) {
-        toast.error(`${ids.length - okCount} could not be published`);
+      if (okCount < draftIds.length) {
+        toast.error(`${draftIds.length - okCount} could not be published`);
       }
       clearSelection();
       router.refresh();
@@ -115,15 +128,18 @@ export function BulkActionBar({
               {bulk?.selectedCount} selected
             </span>
             <div className="h-4 w-px bg-ir-border" />
-            <Button
-              disabled={isPending}
-              onClick={handlePublish}
-              size="sm"
-              variant="outline"
-            >
-              <PaperPlaneTiltIcon data-icon="inline-start" />
-              Publish
-            </Button>
+            {draftIds.length > 0 && (
+              <Button
+                disabled={isPending}
+                onClick={handlePublish}
+                size="sm"
+                variant="outline"
+              >
+                <PaperPlaneTiltIcon data-icon="inline-start" />
+                Publish
+                {draftIds.length < ids.length ? ` (${draftIds.length})` : ""}
+              </Button>
+            )}
             <Select
               disabled={isPending}
               onValueChange={handleStatusChange}

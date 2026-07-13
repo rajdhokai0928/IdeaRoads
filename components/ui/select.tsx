@@ -65,7 +65,7 @@ function SelectContent({
   className,
   children,
   position = "popper",
-  align = "center",
+  align = "start",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
@@ -119,7 +119,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2.5 rounded-ir-sm py-2 pr-8 pl-3 text-sm text-ir-body outline-hidden transition-colors duration-100 select-none focus:bg-ir-primary-light/20 focus:text-ir-primary data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-default items-center gap-2.5 rounded-ir-sm py-2 pr-8 pl-3 text-sm text-ir-body outline-hidden transition-colors duration-100 select-none focus:bg-ir-primary-light/20 focus:text-ir-primary data-[state=checked]:bg-ir-primary-light/20 data-[state=checked]:text-ir-primary data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
       {...props}

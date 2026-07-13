@@ -68,7 +68,7 @@ export function PostRow({
         // biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the checkbox inside, not a new interaction
         // biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable
         <td
-          className="px-4 py-3 align-top"
+          className="px-4 py-3 align-middle"
           onClick={(e) => e.stopPropagation()}
         >
           <RowCheckbox id={post.id} label={post.title} />
@@ -76,7 +76,10 @@ export function PostRow({
       )}
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the interactive control inside, not a new interaction */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
-      <td className="px-4 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+      <td
+        className="px-4 py-3 align-middle"
+        onClick={(e) => e.stopPropagation()}
+      >
         <VoteButton
           initialCount={post.upvotes}
           initialHasVoted={post.hasVoted}
@@ -84,7 +87,7 @@ export function PostRow({
           postId={post.id}
         />
       </td>
-      <td className="max-w-64 px-4 py-3 align-top">
+      <td className="max-w-64 px-4 py-3 align-middle">
         <div className="flex min-w-0 items-center gap-2">
           {post.isPinned && (
             <span
@@ -114,23 +117,23 @@ export function PostRow({
           </p>
         )}
       </td>
-      <td className="hidden max-w-72 px-4 py-3 align-top lg:table-cell">
+      <td className="hidden max-w-72 px-4 py-3 align-middle lg:table-cell">
         <p className="line-clamp-2 text-xs text-ir-muted">
           {post.body ? truncateHtmlToText(post.body, 200) : "—"}
         </p>
       </td>
-      <td className="hidden max-w-32 px-4 py-3 align-top sm:table-cell">
+      <td className="hidden max-w-32 px-4 py-3 align-middle sm:table-cell">
         <p className="truncate text-xs text-ir-muted">
           {post.authorName || post.authorEmail}
         </p>
       </td>
-      <td className="hidden whitespace-nowrap px-4 py-3 align-top text-xs text-ir-muted sm:table-cell">
+      <td className="hidden whitespace-nowrap px-4 py-3 align-middle text-xs text-ir-muted sm:table-cell">
         {formatDistanceToNow(post.createdAt, { addSuffix: true })}
       </td>
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the selects inside, not a new interaction */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
       <td
-        className="hidden px-4 py-3 align-top md:table-cell"
+        className="hidden px-4 py-3 align-middle md:table-cell"
         onClick={(e) => e.stopPropagation()}
       >
         <CategorySelect
@@ -143,7 +146,10 @@ export function PostRow({
       </td>
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the selects inside, not a new interaction */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
-      <td className="px-4 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+      <td
+        className="px-4 py-3 align-middle"
+        onClick={(e) => e.stopPropagation()}
+      >
         <StatusSelect
           canEdit={isMember}
           currentStatus={post.status}
@@ -155,7 +161,10 @@ export function PostRow({
       </td>
       {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the selects inside, not a new interaction */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable */}
-      <td className="px-4 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+      <td
+        className="px-4 py-3 align-middle"
+        onClick={(e) => e.stopPropagation()}
+      >
         <VisibilityToggle
           canEdit={isAdminOrOwner}
           isApproved={post.isApproved}
@@ -168,7 +177,7 @@ export function PostRow({
         // biome-ignore lint/a11y/noNoninteractiveElementInteractions: only fences off row-click bubbling from the menu inside, not a new interaction
         // biome-ignore lint/a11y/useKeyWithClickEvents: same — stopPropagation only, no new behavior to make keyboard-reachable
         <td
-          className="px-4 py-3 align-top"
+          className="px-4 py-3 align-middle"
           onClick={(e) => e.stopPropagation()}
         >
           <PostActionsMenu

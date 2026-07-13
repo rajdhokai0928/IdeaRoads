@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { categories } from "@/db/schema";
 import { db } from "@/lib/db";
 
@@ -20,6 +20,27 @@ export async function updateCategory(
       updatedAt: new Date(),
     })
     .where(eq(categories.id, categoryId));
+}
+
+export async function setDefaultCategory(
+  workspaceId: string,
+  categoryId: string
+) {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(categories)
+      .set({ isDefault: false, updatedAt: new Date() })
+      .where(
+        and(
+          eq(categories.workspaceId, workspaceId),
+          ne(categories.id, categoryId)
+        )
+      );
+    await tx
+      .update(categories)
+      .set({ isDefault: true, updatedAt: new Date() })
+      .where(eq(categories.id, categoryId));
+  });
 }
 
 export async function reorderCategories(

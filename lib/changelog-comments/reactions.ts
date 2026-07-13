@@ -4,6 +4,7 @@ import {
   changelogCommentReactions,
   changelogEntryReactions,
 } from "@/db/schema";
+import { user } from "@/db/schema/auth";
 import { db } from "@/lib/db";
 
 export type { ReactionEmoji } from "@/config/platform";
@@ -13,6 +14,7 @@ export interface ReactionGroup {
   count: number;
   emoji: string;
   hasReacted: boolean;
+  reactorNames: string[];
 }
 
 export async function getReactionsForEntry(
@@ -26,8 +28,12 @@ export async function getReactionsForEntry(
       hasReacted: userId
         ? sql<boolean>`bool_or(${changelogEntryReactions.userId} = ${userId})`
         : sql<boolean>`false`,
+      reactorNames: sql<
+        string[]
+      >`array_agg(${user.name}) filter (where ${user.name} is not null)`,
     })
     .from(changelogEntryReactions)
+    .leftJoin(user, eq(changelogEntryReactions.userId, user.id))
     .where(eq(changelogEntryReactions.changelogEntryId, changelogEntryId))
     .groupBy(changelogEntryReactions.emoji);
 
@@ -35,6 +41,7 @@ export async function getReactionsForEntry(
     emoji: row.emoji,
     count: row.count,
     hasReacted: row.hasReacted,
+    reactorNames: row.reactorNames ?? [],
   }));
 }
 
@@ -56,8 +63,12 @@ export async function getReactionsForEntries(
       hasReacted: userId
         ? sql<boolean>`bool_or(${changelogEntryReactions.userId} = ${userId})`
         : sql<boolean>`false`,
+      reactorNames: sql<
+        string[]
+      >`array_agg(${user.name}) filter (where ${user.name} is not null)`,
     })
     .from(changelogEntryReactions)
+    .leftJoin(user, eq(changelogEntryReactions.userId, user.id))
     .where(inArray(changelogEntryReactions.changelogEntryId, changelogEntryIds))
     .groupBy(
       changelogEntryReactions.changelogEntryId,
@@ -71,6 +82,7 @@ export async function getReactionsForEntries(
       emoji: row.emoji,
       count: row.count,
       hasReacted: row.hasReacted,
+      reactorNames: row.reactorNames ?? [],
     });
     grouped.set(row.changelogEntryId, list);
   }
@@ -132,8 +144,12 @@ export async function getReactionsForChangelogComments(
       hasReacted: userId
         ? sql<boolean>`bool_or(${changelogCommentReactions.userId} = ${userId})`
         : sql<boolean>`false`,
+      reactorNames: sql<
+        string[]
+      >`array_agg(${user.name}) filter (where ${user.name} is not null)`,
     })
     .from(changelogCommentReactions)
+    .leftJoin(user, eq(changelogCommentReactions.userId, user.id))
     .where(inArray(changelogCommentReactions.commentId, commentIds))
     .groupBy(
       changelogCommentReactions.commentId,
@@ -147,6 +163,7 @@ export async function getReactionsForChangelogComments(
       emoji: row.emoji,
       count: row.count,
       hasReacted: row.hasReacted,
+      reactorNames: row.reactorNames ?? [],
     });
     map.set(row.commentId, existing);
   }

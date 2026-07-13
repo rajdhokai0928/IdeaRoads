@@ -1,8 +1,19 @@
-import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
-import type { RoadmapStatusColumn } from "@/lib/roadmap/queries";
+"use client";
+
+import { InfoIcon } from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { updatePostStatusAction } from "@/app/actions/posts";
+import type { RoadmapPost, RoadmapStatusColumn } from "@/lib/roadmap/queries";
 import { RoadmapColumn } from "./roadmap-column";
 
 interface RoadmapBoardProps {
+  // Only the admin-shelled /settings/roadmap page passes this — dragging a
+  // card to another column changes the post's status (triage, permitted for
+  // any workspace member per PLATFORM.md §4). The public /roadmap page never
+  // sets this; it's read-only for visitors.
+  canManage?: boolean;
   columns: RoadmapStatusColumn[];
   isAdmin?: boolean;
   isSignedIn: boolean;
@@ -11,16 +22,77 @@ interface RoadmapBoardProps {
   // for signed-in members — the public portal must never redirect into the
   // workspace app on its own.
   useWorkspaceLinks?: boolean;
+  workspaceId?: string;
   workspaceSlug: string;
+}
+
+type Cols = Record<string, RoadmapPost[]>;
+
+function buildCols(columns: RoadmapStatusColumn[]): Cols {
+  const map: Cols = {};
+  for (const c of columns) {
+    map[c.id] = c.posts;
+  }
+  return map;
 }
 
 export function RoadmapBoard({
   columns,
   workspaceSlug,
+  workspaceId,
   isSignedIn,
   isAdmin,
   useWorkspaceLinks,
+  canManage,
 }: RoadmapBoardProps) {
+  const router = useRouter();
+  const [cols, setCols] = useState<Cols>(() => buildCols(columns));
+  const [drag, setDrag] = useState<{ colId: string; post: RoadmapPost } | null>(
+    null
+  );
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+
+  // Re-seed local state whenever the server sends fresh data (after a refresh
+  // or a search/filter change).
+  useEffect(() => {
+    setCols(buildCols(columns));
+  }, [columns]);
+
+  function performMove(sourceColId: string, targetCol: RoadmapStatusColumn) {
+    const post = cols[sourceColId]?.find((p) => p.id === drag?.post.id);
+    if (!post || !workspaceId || sourceColId === targetCol.id) {
+      return;
+    }
+
+    const previous = cols;
+    setCols((prev) => {
+      const next: Cols = { ...prev };
+      next[sourceColId] = (prev[sourceColId] ?? []).filter(
+        (p) => p.id !== post.id
+      );
+      next[targetCol.id] = [
+        { ...post, status: targetCol.slug },
+        ...(prev[targetCol.id] ?? []),
+      ];
+      return next;
+    });
+
+    (async () => {
+      const res = await updatePostStatusAction({
+        postId: post.id,
+        workspaceId,
+        status: targetCol.slug,
+      });
+      if (!res.success) {
+        toast.error(res.error);
+        setCols(previous);
+        return;
+      }
+      toast.success(`Moved to ${targetCol.name}`);
+      router.refresh();
+    })();
+  }
+
   return (
     <div className="px-6 pb-12">
       {isAdmin && (
@@ -28,6 +100,11 @@ export function RoadmapBoard({
           <InfoIcon className="size-3.5 shrink-0" />
           Admin view includes posts from private boards
         </div>
+      )}
+      {canManage && columns.length > 0 && (
+        <p className="mt-4 mb-2 text-xs text-ir-muted">
+          Drag a card into another column to change its status.
+        </p>
       )}
 
       {columns.length === 0 ? (
@@ -40,11 +117,28 @@ export function RoadmapBoard({
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {columns.map((col) => (
             <RoadmapColumn
+              canManage={canManage}
               color={col.color}
+              draggingId={drag?.post.id ?? null}
+              isDropTarget={dropTarget === col.id}
               isSignedIn={isSignedIn}
               key={col.id}
               name={col.name}
-              posts={col.posts}
+              onDragEnd={() => {
+                setDrag(null);
+                setDropTarget(null);
+              }}
+              onDragLeaveColumn={() => setDropTarget(null)}
+              onDragOverColumn={() => drag && setDropTarget(col.id)}
+              onDragStartPost={(post) => setDrag({ colId: col.id, post })}
+              onDropColumn={() => {
+                if (drag) {
+                  performMove(drag.colId, col);
+                }
+                setDrag(null);
+                setDropTarget(null);
+              }}
+              posts={cols[col.id] ?? []}
               useWorkspaceLinks={useWorkspaceLinks}
               workspaceSlug={workspaceSlug}
             />

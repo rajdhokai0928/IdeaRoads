@@ -40,7 +40,7 @@ export function DatePicker({
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
         <button
-          className="flex w-full items-center gap-2 rounded-ir-input border border-ir-border bg-ir-surface px-2.5 py-1.5 text-left text-sm transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:pointer-events-none disabled:opacity-50"
+          className="flex h-12 w-full items-center gap-2 rounded-ir-input border border-ir-border bg-ir-surface px-3.5 text-left text-sm transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:pointer-events-none disabled:opacity-50"
           disabled={disabled}
           id={id}
           type="button"

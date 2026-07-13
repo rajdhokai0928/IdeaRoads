@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { WebhookDocs } from "@/components/settings/webhook-docs";
 import { WebhookEndpointsSection } from "@/components/settings/webhook-endpoints-section";
 import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
@@ -44,6 +45,7 @@ export default async function WebhooksPage({ params }: Props) {
         endpoints={endpoints}
         workspaceId={workspace.id}
       />
+      <WebhookDocs />
     </ContentContainer>
   );
 }

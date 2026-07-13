@@ -21,6 +21,9 @@ export async function seedDefaultCategories(
       slug: c.slug,
       color: c.color,
       displayOrder: c.displayOrder,
+      // The first seeded category is the workspace's default — every post
+      // needs one, so a fresh workspace can't end up with none.
+      isDefault: c.displayOrder === 0,
     }))
   );
 }

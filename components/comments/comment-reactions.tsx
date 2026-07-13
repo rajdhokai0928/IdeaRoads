@@ -2,8 +2,23 @@
 
 import { SmileyIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { REACTION_EMOJIS } from "@/config/platform";
 import type { CommentApi, ReactionGroup } from "./types";
+
+function formatReactorNames(names: string[]): string {
+  if (names.length <= 1) {
+    return names[0] ?? "";
+  }
+  if (names.length === 2) {
+    return `${names[0]} and ${names[1]}`;
+  }
+  return `${names.slice(0, -1).join(", ")}, and ${names.at(-1)}`;
+}
 
 interface CommentReactionsProps {
   api?: CommentApi;
@@ -43,7 +58,12 @@ export default function CommentReactions({
           prev
             .map((r) =>
               r.emoji === emoji
-                ? { ...r, count: r.count - 1, hasReacted: false }
+                ? {
+                    ...r,
+                    count: r.count - 1,
+                    hasReacted: false,
+                    reactorNames: r.reactorNames.filter((n) => n !== "You"),
+                  }
                 : r
             )
             .filter((r) => r.count > 0)
@@ -53,14 +73,22 @@ export default function CommentReactions({
         setReactions((prev) =>
           prev.map((r) =>
             r.emoji === emoji
-              ? { ...r, count: r.count + 1, hasReacted: true }
+              ? {
+                  ...r,
+                  count: r.count + 1,
+                  hasReacted: true,
+                  reactorNames: [...r.reactorNames, "You"],
+                }
               : r
           )
         );
       }
     } else {
       // New reaction
-      setReactions((prev) => [...prev, { emoji, count: 1, hasReacted: true }]);
+      setReactions((prev) => [
+        ...prev,
+        { emoji, count: 1, hasReacted: true, reactorNames: ["You"] },
+      ]);
     }
 
     try {
@@ -92,22 +120,36 @@ export default function CommentReactions({
 
   return (
     <div className="relative mt-2 flex flex-wrap items-center gap-1">
-      {reactions.map((r) => (
-        <button
-          className={`inline-flex items-center gap-1 rounded-ir-full border px-2 py-0.5 text-xs transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40 disabled:opacity-60 ${
-            r.hasReacted
-              ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
-              : "border-ir-border bg-transparent text-ir-body hover:border-ir-primary/30"
-          }`}
-          disabled={!isSignedIn || !!pendingEmoji}
-          key={r.emoji}
-          onClick={() => handleReact(r.emoji)}
-          type="button"
-        >
-          <span>{r.emoji}</span>
-          <span className="tabular-nums">{r.count}</span>
-        </button>
-      ))}
+      {reactions.map((r) => {
+        const pill = (
+          <button
+            className={`inline-flex items-center gap-1 rounded-ir-full border px-2 py-0.5 text-xs transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40 disabled:opacity-60 ${
+              r.hasReacted
+                ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
+                : "border-ir-border bg-transparent text-ir-body hover:border-ir-primary/30"
+            }`}
+            disabled={!isSignedIn || !!pendingEmoji}
+            onClick={() => handleReact(r.emoji)}
+            type="button"
+          >
+            <span>{r.emoji}</span>
+            <span className="tabular-nums">{r.count}</span>
+          </button>
+        );
+
+        if (r.reactorNames.length === 0) {
+          return <span key={r.emoji}>{pill}</span>;
+        }
+
+        return (
+          <Tooltip key={r.emoji}>
+            <TooltipTrigger asChild>{pill}</TooltipTrigger>
+            <TooltipContent>
+              {formatReactorNames(r.reactorNames)}
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
 
       {isSignedIn && (
         <div className="relative">

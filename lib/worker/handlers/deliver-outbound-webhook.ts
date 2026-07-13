@@ -78,7 +78,7 @@ export async function handleDeliverOutboundWebhook(
     }
 
     const endpoint = await getWebhookEndpoint(delivery.endpointId);
-    if (!endpoint || !endpoint.isEnabled) {
+    if (!endpoint?.isEnabled) {
       continue;
     }
 
@@ -113,6 +113,7 @@ export async function handleDeliverOutboundWebhook(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-IdeaRoads-Event": delivery.event,
           "X-IdeaRoads-Signature": signature,
           "User-Agent": "IdeaRoads-Webhook/1.0",
         },

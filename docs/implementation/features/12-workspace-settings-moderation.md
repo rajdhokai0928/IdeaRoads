@@ -132,6 +132,8 @@ created_at    timestamp   NOT NULL  DEFAULT now()
 
 ```ts
 workspace_id  text        PK        → workspaces.id (CASCADE DELETE)  -- one row per workspace
+board_id      text                  → boards.id (SET NULL)   -- which board the widget embeds; nullable
+                                                               -- (no public board yet, or it was deleted)
 mode          text        NOT NULL  DEFAULT 'inline'        -- 'inline' | 'button'
 position      text        NOT NULL  DEFAULT 'bottom-right'  -- 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
 theme         text        NOT NULL  DEFAULT 'light'          -- 'light' | 'dark' | 'auto'

@@ -38,8 +38,7 @@ export default function CategorySelect({
 
   const current = categories.find((c) => c.id === currentCategoryId) ?? null;
 
-  function handleChange(value: string) {
-    const categoryId = value === "none" ? null : value;
+  function handleChange(categoryId: string) {
     if (categoryId === currentCategoryId) {
       return;
     }
@@ -56,21 +55,26 @@ export default function CategorySelect({
     ) : null;
   }
 
+  // Every post always has a category — this only stays empty if the
+  // workspace hasn't configured any categories yet at all.
+  if (categories.length === 0) {
+    return <span className="text-xs text-ir-muted">No categories</span>;
+  }
+
   return (
     <Select
       disabled={isPending}
       onValueChange={handleChange}
-      value={currentCategoryId ?? "none"}
+      value={currentCategoryId ?? undefined}
     >
       <SelectTrigger
         className="h-auto gap-1.5 rounded-ir-full border-0 bg-ir-muted-surface px-2.5 py-1 text-xs font-medium text-ir-heading"
         showChevron={false}
         size="sm"
       >
-        <SelectValue />
+        <SelectValue placeholder="Select category" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="none">No category</SelectItem>
         {categories.map((c) => (
           <SelectItem key={c.id} value={c.id}>
             {c.name}

@@ -1,6 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { REACTION_EMOJIS } from "@/config/platform";
 import { commentReactions } from "@/db/schema";
+import { user } from "@/db/schema/auth";
 import { db } from "@/lib/db";
 
 export type { ReactionEmoji } from "@/config/platform";
@@ -10,6 +11,7 @@ export interface ReactionGroup {
   count: number;
   emoji: string;
   hasReacted: boolean;
+  reactorNames: string[];
 }
 
 export async function getReactionsForComments(
@@ -28,8 +30,12 @@ export async function getReactionsForComments(
       hasReacted: userId
         ? sql<boolean>`bool_or(${commentReactions.userId} = ${userId})`
         : sql<boolean>`false`,
+      reactorNames: sql<
+        string[]
+      >`array_agg(${user.name}) filter (where ${user.name} is not null)`,
     })
     .from(commentReactions)
+    .leftJoin(user, eq(commentReactions.userId, user.id))
     .where(inArray(commentReactions.commentId, commentIds))
     .groupBy(commentReactions.commentId, commentReactions.emoji);
 
@@ -40,6 +46,7 @@ export async function getReactionsForComments(
       emoji: row.emoji,
       count: row.count,
       hasReacted: row.hasReacted,
+      reactorNames: row.reactorNames ?? [],
     });
     map.set(row.commentId, existing);
   }

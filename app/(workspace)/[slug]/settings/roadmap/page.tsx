@@ -151,10 +151,12 @@ export default async function WorkspaceRoadmapPage({
       )}
       <div className="flex-1">
         <RoadmapBoard
+          canManage={true}
           columns={columns}
           isAdmin={true}
           isSignedIn={true}
           useWorkspaceLinks={true}
+          workspaceId={workspace.id}
           workspaceSlug={slug}
         />
       </div>

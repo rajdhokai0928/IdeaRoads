@@ -25,6 +25,7 @@ export async function getEmbedConfig(workspaceId: string) {
 export async function upsertEmbedConfig(
   workspaceId: string,
   config: {
+    boardId: string | null;
     mode: EmbedMode;
     position: EmbedPosition;
     theme: EmbedTheme;

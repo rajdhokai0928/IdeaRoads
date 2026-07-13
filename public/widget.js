@@ -15,6 +15,7 @@
  * Usage — floating launcher button:
  *   <script src="https://yourapp.example/widget.js"
  *           data-workspace="acme"
+ *           data-board="feature-requests"
  *           data-mode="button"
  *           data-position="bottom-right"
  *           data-width="380"
@@ -22,8 +23,9 @@
  *           data-theme="light"
  *           data-accent-color="#2563eb"></script>
  *
- * data-board is optional; omit it to embed the workspace's roadmap-style
- * default board route. data-workspace is required. data-position,
+ * data-workspace and data-board are both required — there's no public page
+ * at the bare workspace root, so omitting data-board will load a 404 inside
+ * the iframe. Settings → Embed always generates both for you. data-position,
  * data-width, data-height, data-theme and data-accent-color are all
  * optional and are generated for you by Settings → Embed.
  */
@@ -83,7 +85,10 @@
     iframeQuery.set("theme", theme);
   }
   if (accentColor) {
-    iframeQuery.set("accentColor", accentColor);
+    // Strip the "#" for the query string — it's a URL fragment delimiter,
+    // and this value round-trips through the sign-in redirect and Better
+    // Auth's magic-link email link. lib/embed/style.ts re-adds it on read.
+    iframeQuery.set("accentColor", accentColor.slice(1));
   }
   const iframeSrc = origin + path + "?" + iframeQuery.toString();
 

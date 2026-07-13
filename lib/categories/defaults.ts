@@ -1,8 +1,8 @@
 // Default categories seeded into every new workspace (mirrors
 // DEFAULT_WORKSPACE_STATUSES). A workspace ships with these so the category
-// picker is never empty; they remain fully editable/deletable by a Brand Admin.
-// Categories stay optional on a post (posts.categoryId is nullable) — nothing
-// here auto-assigns a category.
+// picker is never empty. Every post always has a category — the first one
+// here (displayOrder 0) is seeded as the workspace's default (see
+// lib/categories/create.ts) and is the one new posts fall back to.
 export const DEFAULT_CATEGORIES = [
   {
     name: "Feature Request",

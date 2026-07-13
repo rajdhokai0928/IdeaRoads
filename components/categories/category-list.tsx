@@ -4,6 +4,7 @@ import {
   ArchiveIcon,
   PencilIcon,
   PlusIcon,
+  StarIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import {
   createCategoryAction,
   deleteCategoryAction,
+  setDefaultCategoryAction,
   updateCategoryAction,
 } from "@/app/actions/categories";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ interface Category {
   displayOrder: number;
   id: string;
   isArchived: boolean;
+  isDefault: boolean;
   name: string;
   slug: string;
 }
@@ -143,6 +146,21 @@ export function CategoryList({
         return;
       }
       toast.success("Category deleted");
+      router.refresh();
+    });
+  }
+
+  function handleSetDefault(cat: Category) {
+    startTransition(async () => {
+      const result = await setDefaultCategoryAction({
+        categoryId: cat.id,
+        workspaceId,
+      });
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(`"${cat.name}" is now the default category`);
       router.refresh();
     });
   }
@@ -302,6 +320,12 @@ export function CategoryList({
                   key={cat.id}
                 >
                   <CategoryChip color={cat.color} name={cat.name} />
+                  {cat.isDefault && (
+                    <span className="flex items-center gap-1 rounded-ir-sm border border-ir-border px-1.5 py-0.5 text-2xs font-medium text-ir-muted">
+                      <StarIcon className="size-2.5" />
+                      Default
+                    </span>
+                  )}
                   {cat.description && (
                     <span className="truncate text-xs text-ir-muted sm:flex-1">
                       {cat.description}
@@ -309,6 +333,17 @@ export function CategoryList({
                   )}
                   {canManage && (
                     <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
+                      {!cat.isDefault && (
+                        <button
+                          aria-label={`Set ${cat.name} as default`}
+                          className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          onClick={() => handleSetDefault(cat)}
+                          title="Set as default"
+                          type="button"
+                        >
+                          <StarIcon className="size-3.5" />
+                        </button>
+                      )}
                       <button
                         aria-label={`Edit ${cat.name}`}
                         className="rounded-ir-xs p-1.5 text-ir-primary transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
@@ -318,24 +353,28 @@ export function CategoryList({
                       >
                         <PencilIcon className="size-3.5" />
                       </button>
-                      <button
-                        aria-label={`Archive ${cat.name}`}
-                        className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-                        onClick={() => setArchiveTarget(cat)}
-                        title="Archive"
-                        type="button"
-                      >
-                        <ArchiveIcon className="size-3.5" />
-                      </button>
-                      <button
-                        aria-label={`Delete ${cat.name}`}
-                        className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-                        onClick={() => setDeleteTarget(cat)}
-                        title="Delete"
-                        type="button"
-                      >
-                        <TrashIcon className="size-3.5" />
-                      </button>
+                      {!cat.isDefault && (
+                        <button
+                          aria-label={`Archive ${cat.name}`}
+                          className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          onClick={() => setArchiveTarget(cat)}
+                          title="Archive"
+                          type="button"
+                        >
+                          <ArchiveIcon className="size-3.5" />
+                        </button>
+                      )}
+                      {!cat.isDefault && (
+                        <button
+                          aria-label={`Delete ${cat.name}`}
+                          className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          onClick={() => setDeleteTarget(cat)}
+                          title="Delete"
+                          type="button"
+                        >
+                          <TrashIcon className="size-3.5" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -393,7 +432,7 @@ export function CategoryList({
         {/* Confirm delete */}
         <ConfirmDialog
           confirmLabel="Delete"
-          description={`Delete "${deleteTarget?.name}"? Posts in this category will become uncategorized. This action cannot be undone.`}
+          description={`Delete "${deleteTarget?.name}"? This action cannot be undone. Every post needs a category, so this is only possible if no posts currently use it.`}
           isPending={isPending}
           onConfirm={handleDelete}
           onOpenChange={(open) => !open && setDeleteTarget(null)}

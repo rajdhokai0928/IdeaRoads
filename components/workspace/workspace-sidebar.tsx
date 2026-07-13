@@ -151,14 +151,52 @@ export function WorkspaceSidebar({
 
   const sidebarContent = (
     <>
-      {/* Workspace switcher */}
-      <WorkspaceSwitcher
-        collapsed={effectiveCollapsed}
-        currentLogoUrl={workspaceLogoUrl}
-        currentName={workspaceName}
-        currentSlug={workspaceSlug}
-        workspaces={workspaces}
-      />
+      {/* Workspace switcher + collapse toggle. The toggle sits inline next to
+          the switcher when expanded (desktop only — mobile has no rail to
+          collapse); when the rail is collapsed there's no room beside the
+          centered logo, so it drops to its own compact row underneath. */}
+      {effectiveCollapsed ? (
+        <div className="border-b border-sidebar-border">
+          <WorkspaceSwitcher
+            collapsed
+            currentLogoUrl={workspaceLogoUrl}
+            currentName={workspaceName}
+            currentSlug={workspaceSlug}
+            workspaces={workspaces}
+          />
+          <button
+            aria-label="Expand sidebar"
+            className="flex h-9 w-full cursor-pointer items-center justify-center text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+            onClick={toggleCollapsed}
+            title="Expand sidebar"
+            type="button"
+          >
+            <CaretRight className="size-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex border-b border-sidebar-border">
+          <div className="min-w-0 flex-1">
+            <WorkspaceSwitcher
+              currentLogoUrl={workspaceLogoUrl}
+              currentName={workspaceName}
+              currentSlug={workspaceSlug}
+              workspaces={workspaces}
+            />
+          </div>
+          {!isMobile && (
+            <button
+              aria-label="Collapse sidebar"
+              className="flex h-14 w-10 shrink-0 cursor-pointer items-center justify-center text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+              onClick={toggleCollapsed}
+              title="Collapse sidebar"
+              type="button"
+            >
+              <CaretLeft className="size-4" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Navigation */}
       <LayoutGroup id="workspace-nav">
@@ -293,31 +331,6 @@ export function WorkspaceSidebar({
               {!effectiveCollapsed && <span>Orbit Admin</span>}
             </Link>
           </motion.div>
-        </div>
-      )}
-
-      {/* Collapse / expand toggle — desktop only */}
-      {!isMobile && (
-        <div className="border-t border-sidebar-border px-2.5 py-2">
-          <button
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={cn(
-              "flex w-full cursor-pointer items-center gap-2.5 rounded-ir-sm text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
-              effectiveCollapsed ? "justify-center px-0 py-2" : "px-3 py-2"
-            )}
-            onClick={toggleCollapsed}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            type="button"
-          >
-            {collapsed ? (
-              <CaretRight className="size-3.5 shrink-0" />
-            ) : (
-              <CaretLeft className="size-3.5 shrink-0" />
-            )}
-            {!effectiveCollapsed && (
-              <span>{collapsed ? "Expand" : "Collapse"}</span>
-            )}
-          </button>
         </div>
       )}
 

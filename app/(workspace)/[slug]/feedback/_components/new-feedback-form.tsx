@@ -32,6 +32,7 @@ const ALLOWED_IMAGE_TYPES = new Set([
 interface Category {
   color: string;
   id: string;
+  isDefault: boolean;
   name: string;
 }
 
@@ -59,7 +60,9 @@ export function NewFeedbackForm({
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const defaultCategoryId =
+    categories.find((c) => c.isDefault)?.id ?? categories[0]?.id ?? "";
+  const [categoryId, setCategoryId] = useState(defaultCategoryId);
   const defaultStatus =
     workspaceStatuses.find((s) => s.isDefault)?.slug ??
     workspaceStatuses[0]?.slug ??
@@ -240,20 +243,18 @@ export function NewFeedbackForm({
           className="mb-1.5 block text-sm font-medium text-ir-heading"
           htmlFor="feedback-category"
         >
-          Category{" "}
-          <span className="text-xs font-normal text-ir-muted">(optional)</span>
+          Category <span className="text-ir-danger">*</span>
         </label>
         {categories.length > 0 ? (
           <Select
             disabled={isPending}
-            onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}
-            value={categoryId || "none"}
+            onValueChange={setCategoryId}
+            value={categoryId}
           >
             <SelectTrigger className="w-full" id="feedback-category">
-              <SelectValue placeholder="No category" />
+              <SelectValue placeholder="Select a category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">No category</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}

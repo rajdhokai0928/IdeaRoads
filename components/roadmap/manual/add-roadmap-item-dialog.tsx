@@ -216,11 +216,8 @@ export function AddRoadmapItemDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent
-        className="flex max-h-[calc(100dvh-4rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
-        showCloseButton={false}
-      >
-        <div className="shrink-0 border-b border-ir-border px-5 py-4">
+      <DialogContent className="flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
+        <div className="shrink-0 border-b border-ir-border px-5 py-4 pr-14">
           <DialogTitle className="text-base font-semibold">
             {isEdit ? "Edit Roadmap Item" : "Add Roadmap Item"}
           </DialogTitle>
@@ -292,7 +289,7 @@ export function AddRoadmapItemDialog({
                   Column
                 </label>
                 <Select onValueChange={setStatusId} value={statusId}>
-                  <SelectTrigger className="w-full" id="ri-status">
+                  <SelectTrigger className="w-full" id="ri-status" size="lg">
                     <SelectValue placeholder="Select a column" />
                   </SelectTrigger>
                   <SelectContent>

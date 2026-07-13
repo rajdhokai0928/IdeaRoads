@@ -31,6 +31,7 @@ const ALLOWED_IMAGE_TYPES = new Set([
 interface Category {
   color: string;
   id: string;
+  isDefault: boolean;
   name: string;
 }
 
@@ -59,7 +60,9 @@ export default function NewPostForm({
   const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const defaultCategoryId =
+    categories.find((c) => c.isDefault)?.id ?? categories[0]?.id ?? "";
+  const [categoryId, setCategoryId] = useState(defaultCategoryId);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -220,28 +223,24 @@ export default function NewPostForm({
             />
           </div>
 
-          {/* Category (optional) */}
+          {/* Category */}
           {categories.length > 0 && (
             <div>
               <label
                 className="mb-1.5 block text-sm font-medium text-ir-heading"
                 htmlFor="post-category"
               >
-                Category{" "}
-                <span className="text-xs font-normal text-ir-muted">
-                  (optional)
-                </span>
+                Category <span className="text-ir-danger">*</span>
               </label>
               <Select
                 disabled={isPending}
-                onValueChange={(v) => setCategoryId(v === "none" ? "" : v)}
-                value={categoryId || "none"}
+                onValueChange={setCategoryId}
+                value={categoryId}
               >
                 <SelectTrigger className="w-full" id="post-category">
-                  <SelectValue placeholder="No category" />
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}

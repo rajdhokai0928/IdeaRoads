@@ -1,12 +1,13 @@
 "use client";
 
-import { SpinnerIcon, XIcon } from "@phosphor-icons/react";
+import { LinkIcon, SpinnerIcon, XIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { revokeInviteLinkAction } from "@/app/actions/members";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SquareAvatar } from "@/components/ui/square-avatar";
 import { workspaceRoleLabel } from "@/config/platform";
 
 interface InviteLink {
@@ -20,7 +21,6 @@ interface InviteLink {
 }
 
 interface InviteLinksListProps {
-  appUrl: string;
   canManage: boolean;
   links: InviteLink[];
   workspaceId: string;
@@ -29,7 +29,6 @@ interface InviteLinksListProps {
 export function InviteLinksList({
   links,
   workspaceId,
-  appUrl,
   canManage,
 }: InviteLinksListProps) {
   const router = useRouter();
@@ -68,22 +67,30 @@ export function InviteLinksList({
           <div className="space-y-px overflow-hidden rounded-ir-card bg-ir-border">
             {links.map((link) => (
               <div
-                className="flex flex-col gap-2 bg-ir-surface px-6 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
+                className="flex flex-col gap-3 bg-ir-surface px-6 py-4 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:flex-row sm:items-center sm:gap-4"
                 key={link.id}
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-ir-heading">
-                    {link.label ?? "Invite link"}
-                  </p>
-                  <p className="text-xs text-ir-muted">
-                    {workspaceRoleLabel(link.role)}
-                    {link.maxUses === null
-                      ? ` · ${link.useCount} uses`
-                      : ` · ${link.useCount}/${link.maxUses} uses`}
-                    {link.expiresAt
-                      ? ` · Expires ${link.expiresAt.toLocaleDateString()}`
-                      : ""}
-                  </p>
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <SquareAvatar
+                    alt=""
+                    className="size-9 bg-ir-primary-light/15 text-ir-primary"
+                    fallback={<LinkIcon className="size-4" weight="bold" />}
+                    imageUrl={null}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ir-heading">
+                      {link.label ?? "Invite link"}
+                    </p>
+                    <p className="text-xs text-ir-muted">
+                      {workspaceRoleLabel(link.role)}
+                      {link.maxUses === null
+                        ? ` · ${link.useCount} uses`
+                        : ` · ${link.useCount}/${link.maxUses} uses`}
+                      {link.expiresAt
+                        ? ` · Expires ${link.expiresAt.toLocaleDateString()}`
+                        : ""}
+                    </p>
+                  </div>
                 </div>
                 {canManage && (
                   <Button

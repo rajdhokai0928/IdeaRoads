@@ -311,25 +311,40 @@ export function ProductTour() {
         </p>
 
         <div className="mt-16 divide-y divide-ir-border border-t border-ir-border">
-          {FRAMES.map(({ step, heading, caption, Mockup }) => (
-            <div
-              className="grid gap-8 py-12 lg:grid-cols-[5fr_7fr] lg:items-start lg:gap-16"
-              key={step}
-            >
-              {/* Caption */}
-              <div className="lg:pt-2">
-                <span className="font-mono text-2xs text-ir-muted">{step}</span>
-                <h3 className="mt-2 font-bold text-xl text-ir-heading">
-                  {heading}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-ir-muted">
-                  {caption}
-                </p>
+          {FRAMES.map(({ step, heading, caption, Mockup }, index) => {
+            // Zigzag: odd frames (02, 04…) flip sides — mockup left, caption
+            // right — instead of every row reading text-then-mockup. The
+            // column ratio flips with it so the mockup keeps the wider track
+            // regardless of which side it's on.
+            const isReversed = index % 2 === 1;
+            return (
+              <div
+                className={`grid gap-8 py-12 lg:items-start lg:gap-16 ${
+                  isReversed
+                    ? "lg:grid-cols-[7fr_5fr]"
+                    : "lg:grid-cols-[5fr_7fr]"
+                }`}
+                key={step}
+              >
+                {/* Caption */}
+                <div className={isReversed ? "lg:order-2 lg:pt-2" : "lg:pt-2"}>
+                  <span className="font-mono text-2xs text-ir-muted">
+                    {step}
+                  </span>
+                  <h3 className="mt-2 font-bold text-xl text-ir-heading">
+                    {heading}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-ir-muted">
+                    {caption}
+                  </p>
+                </div>
+                {/* Mockup */}
+                <div className={isReversed ? "lg:order-1" : undefined}>
+                  <Mockup />
+                </div>
               </div>
-              {/* Mockup */}
-              <Mockup />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

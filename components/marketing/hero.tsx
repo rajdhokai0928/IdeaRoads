@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export function Hero() {
   return (
     <section className="bg-ir-background">
-      <div className="mx-auto max-w-6xl px-4 py-24 sm:px-8 sm:py-32">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-8 sm:py-16 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-[5fr_7fr] lg:items-center lg:gap-16">
           <div>
             <h1 className="text-5xl font-black tracking-normal text-ir-heading sm:text-6xl lg:text-7xl">

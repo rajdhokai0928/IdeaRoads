@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PageBody } from "@/components/ui/page";
+import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
 import { listMembers } from "@/lib/workspaces/members";
@@ -37,7 +37,7 @@ export default async function MembersPage({ params }: Props) {
   const members = await listMembers(workspace.id);
 
   return (
-    <PageBody>
+    <ContentContainer>
       <p className="mb-4 text-xs font-semibold tracking-eyebrow text-ir-muted uppercase">
         {members.length} {members.length === 1 ? "member" : "members"}
       </p>
@@ -48,6 +48,6 @@ export default async function MembersPage({ params }: Props) {
         members={members}
         workspaceId={workspace.id}
       />
-    </PageBody>
+    </ContentContainer>
   );
 }

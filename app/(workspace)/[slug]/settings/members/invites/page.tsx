@@ -50,30 +50,29 @@ export default async function InvitesPage({ params }: Props) {
   const appUrl = adminBaseUrl();
 
   return (
-    <ContentContainer className="space-y-10">
+    <ContentContainer className="space-y-6">
       {canManage && (
-        <div className="space-y-6 border-b border-ir-border pb-10">
+        <div className="rounded-ir-card border border-ir-border bg-ir-surface p-5 shadow-ir-xs sm:p-6">
           <InviteForm
             canInviteAdmin={canManageAdmin}
             workspaceId={workspace.id}
           />
-          <div>
-            <InviteLinksList
-              appUrl={appUrl}
-              canManage={canManage}
-              links={activeLinks}
-              workspaceId={workspace.id}
-            />
-            <div className="mt-4">
-              <CreateLinkForm
-                appUrl={appUrl}
-                canCreateAdmin={canManageAdmin}
-                workspaceId={workspace.id}
-              />
-            </div>
-          </div>
         </div>
       )}
+      {canManage && (
+        <div className="rounded-ir-card border border-ir-border bg-ir-surface p-5 shadow-ir-xs sm:p-6">
+          <CreateLinkForm
+            appUrl={appUrl}
+            canCreateAdmin={canManageAdmin}
+            workspaceId={workspace.id}
+          />
+        </div>
+      )}
+      <InviteLinksList
+        canManage={canManage}
+        links={activeLinks}
+        workspaceId={workspace.id}
+      />
       <PendingInvitesList
         actorRole={actorMember.role}
         canManage={canManage}

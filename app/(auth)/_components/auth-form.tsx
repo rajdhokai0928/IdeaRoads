@@ -4,14 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useEffect, useState } from "react";
+import { HeroMockup } from "@/components/marketing/hero-mockup";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 import { signIn, useSession } from "@/lib/auth-client";
@@ -133,34 +127,34 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-page px-4 py-10">
-      <div className="w-full max-w-md">
-        <Link
-          className="mb-8 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          href="/"
-        >
-          <Image
-            alt={PRODUCT_NAME}
-            className="h-9 w-auto"
-            height={164}
-            priority
-            src={LOGO_PATH}
-            width={500}
-          />
-        </Link>
+    <main className="grid h-screen place-items-center overflow-hidden bg-ir-primary-light/20 px-4 py-6">
+      <div className="grid max-h-full w-full max-w-4xl overflow-hidden rounded-ir-xl border border-ir-border bg-ir-surface shadow-ir-lg lg:grid-cols-2">
+        {/* Left — sign-in form */}
+        <div className="flex flex-col justify-center overflow-y-auto px-6 py-8 sm:px-10 lg:px-12 lg:py-10">
+          <Link
+            className="mb-6 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            href="/"
+          >
+            <Image
+              alt={PRODUCT_NAME}
+              className="h-14 w-auto"
+              height={164}
+              priority
+              src={LOGO_PATH}
+              width={500}
+            />
+          </Link>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {sent ? "Check your email" : "Welcome to IdeaRoads"}
-            </CardTitle>
-            <CardDescription>
-              {sent
-                ? "Your sign-in link is on its way. Click it to continue."
-                : "Sign in or create a free account - no password needed."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <h1 className="text-2xl font-bold text-foreground">
+            {sent ? "Check your email" : "Welcome to IdeaRoads"}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {sent
+              ? "Your sign-in link is on its way. Click it to continue."
+              : "Sign in or create a free account - no password needed."}
+          </p>
+
+          <div className="mt-6">
             {sent ? (
               <div className="space-y-4">
                 <p className="bg-success-subtle p-3 text-sm text-success-foreground">
@@ -182,6 +176,29 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
                   <p className="bg-destructive/10 p-3 text-sm text-destructive">
                     {urlError}
                   </p>
+                )}
+
+                {googleEnabled && (
+                  <>
+                    <Button
+                      className="w-full gap-2"
+                      disabled={submitting || googleLoading}
+                      onClick={handleGoogleSignIn}
+                      type="button"
+                      variant="outline"
+                    >
+                      <GoogleIcon className="size-4" />
+                      {googleLoading ? "Redirecting…" : "Continue with Google"}
+                    </Button>
+
+                    <div className="flex items-center gap-3">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs font-semibold uppercase tracking-ui text-muted-foreground">
+                        or continue with email
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                  </>
                 )}
 
                 <form className="space-y-4" onSubmit={onSubmit}>
@@ -217,33 +234,39 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
                     </p>
                   </div>
                 </form>
-
-                {googleEnabled && (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs font-semibold uppercase tracking-ui text-muted-foreground">
-                        or
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-
-                    <Button
-                      className="w-full gap-2"
-                      disabled={submitting || googleLoading}
-                      onClick={handleGoogleSignIn}
-                      type="button"
-                      variant="outline"
-                    >
-                      <GoogleIcon className="size-4" />
-                      {googleLoading ? "Redirecting…" : "Continue with Google"}
-                    </Button>
-                  </>
-                )}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+
+          {!sent && (
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              By continuing you agree to our{" "}
+              <Link className="underline hover:no-underline" href="/terms">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link className="underline hover:no-underline" href="/privacy">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          )}
+        </div>
+
+        {/* Right — brand panel, hidden below the split-screen breakpoint */}
+        <div className="hidden flex-col items-center justify-center gap-6 overflow-hidden bg-ir-primary-light/15 px-10 py-10 lg:flex">
+          <div className="text-center">
+            <p className="text-xs font-bold tracking-eyebrow text-ir-primary uppercase">
+              Feedback · Roadmap · Changelog
+            </p>
+            <h2 className="mt-3 text-2xl font-bold text-ir-heading">
+              Ship what your users actually want.
+            </h2>
+          </div>
+          <div className="w-full origin-top scale-90">
+            <HeroMockup />
+          </div>
+        </div>
       </div>
     </main>
   );

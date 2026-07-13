@@ -14,6 +14,7 @@ import {
 } from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
+import { getDefaultCategory } from "@/lib/categories/queries";
 import { db } from "@/lib/db";
 import { isBlocked } from "@/lib/moderation/queries";
 import { createNotification } from "@/lib/notifications/create";
@@ -32,7 +33,6 @@ import {
   unapprovePost,
   unpublishPost,
   updatePost,
-  updatePostCategory,
   updatePostStatus,
 } from "@/lib/posts/queries";
 import { uploadFile } from "@/lib/storage";
@@ -166,7 +166,9 @@ export async function createPostAction(input: {
     moderationMode !== "manual" &&
     (moderationMode !== "auto" || !isSpam);
 
-  // Validate the optional category belongs to this workspace (cross-tenant safety).
+  // Every post always has a category. Validate an explicit choice belongs to
+  // this workspace (cross-tenant safety); otherwise fall back to the
+  // workspace's default category rather than leaving it unset.
   let categoryId: string | null = null;
   if (parsed.data.categoryId) {
     const [category] = await db
@@ -187,6 +189,9 @@ export async function createPostAction(input: {
       };
     }
     categoryId = category.id;
+  } else {
+    const defaultCategory = await getDefaultCategory(parsed.data.workspaceId);
+    categoryId = defaultCategory?.id ?? null;
   }
 
   // Setting an initial status at creation is a triage action, same as
@@ -680,37 +685,6 @@ export async function updatePostAction(input: {
     metadata: { workspaceId: parsed.data.workspaceId, wasAuthor: isAuthor },
   });
 
-  return { success: true, data: undefined };
-}
-
-// ─── Update Post Category ─────────────────────────────────────────────────────
-
-export async function updatePostCategoryAction(input: {
-  postId: string;
-  workspaceId: string;
-  categoryId: string | null;
-}): Promise<ActionResult<undefined>> {
-  const session = await requireSession();
-
-  // Assigning a category is a triage action available to any workspace member
-  // (PLATFORM.md §4). Defining categories themselves remains Brand-Admin-only.
-  const actorMember = await getWorkspaceMember(
-    input.workspaceId,
-    session.user.id
-  );
-  if (!actorMember) {
-    return {
-      success: false,
-      error: "Only workspace members can set post categories.",
-    };
-  }
-
-  const post = await getPost(input.postId);
-  if (!post || post.workspaceId !== input.workspaceId) {
-    return { success: false, error: "Post not found." };
-  }
-
-  await updatePostCategory(input.postId, input.categoryId);
   return { success: true, data: undefined };
 }
 

@@ -26,6 +26,7 @@ describe("upsertEmbedConfig", () => {
     const ws = await createTestWorkspace(owner.id, owner.email);
 
     const saved = await upsertEmbedConfig(ws.id, {
+      boardId: null,
       mode: "button",
       position: "top-left",
       theme: "dark",
@@ -59,6 +60,7 @@ describe("upsertEmbedConfig", () => {
     const ws = await createTestWorkspace(owner.id, owner.email);
 
     await upsertEmbedConfig(ws.id, {
+      boardId: null,
       mode: "inline",
       position: "bottom-right",
       theme: "light",
@@ -67,6 +69,7 @@ describe("upsertEmbedConfig", () => {
       accentColor: "#111111",
     });
     await upsertEmbedConfig(ws.id, {
+      boardId: null,
       mode: "button",
       position: "bottom-left",
       theme: "auto",
@@ -93,6 +96,7 @@ describe("upsertEmbedConfig", () => {
 
     await upsertEmbedConfig(wsA.id, {
       ...DEFAULT_EMBED_CONFIG,
+      boardId: null,
       accentColor: "#111111",
     });
 

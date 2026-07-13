@@ -39,14 +39,14 @@ function SelectTrigger({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   showChevron?: boolean
-  size?: "sm" | "default"
+  size?: "sm" | "default" | "lg"
 }) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-1.5 rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-sm whitespace-nowrap text-ir-body shadow-ir-xs transition-[color,border-color,box-shadow] duration-150 ease-ir-standard outline-none hover:border-ir-primary/40 focus-visible:border-ir-primary focus-visible:ring-2 focus-visible:ring-ir-primary/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-ir-border aria-invalid:border-ir-danger aria-invalid:focus-visible:ring-ir-danger/20 data-placeholder:text-ir-muted data-[size=default]:h-10 data-[size=sm]:h-9 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:aria-invalid:border-ir-danger/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+        "flex w-fit items-center justify-between gap-1.5 rounded-ir-input border border-ir-border bg-ir-surface px-3 py-2 text-sm whitespace-nowrap text-ir-body shadow-ir-xs transition-[color,border-color,box-shadow] duration-150 ease-ir-standard outline-none hover:border-ir-primary/40 focus-visible:border-ir-primary focus-visible:ring-2 focus-visible:ring-ir-primary/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-ir-border aria-invalid:border-ir-danger aria-invalid:focus-visible:ring-ir-danger/20 data-placeholder:text-ir-muted data-[size=default]:h-10 data-[size=lg]:h-12 data-[size=sm]:h-9 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:aria-invalid:border-ir-danger/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       {...props}

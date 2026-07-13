@@ -23,21 +23,26 @@ describe("parseEmbedParams", () => {
     expect(parseEmbedParams({}).theme).toBeUndefined();
   });
 
-  it("accepts a well-formed 6-digit hex accent color", () => {
-    expect(parseEmbedParams({ accentColor: "#2563eb" }).accentColor).toBe(
+  it("accepts a bare 6-digit hex accent color and re-adds the #", () => {
+    expect(parseEmbedParams({ accentColor: "2563eb" }).accentColor).toBe(
       "#2563eb"
     );
   });
 
-  it("rejects malformed accent color values", () => {
+  it("rejects malformed accent color values, including a leading #", () => {
     expect(
       parseEmbedParams({ accentColor: "not-a-color" }).accentColor
     ).toBeUndefined();
     expect(
-      parseEmbedParams({ accentColor: "#fff" }).accentColor
+      parseEmbedParams({ accentColor: "fff" }).accentColor
     ).toBeUndefined();
     expect(
       parseEmbedParams({ accentColor: "red" }).accentColor
+    ).toBeUndefined();
+    // A leading "#" is rejected here — the query string is expected to carry
+    // the bare hex digits only (see the comment in lib/embed/style.ts).
+    expect(
+      parseEmbedParams({ accentColor: "#2563eb" }).accentColor
     ).toBeUndefined();
   });
 });
@@ -54,7 +59,7 @@ describe("buildEmbedQuery", () => {
     expect(buildEmbedQuery({ isEmbed: true })).toBe("?embed=1");
   });
 
-  it("carries theme and accentColor forward for internal navigation", () => {
+  it("carries theme and accentColor forward for internal navigation, stripping the # for the query string", () => {
     const query = buildEmbedQuery({
       isEmbed: true,
       theme: "dark",
@@ -63,7 +68,7 @@ describe("buildEmbedQuery", () => {
     const params = new URLSearchParams(query.slice(1));
     expect(params.get("embed")).toBe("1");
     expect(params.get("theme")).toBe("dark");
-    expect(params.get("accentColor")).toBe("#2563eb");
+    expect(params.get("accentColor")).toBe("2563eb");
   });
 });
 

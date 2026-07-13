@@ -8,6 +8,7 @@ import {
   ManualRoadmapBoard,
 } from "@/components/roadmap/manual/manual-roadmap-board";
 import type { BoardItem } from "@/components/roadmap/manual/manual-roadmap-card";
+import { ManualRoadmapProvider } from "@/components/roadmap/manual/manual-roadmap-search-context";
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
 import { Button } from "@/components/ui/button";
 import { PortalHeader } from "@/components/workspace/portal-header";
@@ -181,13 +182,19 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
           </>
         ) : (
           <div className="flex-1">
-            {/* Manual roadmap is read-only on the public portal. */}
-            <ManualRoadmapBoard
-              canManage={false}
-              items={manualItems}
-              statuses={manualStatuses}
-              workspaceId={workspace.id}
-            />
+            {/* Manual roadmap is read-only on the public portal. The board
+              still reads its (unused, since canManage is false) manage/add
+              controls from this context internally, so it needs a provider
+              here too even though the public page never renders the
+              search/manage/add trigger buttons that normally supply it. */}
+            <ManualRoadmapProvider>
+              <ManualRoadmapBoard
+                canManage={false}
+                items={manualItems}
+                statuses={manualStatuses}
+                workspaceId={workspace.id}
+              />
+            </ManualRoadmapProvider>
           </div>
         )}
       </main>

@@ -144,6 +144,7 @@ API Keys give a Brand Admin programmatic access to the workspace's data.
 
 Embed lets a Brand Admin put the workspace's feedback board on their own site as a widget, without building anything custom.
 
+- **Board** — which public board the widget displays. Required: the widget is a public, anonymous iframe onto a specific board's page, and there's no "all boards" route for it to fall back to.
 - **Launcher** — choose whether the widget renders **inline** (embedded directly in the page) or as a **floating launcher** button that opens a panel.
 - **Position** — for the floating launcher, which corner it anchors to (bottom right, bottom left, top right, top left).
 - **Theme** — light, dark, or match the visitor's system.
@@ -276,6 +277,7 @@ Audit Log                                  [Filter: All ▾]  [Actor: All ▾]
 | Audit log grows very large | Shown in pages, newest first; performance is unaffected. |
 | Embed settings changed after the snippet was already pasted elsewhere | The live site keeps the old appearance until the Brand Admin re-copies and re-pastes the updated snippet. |
 | Position set on an inline (non-floating) embed | Ignored — position only affects the floating launcher. |
+| Workspace has no public board | The Embed page shows an empty state instead of a snippet — there's nothing valid to embed yet. |
 
 ---
 
@@ -316,7 +318,7 @@ Audit Log                                  [Filter: All ▾]  [Actor: All ▾]
 - [ ] A key can be revoked.
 
 **Embed**
-- [ ] A Brand Admin can choose Launcher (Inline / Floating), Position, Theme, Width, Height, and Accent color.
+- [ ] A Brand Admin can choose Board, Launcher (Inline / Floating), Position, Theme, Width, Height, and Accent color.
 - [ ] The generated `<script>` snippet updates live as settings change, before saving.
 - [ ] The snippet can be copied with one click.
 - [ ] Position is disabled/ignored when Launcher is Inline.

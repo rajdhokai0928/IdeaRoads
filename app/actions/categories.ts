@@ -6,8 +6,15 @@ import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
 import { createCategory } from "@/lib/categories/create";
 import { deleteCategory } from "@/lib/categories/delete";
-import { getCategoryById } from "@/lib/categories/queries";
-import { reorderCategories, updateCategory } from "@/lib/categories/update";
+import {
+  countPostsInCategory,
+  getCategoryById,
+} from "@/lib/categories/queries";
+import {
+  reorderCategories,
+  setDefaultCategory,
+  updateCategory,
+} from "@/lib/categories/update";
 import { getPost, updatePostCategory } from "@/lib/posts/queries";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
@@ -138,6 +145,17 @@ export async function updateCategoryAction(input: {
     return { success: false, error: "Category not found." };
   }
 
+  // The default category can't be archived — it's the one new posts fall
+  // back to, and an archived category can no longer be assigned. Set
+  // another category as default first.
+  if (parsed.data.isArchived && category.isDefault) {
+    return {
+      success: false,
+      error:
+        "This is the default category. Set another category as default before archiving it.",
+    };
+  }
+
   try {
     await updateCategory(parsed.data.categoryId, {
       name: parsed.data.name,
@@ -182,6 +200,24 @@ export async function deleteCategoryAction(input: {
     return { success: false, error: "Category not found." };
   }
 
+  // Every post always has a category — a category currently in use, or the
+  // workspace's default, can't be deleted out from under posts that rely on
+  // it. Archive it instead, or reassign posts / set another default first.
+  if (category.isDefault) {
+    return {
+      success: false,
+      error:
+        "This is the default category. Set another category as default before deleting it.",
+    };
+  }
+  const postCount = await countPostsInCategory(input.categoryId);
+  if (postCount > 0) {
+    return {
+      success: false,
+      error: `This category is used by ${postCount} post${postCount === 1 ? "" : "s"}. Move them to another category first.`,
+    };
+  }
+
   await deleteCategory(input.categoryId);
 
   audit({
@@ -194,6 +230,37 @@ export async function deleteCategoryAction(input: {
     metadata: { name: category.name, workspaceId: input.workspaceId },
   });
 
+  return { success: true, data: undefined };
+}
+
+// ─── Set Default Category ─────────────────────────────────────────────────────
+
+export async function setDefaultCategoryAction(input: {
+  categoryId: string;
+  workspaceId: string;
+}): Promise<ActionResult<undefined>> {
+  const session = await requireSession();
+
+  const member = await getWorkspaceMember(input.workspaceId, session.user.id);
+  if (!member || member.role === WORKSPACE_MEMBER) {
+    return {
+      success: false,
+      error: "Only admins and owners can manage categories.",
+    };
+  }
+
+  const category = await getCategoryById(input.categoryId);
+  if (!category || category.workspaceId !== input.workspaceId) {
+    return { success: false, error: "Category not found." };
+  }
+  if (category.isArchived) {
+    return {
+      success: false,
+      error: "An archived category can't be the default. Restore it first.",
+    };
+  }
+
+  await setDefaultCategory(input.workspaceId, input.categoryId);
   return { success: true, data: undefined };
 }
 
@@ -219,16 +286,33 @@ export async function reorderCategoriesAction(input: {
 
 // ─── Update Post Category ─────────────────────────────────────────────────────
 
+const updatePostCategorySchema = z.object({
+  postId: z.string().min(1),
+  workspaceId: z.string().min(1),
+  categoryId: z.string().min(1, "A category is required."),
+});
+
 export async function updatePostCategoryAction(input: {
   postId: string;
   workspaceId: string;
-  categoryId: string | null;
+  categoryId: string;
 }): Promise<ActionResult<undefined>> {
   const session = await requireSession();
 
+  const parsed = updatePostCategorySchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
+  }
+
   // Assigning a category to a post is a triage action available to any workspace
   // member (PLATFORM.md §4). Creating/editing/deleting categories stays Brand-Admin-only.
-  const member = await getWorkspaceMember(input.workspaceId, session.user.id);
+  const member = await getWorkspaceMember(
+    parsed.data.workspaceId,
+    session.user.id
+  );
   if (!member) {
     return {
       success: false,
@@ -236,11 +320,18 @@ export async function updatePostCategoryAction(input: {
     };
   }
 
-  const post = await getPost(input.postId);
-  if (!post || post.workspaceId !== input.workspaceId) {
+  const post = await getPost(parsed.data.postId);
+  if (!post || post.workspaceId !== parsed.data.workspaceId) {
     return { success: false, error: "Post not found." };
   }
 
-  await updatePostCategory(input.postId, input.categoryId);
+  // Every post always has a category — verify it's a real category in this
+  // workspace rather than trusting the ID blindly.
+  const category = await getCategoryById(parsed.data.categoryId);
+  if (!category || category.workspaceId !== parsed.data.workspaceId) {
+    return { success: false, error: "Invalid category." };
+  }
+
+  await updatePostCategory(parsed.data.postId, parsed.data.categoryId);
   return { success: true, data: undefined };
 }

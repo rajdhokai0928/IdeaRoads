@@ -25,6 +25,11 @@ export const categories = pgTable(
     color: text("color").notNull().default("#6366f1"),
     displayOrder: integer("display_order").notNull().default(0),
     isArchived: boolean("is_archived").notNull().default(false),
+    // Every post always has a category now — this is the one auto-assigned
+    // when a post is created without an explicit choice, and the one
+    // deletion falls back to (see lib/categories/delete.ts). Exactly one
+    // per workspace; mirrors workspace_statuses' isDefault.
+    isDefault: boolean("is_default").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

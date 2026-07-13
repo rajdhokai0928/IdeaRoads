@@ -10,9 +10,19 @@ import { RoadmapStatusHeader } from "./roadmap-status-header";
 const PAGE_SIZE = 10;
 
 interface RoadmapColumnProps {
+  // Drag-and-drop is an opt-in enhancement, only wired up by the admin-shelled
+  // board (see RoadmapBoard) — the public roadmap page never passes these.
+  canManage?: boolean;
   color: string;
+  draggingId?: string | null;
+  isDropTarget?: boolean;
   isSignedIn: boolean;
   name: string;
+  onDragEnd?: () => void;
+  onDragLeaveColumn?: () => void;
+  onDragOverColumn?: () => void;
+  onDragStartPost?: (post: RoadmapPost) => void;
+  onDropColumn?: () => void;
   posts: RoadmapPost[];
   useWorkspaceLinks?: boolean;
   workspaceSlug: string;
@@ -25,6 +35,14 @@ export function RoadmapColumn({
   workspaceSlug,
   isSignedIn,
   useWorkspaceLinks,
+  canManage = false,
+  draggingId = null,
+  isDropTarget = false,
+  onDragEnd,
+  onDragLeaveColumn,
+  onDragOverColumn,
+  onDragStartPost,
+  onDropColumn,
 }: RoadmapColumnProps) {
   const shouldReduceMotion = useReducedMotion();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -35,8 +53,33 @@ export function RoadmapColumn({
     <div className="flex w-full min-w-0 flex-col">
       <RoadmapStatusHeader color={color} count={posts.length} name={name} />
 
-      {/* Post cards */}
-      <div className="flex flex-col gap-2">
+      {/* Drop zone. Keyboard/non-pointer users change status via the post's own
+          status control elsewhere (e.g. All Feedback) — drag here is a
+          pointer-only enhancement, matching the manual roadmap board. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: native drop zone, opt-in via canManage */}
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: native drop zone, opt-in via canManage */}
+      <div
+        className={`flex min-h-16 flex-col gap-2 rounded-ir-md p-1 transition-colors duration-150 ease-ir-standard ${
+          isDropTarget && canManage
+            ? "border border-dashed border-ir-primary/60 bg-ir-primary-light/10"
+            : "border border-dashed border-transparent"
+        }`}
+        onDragLeave={() => canManage && onDragLeaveColumn?.()}
+        onDragOver={(e) => {
+          if (!canManage) {
+            return;
+          }
+          e.preventDefault();
+          onDragOverColumn?.();
+        }}
+        onDrop={(e) => {
+          if (!canManage) {
+            return;
+          }
+          e.preventDefault();
+          onDropColumn?.();
+        }}
+      >
         {visible.length === 0 ? (
           <div className="rounded-ir-card border border-dashed border-ir-border">
             <RoadmapEmptyState label={`Nothing in ${name} yet.`} />
@@ -53,12 +96,32 @@ export function RoadmapColumn({
                   layout={!shouldReduceMotion}
                   transition={{ duration: 0.15, ease: "easeOut" }}
                 >
-                  <RoadmapPostCard
-                    isSignedIn={isSignedIn}
-                    post={post}
-                    useWorkspaceLinks={useWorkspaceLinks}
-                    workspaceSlug={workspaceSlug}
-                  />
+                  {/* biome-ignore lint/a11y/noStaticElementInteractions: native draggable card, opt-in via canManage */}
+                  {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: native draggable card, opt-in via canManage */}
+                  <div
+                    className={
+                      canManage && draggingId === post.id
+                        ? "rounded-ir-card opacity-50 ring-2 ring-ir-primary"
+                        : undefined
+                    }
+                    draggable={canManage}
+                    onDragEnd={() => canManage && onDragEnd?.()}
+                    onDragStart={(e) => {
+                      if (!canManage) {
+                        return;
+                      }
+                      e.dataTransfer.effectAllowed = "move";
+                      onDragStartPost?.(post);
+                    }}
+                  >
+                    <RoadmapPostCard
+                      canManage={canManage}
+                      isSignedIn={isSignedIn}
+                      post={post}
+                      useWorkspaceLinks={useWorkspaceLinks}
+                      workspaceSlug={workspaceSlug}
+                    />
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>

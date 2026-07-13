@@ -190,12 +190,12 @@ export default async function PublicChangelogIndexPage({
                       isSignedIn={isSignedIn}
                     />
                     <div className="flex shrink-0 items-center gap-3">
-                      <Link
+                      {/* <Link
                         className="text-sm font-medium text-ir-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         href={`/${slug}/changelog/${entry.id}`}
                       >
                         Read more →
-                      </Link>
+                      </Link> */}
                       <ChangelogShareButton
                         title={entry.title}
                         url={`${baseUrl}/${slug}/changelog/${entry.id}`}

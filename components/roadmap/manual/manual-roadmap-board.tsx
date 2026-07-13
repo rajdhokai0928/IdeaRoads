@@ -188,7 +188,7 @@ export function ManualRoadmapBoard({
         </div>
       )}
 
-      <div className="px-6 pb-12">
+      <div className="px-6 pt-6 pb-12">
         {statuses.length === 0 ? (
           <div className="rounded-ir-card border border-dashed border-ir-border px-4 py-16 text-center text-sm text-ir-muted">
             No roadmap columns yet.

@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { ImpersonateBanner } from "@/components/orbit/impersonate-banner";
 import { SkipLink } from "@/components/ui/skip-link";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from "@/config/platform";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -44,7 +45,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <SkipLink />
         <ImpersonateBanner />
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <Toaster position="top-right" />
       </body>
     </html>

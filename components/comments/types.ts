@@ -2,6 +2,7 @@ export interface ReactionGroup {
   count: number;
   emoji: string;
   hasReacted: boolean;
+  reactorNames: string[];
 }
 
 // Endpoint config that lets the comment components serve more than one resource

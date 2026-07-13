@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { EmbedDocs } from "@/components/settings/embed-docs";
 import { EmbedSection } from "@/components/settings/embed-section";
 import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
@@ -52,6 +53,7 @@ export default async function EmbedPage({ params }: Props) {
         workspaceId={workspace.id}
         workspaceSlug={slug}
       />
+      <EmbedDocs appUrl={portalBaseUrl()} />
     </ContentContainer>
   );
 }

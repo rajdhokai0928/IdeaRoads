@@ -6,13 +6,24 @@ export interface ParsedEmbedParams {
   theme?: "light" | "dark";
 }
 
-const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+// The query string carries the color WITHOUT its leading "#" (see below for
+// why) — this is what's actually valid in the ?accentColor= value.
+const BARE_HEX_COLOR = /^[0-9a-fA-F]{6}$/;
 
 // Reads the embed-related query params widget.js appends to the iframe src.
 // "auto" theme (and anything unrecognized) intentionally resolves to no
 // override — the app has no OS-preference-based dark mode wired up today, so
 // "auto" falls back to the default (light) rendering rather than pretending
 // to support a theme mode that isn't actually implemented.
+//
+// accentColor is expected WITHOUT a leading "#" (e.g. "cc1e1e") — a bare "#"
+// is a URL fragment delimiter, and this value round-trips through more than
+// one encode/decode hop (this page's own query string, then reconstructed
+// into a `/signin?next=...` redirect, then through Better Auth's magic-link
+// email link and its own internal decoding). A literal "#" surviving that
+// chain gets misread as the start of a URL fragment partway through and
+// throws "Invalid callbackURL" — stripping it here and re-adding it only
+// where it's actually used as a CSS value sidesteps the whole problem.
 export function parseEmbedParams(searchParams: {
   accentColor?: string;
   embed?: string;
@@ -24,8 +35,8 @@ export function parseEmbedParams(searchParams: {
       ? searchParams.theme
       : undefined;
   const accentColor =
-    searchParams.accentColor && HEX_COLOR.test(searchParams.accentColor)
-      ? searchParams.accentColor
+    searchParams.accentColor && BARE_HEX_COLOR.test(searchParams.accentColor)
+      ? `#${searchParams.accentColor}`
       : undefined;
   return { accentColor, isEmbed, theme };
 }
@@ -41,7 +52,8 @@ export function buildEmbedQuery(params: ParsedEmbedParams): string {
     qs.set("theme", params.theme);
   }
   if (params.accentColor) {
-    qs.set("accentColor", params.accentColor);
+    // Strip the "#" — see the comment on parseEmbedParams for why.
+    qs.set("accentColor", params.accentColor.replace("#", ""));
   }
   return `?${qs.toString()}`;
 }

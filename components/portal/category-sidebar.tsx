@@ -1,10 +1,6 @@
-import {
-  ChatCircleIcon,
-  PlusIcon,
-  UserIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { ChatCircleIcon, UserIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { NewFeedbackButton } from "@/components/embed/new-feedback-button";
 
 interface Category {
   color: string;
@@ -84,14 +80,7 @@ export function CategorySidebar({
 
   return (
     <aside className="w-full shrink-0 space-y-4 lg:w-56">
-      {newPostHref && (
-        <Button asChild className="w-full">
-          <Link href={newPostHref}>
-            <PlusIcon data-icon="inline-start" />
-            Feedback
-          </Link>
-        </Button>
-      )}
+      {newPostHref && <NewFeedbackButton href={newPostHref} />}
 
       <nav className="space-y-0.5">
         <Link

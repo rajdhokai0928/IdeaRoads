@@ -5,6 +5,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
+import { useIsEmbed } from "@/components/embed/use-is-embed";
 
 interface VoteButtonProps {
   // Smaller, borderless, label-less rendering for dense card/table layouts —
@@ -28,10 +30,13 @@ export default function VoteButton({
   compact = false,
 }: VoteButtonProps) {
   const router = useRouter();
+  const isEmbed = useIsEmbed();
   const shouldReduceMotion = useReducedMotion();
   const [count, setCount] = useState(initialCount);
   const [hasVoted, setHasVoted] = useState(initialHasVoted);
   const [isPending, setIsPending] = useState(false);
+  const [signedIn, setSignedIn] = useState(isSignedIn);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const disabled = isLocked || isArchived || isPending;
   const tooltip = isLocked
@@ -40,19 +45,7 @@ export default function VoteButton({
       ? "This board is archived"
       : undefined;
 
-  async function handleClick() {
-    if (disabled) {
-      return;
-    }
-
-    if (!isSignedIn) {
-      // Voting requires sign-in — send the visitor to sign in, then back here.
-      const next = encodeURIComponent(window.location.pathname);
-      router.push(`/signin?next=${next}`);
-      return;
-    }
-
-    // Optimistic update
+  async function castVote() {
     const wasVoted = hasVoted;
     const prevCount = count;
     setHasVoted(!wasVoted);
@@ -87,52 +80,95 @@ export default function VoteButton({
     }
   }
 
+  function handleClick() {
+    if (disabled) {
+      return;
+    }
+
+    if (!signedIn) {
+      if (isEmbed) {
+        // Stay in the widget — sign in in place, then vote automatically.
+        setAuthOpen(true);
+        return;
+      }
+      // Voting requires sign-in — send the visitor to sign in, then back here.
+      const next = encodeURIComponent(window.location.pathname);
+      router.push(`/signin?next=${next}`);
+      return;
+    }
+
+    castVote();
+  }
+
+  function handleAuthenticated() {
+    setSignedIn(true);
+    router.refresh();
+    castVote();
+  }
+
+  const authDialog = isEmbed && (
+    <EmbedAuthDialog
+      onAuthenticated={handleAuthenticated}
+      onOpenChange={setAuthOpen}
+      open={authOpen}
+    />
+  );
+
   if (compact) {
     return (
+      <>
+        <motion.button
+          aria-label={hasVoted ? "Remove vote" : "Vote for this post"}
+          aria-pressed={hasVoted}
+          className={`flex flex-col items-center gap-0.5 rounded-ir-sm px-2 py-1.5 transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
+            disabled && !isPending
+              ? "cursor-not-allowed text-ir-muted opacity-50"
+              : hasVoted
+                ? "cursor-pointer bg-ir-primary-light/15 text-ir-primary hover:bg-ir-primary-light/25"
+                : "cursor-pointer text-ir-muted hover:bg-ir-muted-surface hover:text-ir-heading"
+          } ${isPending ? "opacity-70" : ""}`}
+          disabled={disabled}
+          onClick={handleClick}
+          title={tooltip}
+          type="button"
+          whileTap={disabled || shouldReduceMotion ? undefined : { scale: 0.9 }}
+        >
+          <CaretUpIcon
+            className="size-4"
+            weight={hasVoted ? "bold" : "regular"}
+          />
+          <span className="text-xs font-semibold tabular-nums">{count}</span>
+        </motion.button>
+        {authDialog}
+      </>
+    );
+  }
+
+  return (
+    <>
       <motion.button
         aria-label={hasVoted ? "Remove vote" : "Vote for this post"}
         aria-pressed={hasVoted}
-        className={`flex flex-col items-center gap-0.5 rounded-ir-sm px-2 py-1.5 transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
+        className={`flex flex-col items-center gap-0.5 rounded-ir-sm border px-2.5 py-1.5 transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
           disabled && !isPending
-            ? "cursor-not-allowed text-ir-muted opacity-50"
+            ? "cursor-not-allowed border-ir-border text-ir-muted opacity-50"
             : hasVoted
-              ? "cursor-pointer bg-ir-primary-light/15 text-ir-primary hover:bg-ir-primary-light/25"
-              : "cursor-pointer text-ir-muted hover:bg-ir-muted-surface hover:text-ir-heading"
+              ? "cursor-pointer border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary hover:bg-ir-primary-light/25"
+              : "cursor-pointer border-ir-border text-ir-muted hover:border-ir-primary/30 hover:text-ir-heading"
         } ${isPending ? "opacity-70" : ""}`}
         disabled={disabled}
         onClick={handleClick}
         title={tooltip}
         type="button"
-        whileTap={disabled || shouldReduceMotion ? undefined : { scale: 0.9 }}
+        whileTap={disabled ? undefined : { scale: 0.9 }}
       >
         <CaretUpIcon
           className="size-4"
           weight={hasVoted ? "bold" : "regular"}
         />
-        <span className="text-xs font-semibold tabular-nums">{count}</span>
+        <span className="text-sm font-semibold tabular-nums">{count}</span>
       </motion.button>
-    );
-  }
-
-  return (
-    <motion.button
-      aria-label={hasVoted ? "Remove vote" : "Vote for this post"}
-      aria-pressed={hasVoted}
-      className={`flex flex-col items-center gap-0.5 rounded-ir-sm border px-2.5 py-1.5 transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
-        disabled && !isPending
-          ? "cursor-not-allowed border-ir-border text-ir-muted opacity-50"
-          : hasVoted
-            ? "cursor-pointer border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary hover:bg-ir-primary-light/25"
-            : "cursor-pointer border-ir-border text-ir-muted hover:border-ir-primary/30 hover:text-ir-heading"
-      } ${isPending ? "opacity-70" : ""}`}
-      disabled={disabled}
-      onClick={handleClick}
-      title={tooltip}
-      type="button"
-      whileTap={disabled ? undefined : { scale: 0.9 }}
-    >
-      <CaretUpIcon className="size-4" weight={hasVoted ? "bold" : "regular"} />
-      <span className="text-sm font-semibold tabular-nums">{count}</span>
-    </motion.button>
+      {authDialog}
+    </>
   );
 }

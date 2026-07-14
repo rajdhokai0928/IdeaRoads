@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
+import { useIsEmbed } from "@/components/embed/use-is-embed";
 import { Button } from "@/components/ui/button";
 import { type CommentApi, type CommentData, postsCommentApi } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
@@ -26,6 +28,8 @@ export default function CommentForm({
   onSuccess,
 }: CommentFormProps) {
   const createUrl = (api ?? postsCommentApi(postId)).createUrl;
+  const router = useRouter();
+  const isEmbed = useIsEmbed();
   const [html, setHtml] = useState("");
   const [text, setText] = useState("");
   const [editorKey, setEditorKey] = useState(0);
@@ -33,6 +37,8 @@ export default function CommentForm({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(isSignedIn);
+  const [authOpen, setAuthOpen] = useState(false);
   const pathname = usePathname();
 
   // Mirrors of the latest content so the Enter-to-submit handler always reads
@@ -125,17 +131,39 @@ export default function CommentForm({
     );
   }
 
-  if (!isSignedIn) {
+  if (!signedIn) {
     return (
-      <p className="py-2 text-sm text-ir-muted">
-        <Link
-          className="font-medium text-ir-primary hover:underline"
-          href={`/signin?next=${encodeURIComponent(pathname)}`}
-        >
-          Sign in
-        </Link>{" "}
-        to join the conversation.
-      </p>
+      <>
+        <p className="py-2 text-sm text-ir-muted">
+          {isEmbed ? (
+            <button
+              className="font-medium text-ir-primary hover:underline"
+              onClick={() => setAuthOpen(true)}
+              type="button"
+            >
+              Sign in
+            </button>
+          ) : (
+            <Link
+              className="font-medium text-ir-primary hover:underline"
+              href={`/signin?next=${encodeURIComponent(pathname)}`}
+            >
+              Sign in
+            </Link>
+          )}{" "}
+          to join the conversation.
+        </p>
+        {isEmbed && (
+          <EmbedAuthDialog
+            onAuthenticated={() => {
+              setSignedIn(true);
+              router.refresh();
+            }}
+            onOpenChange={setAuthOpen}
+            open={authOpen}
+          />
+        )}
+      </>
     );
   }
 

@@ -164,6 +164,7 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
         <PortalHeader
           boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
+          currentPath={`/${slug}/b/${boardSlug}/p/${postSlug}${embedQuery}`}
           isMember={isMember}
           isSignedIn={isSignedIn}
           logoUrl={workspace.logoUrl}

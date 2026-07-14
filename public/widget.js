@@ -24,10 +24,12 @@
  *           data-accent-color="#2563eb"></script>
  *
  * data-workspace and data-board are both required — there's no public page
- * at the bare workspace root, so omitting data-board will load a 404 inside
- * the iframe. Settings → Embed always generates both for you. data-position,
- * data-width, data-height, data-theme and data-accent-color are all
- * optional and are generated for you by Settings → Embed.
+ * at the bare workspace root. Omitting either shows a small "configuration
+ * incomplete" notice in place of the widget instead of mounting anything
+ * (no iframe, no navigation) — check the console for details. Settings →
+ * Embed always generates both for you. data-position, data-width,
+ * data-height, data-theme and data-accent-color are all optional and are
+ * generated for you by Settings → Embed.
  */
 (() => {
   const MESSAGE_SOURCE = "idearoads-widget";
@@ -40,15 +42,46 @@
   }
 
   const workspace = script.getAttribute("data-workspace");
+  const containerId = script.getAttribute("data-container");
+
+  // Renders a small, visible notice instead of the widget — used when
+  // required config is missing, so a broken snippet fails loudly (for the
+  // site owner debugging it) instead of silently mounting an iframe pointed
+  // at a URL that 404s or, worse, redirects a visitor into the admin app's
+  // sign-in. Never falls through to building an iframe/src of any kind.
+  function renderConfigError(message) {
+    console.error("[IdeaRoads widget] " + message);
+    const box = document.createElement("div");
+    box.setAttribute("data-idearoads-widget-error", "");
+    box.style.cssText =
+      "font:500 13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;" +
+      "color:#991b1b;background:#fef2f2;border:1px solid #fecaca;" +
+      "border-radius:8px;padding:10px 14px;max-width:420px;";
+    box.textContent = "Feedback widget: " + message;
+    const container = containerId ? document.getElementById(containerId) : null;
+    if (container) {
+      container.appendChild(box);
+    } else if (script.parentNode) {
+      script.parentNode.insertBefore(box, script.nextSibling);
+    }
+  }
+
   if (!workspace) {
-    console.error("[IdeaRoads widget] data-workspace attribute is required");
+    renderConfigError("data-workspace attribute is required.");
     return;
   }
 
   const board = script.getAttribute("data-board");
+  if (!board) {
+    renderConfigError(
+      'data-board attribute is required (e.g. data-board="feature-requests"). ' +
+        "Copy a fresh embed snippet from Settings → Embed."
+    );
+    return;
+  }
+
   const mode =
     script.getAttribute("data-mode") === "button" ? "button" : "inline";
-  const containerId = script.getAttribute("data-container");
 
   const POSITIONS = ["bottom-right", "bottom-left", "top-right", "top-left"];
   const position = POSITIONS.includes(script.getAttribute("data-position"))
@@ -77,9 +110,7 @@
   })();
 
   const path =
-    "/" +
-    encodeURIComponent(workspace) +
-    (board ? "/b/" + encodeURIComponent(board) : "");
+    "/" + encodeURIComponent(workspace) + "/b/" + encodeURIComponent(board);
   const iframeQuery = new URLSearchParams({ embed: "1" });
   if (theme) {
     iframeQuery.set("theme", theme);

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { EmbedInlineSignIn } from "@/components/embed/embed-inline-signin";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
@@ -44,14 +45,6 @@ export default async function NewPostPage({ params, searchParams }: Props) {
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
 
-  // Submitting feedback requires a signed-in User — send visitors to sign in.
-  const session = await getCurrentSession();
-  if (!session) {
-    redirect(
-      `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`
-    );
-  }
-
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) {
     notFound();
@@ -60,6 +53,27 @@ export default async function NewPostPage({ params, searchParams }: Props) {
   const board = await getBoardBySlug(workspace.id, boardSlug);
   if (!board) {
     notFound();
+  }
+
+  // Submitting feedback requires a signed-in User.
+  const session = await getCurrentSession();
+  if (!session) {
+    // Embedded in a customer's site — sign in in place instead of
+    // redirecting the whole widget out to a full /signin page.
+    if (isEmbed) {
+      return (
+        <div
+          className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
+          style={embedWrapper.style}
+        >
+          <EmbedResizeReporter />
+          <EmbedInlineSignIn title={`New post — ${board.name}`} />
+        </div>
+      );
+    }
+    redirect(
+      `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`
+    );
   }
 
   const member = await getWorkspaceMember(workspace.id, session.user.id);

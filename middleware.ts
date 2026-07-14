@@ -35,6 +35,7 @@ const RESERVED_TOP = new Set([
   "privacy",
   "terms",
   "uploads",
+  "embed-auth-complete",
 ]);
 
 function hostOf(url: string | undefined): string | null {
@@ -75,7 +76,11 @@ function isDualHostPath(pathname: string): boolean {
     pathname === "/signin" ||
     pathname === "/signup" ||
     pathname.startsWith("/signin/") ||
-    pathname.startsWith("/signup/")
+    pathname.startsWith("/signup/") ||
+    // Landing page for the embed widget's popup/magic-link sign-in — opened
+    // directly on whichever host the widget's iframe is on (always the
+    // portal host in practice), so it must never bounce to the other host.
+    pathname === "/embed-auth-complete"
   );
 }
 

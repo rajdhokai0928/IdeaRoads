@@ -1,7 +1,10 @@
 "use client";
 
 import { SmileyIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
+import { useIsEmbed } from "@/components/embed/use-is-embed";
 import {
   Tooltip,
   TooltipContent,
@@ -31,15 +34,22 @@ export function ChangelogReactions({
   initialReactions,
   isSignedIn,
 }: ChangelogReactionsProps) {
+  const router = useRouter();
+  const isEmbed = useIsEmbed();
   const [reactions, setReactions] = useState<ReactionGroup[]>(initialReactions);
   const [showPicker, setShowPicker] = useState(false);
   const [pendingEmoji, setPendingEmoji] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(isSignedIn);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [afterAuthEmoji, setAfterAuthEmoji] = useState<string | null>(null);
 
-  async function handleReact(emoji: string) {
-    if (!isSignedIn || pendingEmoji) {
-      return;
+  useEffect(() => {
+    if (isSignedIn) {
+      setSignedIn(true);
     }
+  }, [isSignedIn]);
 
+  async function castReaction(emoji: string) {
     setPendingEmoji(emoji);
     setShowPicker(false);
 
@@ -94,6 +104,42 @@ export function ChangelogReactions({
     }
   }
 
+  function handleReact(emoji: string) {
+    if (!signedIn) {
+      if (isEmbed) {
+        setAfterAuthEmoji(emoji);
+        setAuthOpen(true);
+      }
+      return;
+    }
+    if (pendingEmoji) {
+      return;
+    }
+    castReaction(emoji);
+  }
+
+  function handleAddReactionClick() {
+    if (!signedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    setShowPicker((v) => !v);
+  }
+
+  function handleAuthenticated() {
+    setSignedIn(true);
+    router.refresh();
+    if (afterAuthEmoji) {
+      const emoji = afterAuthEmoji;
+      setAfterAuthEmoji(null);
+      castReaction(emoji);
+    } else {
+      setShowPicker(true);
+    }
+  }
+
+  const canReact = signedIn || isEmbed;
+
   return (
     <div className="relative flex flex-wrap items-center gap-1">
       {reactions.map((r) => {
@@ -104,7 +150,7 @@ export function ChangelogReactions({
                 ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-heading"
                 : "border-ir-border bg-transparent text-ir-heading hover:border-ir-primary/30"
             }`}
-            disabled={!isSignedIn || !!pendingEmoji}
+            disabled={!canReact || !!pendingEmoji}
             onClick={() => handleReact(r.emoji)}
             type="button"
           >
@@ -127,19 +173,19 @@ export function ChangelogReactions({
         );
       })}
 
-      {isSignedIn && (
+      {canReact && (
         <div className="relative">
           <button
             aria-label="Add reaction"
             className="inline-flex items-center gap-1 rounded-ir-sm border border-ir-border px-2 py-0.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             disabled={!!pendingEmoji}
-            onClick={() => setShowPicker((v) => !v)}
+            onClick={handleAddReactionClick}
             type="button"
           >
             <SmileyIcon className="size-3" />
           </button>
 
-          {showPicker && (
+          {showPicker && signedIn && (
             <>
               <button
                 aria-label="Close emoji picker"
@@ -163,6 +209,14 @@ export function ChangelogReactions({
             </>
           )}
         </div>
+      )}
+
+      {isEmbed && (
+        <EmbedAuthDialog
+          onAuthenticated={handleAuthenticated}
+          onOpenChange={setAuthOpen}
+          open={authOpen}
+        />
       )}
     </div>
   );

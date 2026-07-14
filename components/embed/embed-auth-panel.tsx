@@ -3,7 +3,7 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient, signIn } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -37,26 +37,31 @@ interface EmbedAuthPanelProps {
   onAuthenticated: () => void;
 }
 
-const POLL_INTERVAL_MS = 1500;
 const POPUP_CHECK_INTERVAL_MS = 500;
+const GOOGLE_CALLBACK_URL = "/embed-auth-complete";
 
-// In-place sign-in for the embed widget: magic link + Google popup, both
-// landing on /embed-auth-complete (never /signin) so a signed-in visitor
-// never leaves the customer's page. Polls the session while waiting so
-// either method resolves back into the widget with no manual "continue"
-// step.
+type Step = "email" | "otp";
+
+// In-place sign-in for the embed widget: a one-time code (never a link) plus
+// an optional Google popup — both resolve without ever navigating the
+// visitor away from the host page. The code is entered directly into this
+// panel, so unlike a magic-link email there's no second tab to lose track
+// of and no host to get wrong: /sign-in/email-otp returns a session in the
+// same response, synchronously.
 export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
+  const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [name, setName] = useState("");
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const popupRef = useRef<Window | null>(null);
   const onAuthenticatedRef = useRef(onAuthenticated);
   onAuthenticatedRef.current = onAuthenticated;
-
-  const callbackURL = "/embed-auth-complete";
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +79,7 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
   }, []);
 
   useEffect(() => {
-    if (!(sent || googleLoading)) {
+    if (!googleLoading) {
       return;
     }
     const interval = setInterval(async () => {
@@ -83,16 +88,14 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
         clearInterval(interval);
         onAuthenticatedRef.current();
       }
-    }, POLL_INTERVAL_MS);
+    }, POPUP_CHECK_INTERVAL_MS * 3);
     return () => clearInterval(interval);
-  }, [sent, googleLoading]);
+  }, [googleLoading]);
 
-  // Someone can complete the magic-link step in a different tab than the one
-  // that opened this panel (e.g. pasting the link instead of clicking a
-  // popup), which the interval above only catches while sent/googleLoading is
-  // true. Cover the rest: check immediately on mount (the panel may be
-  // reopened after the visitor already finished signing in elsewhere) and
-  // again whenever the tab regains focus, instead of waiting on the poll.
+  // The Google popup is the only path left that can complete outside this
+  // component's direct control (its own window, its own redirect chain), so
+  // recheck immediately whenever the tab regains focus rather than waiting
+  // on the poll above.
   useEffect(() => {
     let cancelled = false;
     async function checkSession() {
@@ -101,7 +104,6 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
         onAuthenticatedRef.current();
       }
     }
-    checkSession();
     function onVisible() {
       if (document.visibilityState === "visible") {
         checkSession();
@@ -118,19 +120,52 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
 
   useEffect(() => () => popupRef.current?.close(), []);
 
-  async function handleMagicLinkSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function sendCode() {
     setFormError(null);
-    setSubmitting(true);
-    const result = await signIn.magicLink({ email, callbackURL });
-    setSubmitting(false);
+    const result = await authClient.emailOtp.sendVerificationOtp({
+      email,
+      type: "sign-in",
+    });
     if (result.error) {
       setFormError(
         result.error.message ?? "Something went wrong. Please try again."
       );
+      return false;
+    }
+    return true;
+  }
+
+  async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSendingCode(true);
+    const ok = await sendCode();
+    setSendingCode(false);
+    if (ok) {
+      setStep("otp");
+    }
+  }
+
+  async function handleResend() {
+    setResending(true);
+    await sendCode();
+    setResending(false);
+  }
+
+  async function handleOtpSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormError(null);
+    setVerifying(true);
+    const result = await authClient.signIn.emailOtp({
+      email,
+      otp,
+      name: name.trim() || undefined,
+    });
+    setVerifying(false);
+    if (result.error) {
+      setFormError(result.error.message ?? "Invalid code. Please try again.");
       return;
     }
-    setSent(true);
+    onAuthenticatedRef.current();
   }
 
   async function handleGoogleSignIn() {
@@ -140,7 +175,10 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
       const res = await fetch("/api/auth/sign-in/social", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider: "google", callbackURL }),
+        body: JSON.stringify({
+          provider: "google",
+          callbackURL: GOOGLE_CALLBACK_URL,
+        }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.url) {
@@ -170,22 +208,82 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
     }
   }
 
-  if (sent) {
+  if (step === "otp") {
     return (
-      <div className="space-y-3 text-center">
-        <p className="text-sm font-medium text-ir-heading">Check your email</p>
-        <p className="text-sm text-ir-muted">
-          We sent a sign-in link to <strong>{email}</strong>. Click it to
-          continue — this panel will pick it up automatically.
-        </p>
-        <Button
-          onClick={() => setSent(false)}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Use a different email
-        </Button>
+      <div className="space-y-4">
+        <div className="text-center">
+          <p className="text-sm font-medium text-ir-heading">Enter your code</p>
+          <p className="mt-1 text-sm text-ir-muted">
+            We sent a 6-digit code to <strong>{email}</strong>.
+          </p>
+        </div>
+
+        <form className="space-y-3" onSubmit={handleOtpSubmit}>
+          <label className="block" htmlFor="embed-auth-otp">
+            <span className="mb-1.5 block text-sm font-medium text-ir-heading">
+              Code
+            </span>
+            <Input
+              autoComplete="one-time-code"
+              autoFocus
+              className="text-center font-mono text-lg tracking-[0.3em]"
+              id="embed-auth-otp"
+              inputMode="numeric"
+              maxLength={6}
+              onChange={(event) =>
+                setOtp(event.target.value.replace(/\D/g, ""))
+              }
+              placeholder="000000"
+              required
+              value={otp}
+            />
+          </label>
+          <label className="block" htmlFor="embed-auth-name">
+            <span className="mb-1.5 block text-sm font-medium text-ir-heading">
+              Your name{" "}
+              <span className="font-normal text-ir-muted">
+                (only needed if you're new here)
+              </span>
+            </span>
+            <Input
+              autoComplete="name"
+              id="embed-auth-name"
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Jane Doe"
+              value={name}
+            />
+          </label>
+          {formError && <p className="text-sm text-ir-danger">{formError}</p>}
+          <Button
+            className="w-full"
+            disabled={verifying || otp.length < 6}
+            type="submit"
+          >
+            {verifying ? "Verifying…" : "Verify code"}
+          </Button>
+        </form>
+
+        <div className="flex items-center justify-between text-xs">
+          <button
+            className="font-medium text-ir-muted hover:text-ir-heading hover:underline"
+            onClick={() => {
+              setStep("email");
+              setOtp("");
+              setFormError(null);
+            }}
+            type="button"
+          >
+            Use a different email
+          </button>
+          <button
+            className="font-medium text-ir-primary hover:underline disabled:opacity-50"
+            disabled={resending}
+            onClick={handleResend}
+            type="button"
+          >
+            {resending ? "Sending…" : "Resend code"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -196,7 +294,7 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
         <>
           <Button
             className="w-full gap-2"
-            disabled={submitting || googleLoading}
+            disabled={sendingCode || googleLoading}
             onClick={handleGoogleSignIn}
             type="button"
             variant="outline"
@@ -214,14 +312,14 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
         </>
       )}
 
-      <form className="space-y-3" onSubmit={handleMagicLinkSubmit}>
+      <form className="space-y-3" onSubmit={handleEmailSubmit}>
         <label className="block" htmlFor="embed-auth-email">
           <span className="mb-1.5 block text-sm font-medium text-ir-heading">
             Email
           </span>
           <Input
             autoComplete="email"
-            disabled={submitting || googleLoading}
+            disabled={sendingCode || googleLoading}
             id="embed-auth-email"
             onChange={(event) => setEmail(event.target.value)}
             placeholder="you@example.com"
@@ -233,10 +331,10 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
         {formError && <p className="text-sm text-ir-danger">{formError}</p>}
         <Button
           className="w-full"
-          disabled={submitting || googleLoading}
+          disabled={sendingCode || googleLoading}
           type="submit"
         >
-          {submitting ? "Sending…" : "Continue with email"}
+          {sendingCode ? "Sending code…" : "Continue with email"}
         </Button>
       </form>
     </div>

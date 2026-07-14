@@ -7,6 +7,7 @@ import { ChangelogCommentSection } from "@/components/changelog/changelog-commen
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
+import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
@@ -16,6 +17,11 @@ import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { sanitizeChangelogHtml } from "@/lib/changelog/html";
 import { getChangelogEntryById } from "@/lib/changelog/queries";
 import { getReactionsForEntry } from "@/lib/changelog-comments/reactions";
+import {
+  buildEmbedQuery,
+  embedWrapperProps,
+  parseEmbedParams,
+} from "@/lib/embed/style";
 import { portalBaseUrl } from "@/lib/urls";
 import {
   getWorkspaceBySlug,
@@ -24,6 +30,11 @@ import {
 
 interface Props {
   params: Promise<{ slug: string; entryId: string }>;
+  searchParams: Promise<{
+    accentColor?: string;
+    embed?: string;
+    theme?: string;
+  }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -52,8 +63,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PublicChangelogEntryPage({ params }: Props) {
+export default async function PublicChangelogEntryPage({
+  params,
+  searchParams,
+}: Props) {
   const { slug, entryId } = await params;
+  const { embed, theme, accentColor } = await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { isEmbed } = embedParams;
+  const embedQuery = buildEmbedQuery(embedParams);
+  const embedWrapper = embedWrapperProps(embedParams);
 
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) {
@@ -91,24 +110,30 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
   const entryUrl = `${portalBaseUrl()}/${slug}/changelog/${entryId}`;
 
   return (
-    <div className="min-h-screen bg-ir-background">
-      <PortalHeader
-        active="changelog"
-        boards={publicBoards}
-        changelogPublic={workspace.changelogPublic}
-        currentPath={`/${slug}/changelog/${entryId}`}
-        isMember={!!member}
-        isSignedIn={isSignedIn}
-        logoUrl={workspace.logoUrl}
-        roadmapPublic={workspace.roadmapPublic}
-        rssHref={`/${slug}/changelog/feed.xml`}
-        slug={slug}
-        userEmail={session?.user.email}
-        userImage={session?.user.image}
-        userName={session?.user.name}
-        workspaceName={workspace.name}
-      />
-      <PoweredByBadge />
+    <div
+      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
+      style={embedWrapper.style}
+    >
+      {isEmbed && <EmbedResizeReporter />}
+      {!isEmbed && (
+        <PortalHeader
+          active="changelog"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          currentPath={`/${slug}/changelog/${entryId}`}
+          isMember={!!member}
+          isSignedIn={isSignedIn}
+          logoUrl={workspace.logoUrl}
+          roadmapPublic={workspace.roadmapPublic}
+          rssHref={`/${slug}/changelog/feed.xml`}
+          slug={slug}
+          userEmail={session?.user.email}
+          userImage={session?.user.image}
+          userName={session?.user.name}
+          workspaceName={workspace.name}
+        />
+      )}
+      {!isEmbed && <PoweredByBadge />}
 
       {/* Content */}
       <main
@@ -118,7 +143,7 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
         {/* Back link */}
         <Link
           className="mb-8 inline-flex items-center gap-1.5 rounded-ir-sm text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-          href={`/${slug}/changelog`}
+          href={`/${slug}/changelog${embedQuery}`}
         >
           <ArrowLeftIcon className="size-3.5" />
           All updates
@@ -191,7 +216,7 @@ export default async function PublicChangelogEntryPage({ params }: Props) {
                 >
                   <Link
                     className="relative min-w-0 flex-1 text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard after:absolute after:inset-0 after:content-[''] group-hover:text-ir-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-                    href={`/${slug}/b/${post.boardSlug}/p/${post.slug}`}
+                    href={`/${slug}/b/${post.boardSlug}/p/${post.slug}${embedQuery}`}
                   >
                     {post.title}
                   </Link>

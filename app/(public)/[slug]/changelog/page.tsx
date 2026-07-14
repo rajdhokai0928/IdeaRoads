@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
+import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
@@ -12,6 +13,11 @@ import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { truncateHtmlToText } from "@/lib/changelog/html";
 import { listChangelogEntries } from "@/lib/changelog/queries";
 import { getReactionsForEntries } from "@/lib/changelog-comments/reactions";
+import {
+  buildEmbedQuery,
+  embedWrapperProps,
+  parseEmbedParams,
+} from "@/lib/embed/style";
 import { getNotificationPreferences } from "@/lib/notifications/queries";
 import { portalBaseUrl } from "@/lib/urls";
 import {
@@ -23,7 +29,13 @@ import { SubscribeToggle } from "./_components/subscribe-toggle";
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ label?: string; q?: string }>;
+  searchParams: Promise<{
+    accentColor?: string;
+    embed?: string;
+    label?: string;
+    q?: string;
+    theme?: string;
+  }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -49,7 +61,11 @@ export default async function PublicChangelogIndexPage({
   searchParams,
 }: Props) {
   const { slug } = await params;
-  const { label, q } = await searchParams;
+  const { label, q, embed, theme, accentColor } = await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { isEmbed } = embedParams;
+  const embedQuery = buildEmbedQuery(embedParams);
+  const embedWrapper = embedWrapperProps(embedParams);
 
   const workspace = await getWorkspaceBySlug(slug);
   if (!workspace) {
@@ -89,24 +105,30 @@ export default async function PublicChangelogIndexPage({
   const baseUrl = portalBaseUrl();
 
   return (
-    <div className="min-h-screen bg-ir-background">
-      <PortalHeader
-        active="changelog"
-        boards={publicBoards}
-        changelogPublic={workspace.changelogPublic}
-        currentPath={`/${slug}/changelog`}
-        isMember={!!member}
-        isSignedIn={isSignedIn}
-        logoUrl={workspace.logoUrl}
-        roadmapPublic={workspace.roadmapPublic}
-        rssHref={`/${slug}/changelog/feed.xml`}
-        slug={slug}
-        userEmail={session?.user.email}
-        userImage={session?.user.image}
-        userName={session?.user.name}
-        workspaceName={workspace.name}
-      />
-      <PoweredByBadge />
+    <div
+      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
+      style={embedWrapper.style}
+    >
+      {isEmbed && <EmbedResizeReporter />}
+      {!isEmbed && (
+        <PortalHeader
+          active="changelog"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          currentPath={`/${slug}/changelog`}
+          isMember={!!member}
+          isSignedIn={isSignedIn}
+          logoUrl={workspace.logoUrl}
+          roadmapPublic={workspace.roadmapPublic}
+          rssHref={`/${slug}/changelog/feed.xml`}
+          slug={slug}
+          userEmail={session?.user.email}
+          userImage={session?.user.image}
+          userName={session?.user.name}
+          workspaceName={workspace.name}
+        />
+      )}
+      {!isEmbed && <PoweredByBadge />}
 
       {/* Content */}
       <main
@@ -123,11 +145,10 @@ export default async function PublicChangelogIndexPage({
             activeLabel={activeLabel}
             activeSearch={searchQuery}
           />
-          {isSignedIn && (
-            <SubscribeToggle
-              initialSubscribed={notificationPrefs?.emailChangelog ?? true}
-            />
-          )}
+          <SubscribeToggle
+            initialSubscribed={notificationPrefs?.emailChangelog ?? true}
+            isSignedIn={isSignedIn}
+          />
         </div>
 
         {entries.length === 0 ? (
@@ -160,7 +181,7 @@ export default async function PublicChangelogIndexPage({
                   {entry.coverImageUrl && (
                     <Link
                       className="mb-4 block"
-                      href={`/${slug}/changelog/${entry.id}`}
+                      href={`/${slug}/changelog/${entry.id}${embedQuery}`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
@@ -174,7 +195,7 @@ export default async function PublicChangelogIndexPage({
                   <h2 className="text-lg font-semibold text-ir-heading">
                     <Link
                       className="transition-colors duration-150 ease-ir-standard hover:text-ir-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-                      href={`/${slug}/changelog/${entry.id}`}
+                      href={`/${slug}/changelog/${entry.id}${embedQuery}`}
                     >
                       {entry.title}
                     </Link>

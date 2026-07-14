@@ -1,5 +1,6 @@
 import { ChatCircleIcon, UserIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { EmbedProfileLink } from "@/components/embed/embed-profile-link";
 import { NewFeedbackButton } from "@/components/embed/new-feedback-button";
 
 interface Category {
@@ -128,6 +129,7 @@ export function CategorySidebar({
             <UserIcon className="size-4" />
             My Posts
           </Link>
+          <EmbedProfileLink slug={slug} />
         </nav>
       )}
     </aside>

@@ -12,7 +12,7 @@ export default async function AdminLayout({
   const workspace = await getFirstUserWorkspace(session.user.id);
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-page md:flex-row">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#F7F9FB] md:flex-row">
       <AdminSidebar
         email={session.user.email}
         image={session.user.image ?? null}

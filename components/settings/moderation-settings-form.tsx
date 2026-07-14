@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { useDirtyState } from "@/hooks/use-dirty-state";
+
+// Arrays aren't reference-comparable, so dirty-tracking compares a stable,
+// order-independent string form of the keyword list instead.
+function keywordsKey(keywords: string[]): string {
+  return [...keywords].sort().join(",");
+}
 
 interface Props {
   commentModeration: boolean;
@@ -47,6 +54,11 @@ export function ModerationSettingsForm({
   const [commentMod, setCommentMod] = useState(commentModeration);
   const [keywords, setKeywords] = useState<string[]>(spamKeywords);
   const [keywordInput, setKeywordInput] = useState("");
+  const { isDirty, markClean } = useDirtyState({
+    mode,
+    commentMod,
+    keywords: keywordsKey(keywords),
+  });
 
   function addKeyword(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter" && e.key !== ",") {
@@ -80,6 +92,7 @@ export function ModerationSettingsForm({
       }
 
       toast.success("Moderation settings saved");
+      markClean({ mode, commentMod, keywords: keywordsKey(keywords) });
       router.refresh();
     });
   }
@@ -189,7 +202,11 @@ export function ModerationSettingsForm({
       </div>
 
       <div className="mt-4 flex justify-end">
-        <Button disabled={isPending} onClick={handleSave} type="button">
+        <Button
+          disabled={isPending || !isDirty}
+          onClick={handleSave}
+          type="button"
+        >
           {isPending ? "Saving…" : "Save settings"}
         </Button>
       </div>

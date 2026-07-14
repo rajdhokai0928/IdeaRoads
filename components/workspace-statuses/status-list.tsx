@@ -24,6 +24,7 @@ import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { ContentContainer, PageHeader } from "@/components/ui/page";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 
 interface WorkspaceStatus {
   color: string;
@@ -71,15 +72,21 @@ export function StatusList({
     null
   );
   const [error, setError] = useState<string | null>(null);
+  const { isDirty, markClean } = useDirtyState({
+    name: form?.name ?? "",
+    color: form?.color ?? "",
+  });
 
   function openCreate() {
     setForm({ ...DEFAULT_FORM });
     setError(null);
+    markClean({ name: DEFAULT_FORM.name, color: DEFAULT_FORM.color });
   }
 
   function openEdit(s: WorkspaceStatus) {
     setForm({ mode: "edit", statusId: s.id, name: s.name, color: s.color });
     setError(null);
+    markClean({ name: s.name, color: s.color });
   }
 
   function closeForm() {
@@ -305,7 +312,7 @@ export function StatusList({
             {error && <p className="text-xs text-ir-danger">{error}</p>}
 
             <div className="flex items-center gap-2">
-              <Button disabled={isPending} type="submit">
+              <Button disabled={isPending || !isDirty} type="submit">
                 {isPending
                   ? "Saving…"
                   : form.mode === "create"

@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { ContentContainer } from "@/components/ui/page";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 
 interface GeneralSettingsFormProps {
   canManage: boolean;
@@ -155,6 +156,12 @@ export function GeneralSettingsForm({
   const [description, setDescription] = useState(workspaceDescription);
   const [logoUrl, setLogoUrl] = useState(workspaceLogoUrl);
   const [infoErrors, setInfoErrors] = useState<Record<string, string>>({});
+  const { isDirty: infoDirty, markClean: markInfoClean } = useDirtyState({
+    name,
+    slug,
+    description,
+    logoUrl,
+  });
 
   // Delete workspace state
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -247,6 +254,7 @@ export function GeneralSettingsForm({
       }
 
       toast.success("Workspace info saved");
+      markInfoClean({ name, slug, description, logoUrl });
 
       // If slug changed, navigate to new URL
       if (result.data.newSlug && result.data.newSlug !== workspaceSlug) {
@@ -361,7 +369,7 @@ export function GeneralSettingsForm({
 
           {canManage && (
             <div className="mt-3 flex justify-end">
-              <Button disabled={isPending} type="submit">
+              <Button disabled={isPending || !infoDirty} type="submit">
                 {isPending ? "Saving…" : "Save changes"}
               </Button>
             </div>

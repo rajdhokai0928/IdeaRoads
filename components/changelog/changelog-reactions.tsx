@@ -92,11 +92,24 @@ export function ChangelogReactions({
     }
 
     try {
-      await fetch(`/api/changelog/${changelogEntryId}/reactions`, {
+      const res = await fetch(`/api/changelog/${changelogEntryId}/reactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emoji }),
       });
+      // A session can go stale between page load and this click (expiry, a
+      // sign-out elsewhere). Reopen the in-place prompt instead of leaving
+      // the visitor stuck behind a silently-reverted reaction.
+      if (res.status === 401 && isEmbed) {
+        setReactions(initialReactions);
+        setSignedIn(false);
+        setAfterAuthEmoji(emoji);
+        setAuthOpen(true);
+        return;
+      }
+      if (!res.ok) {
+        setReactions(initialReactions);
+      }
     } catch {
       setReactions(initialReactions);
     } finally {

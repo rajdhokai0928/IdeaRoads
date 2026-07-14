@@ -104,6 +104,16 @@ export default function CommentForm({
       const data = await res.json();
 
       if (!res.ok) {
+        // A session can go stale between page load and this submit (expiry,
+        // a sign-out elsewhere). Reopen the in-place prompt instead of
+        // leaving the visitor stuck behind a generic error — the draft stays
+        // intact (it's tracked in refs/state, not reset here) and resubmits
+        // automatically once they're signed in again.
+        if (res.status === 401 && isEmbed) {
+          setSignedIn(false);
+          setAuthOpen(true);
+          return;
+        }
         setError(data.error ?? "Something went wrong.");
         return;
       }
@@ -168,6 +178,10 @@ export default function CommentForm({
             onAuthenticated={() => {
               setSignedIn(true);
               router.refresh();
+              // No-ops if the box was empty (a manual "Sign in" click);
+              // resubmits the draft automatically if this reopened after a
+              // 401 mid-submit.
+              submit();
             }}
             onOpenChange={setAuthOpen}
             open={authOpen}

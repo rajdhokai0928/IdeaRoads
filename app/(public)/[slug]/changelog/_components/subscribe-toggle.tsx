@@ -42,6 +42,14 @@ export function SubscribeToggle({
         emailChangelog: next,
       });
       if (!result.success) {
+        // A session can go stale between page load and this click (expiry, a
+        // sign-out elsewhere). Reopen the in-place prompt instead of leaving
+        // the visitor stuck behind a generic error.
+        if (result.code === "UNAUTHENTICATED" && isEmbed) {
+          setSignedIn(false);
+          setAuthOpen(true);
+          return;
+        }
         toast.error(result.error);
         return;
       }
@@ -68,6 +76,7 @@ export function SubscribeToggle({
           onAuthenticated={() => {
             setSignedIn(true);
             router.refresh();
+            toggle();
           }}
           onOpenChange={setAuthOpen}
           open={authOpen}

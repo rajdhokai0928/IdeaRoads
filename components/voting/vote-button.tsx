@@ -70,6 +70,16 @@ export default function VoteButton({
         // Revert optimistic update
         setHasVoted(wasVoted);
         setCount(prevCount);
+        // A session can go stale between page load and this click (expiry, a
+        // sign-out elsewhere) — the local `signedIn` flag has no way to know
+        // that on its own. Rather than leave the visitor stuck behind a
+        // generic error until they manually reload, treat 401 as "actually
+        // signed out" and reopen the in-place prompt right away.
+        if (res.status === 401 && isEmbed) {
+          setSignedIn(false);
+          setAuthOpen(true);
+          return;
+        }
         const data = await res.json().catch(() => ({}));
         toast.error(data.error ?? "Something went wrong.");
         return;

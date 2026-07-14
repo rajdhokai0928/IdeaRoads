@@ -87,6 +87,35 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
     return () => clearInterval(interval);
   }, [sent, googleLoading]);
 
+  // Someone can complete the magic-link step in a different tab than the one
+  // that opened this panel (e.g. pasting the link instead of clicking a
+  // popup), which the interval above only catches while sent/googleLoading is
+  // true. Cover the rest: check immediately on mount (the panel may be
+  // reopened after the visitor already finished signing in elsewhere) and
+  // again whenever the tab regains focus, instead of waiting on the poll.
+  useEffect(() => {
+    let cancelled = false;
+    async function checkSession() {
+      const { data } = await authClient.getSession();
+      if (!cancelled && data?.session) {
+        onAuthenticatedRef.current();
+      }
+    }
+    checkSession();
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        checkSession();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", checkSession);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", checkSession);
+    };
+  }, []);
+
   useEffect(() => () => popupRef.current?.close(), []);
 
   async function handleMagicLinkSubmit(event: FormEvent<HTMLFormElement>) {

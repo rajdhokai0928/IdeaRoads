@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
 import { useIsEmbed } from "@/components/embed/use-is-embed";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,16 @@ export default function CommentForm({
   const [signedIn, setSignedIn] = useState(isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
   const pathname = usePathname();
+
+  // Another embedded element may complete sign-in and call router.refresh()
+  // — that re-renders this component with a new isSignedIn prop, but
+  // useState only reads its initial value once, so sync it explicitly rather
+  // than staying stuck showing signed-out.
+  useEffect(() => {
+    if (isSignedIn) {
+      setSignedIn(true);
+    }
+  }, [isSignedIn]);
 
   // Mirrors of the latest content so the Enter-to-submit handler always reads
   // the current value (not a stale render's state).

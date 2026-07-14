@@ -3,7 +3,7 @@
 import { CaretUpIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
 import { useIsEmbed } from "@/components/embed/use-is-embed";
@@ -37,6 +37,16 @@ export default function VoteButton({
   const [isPending, setIsPending] = useState(false);
   const [signedIn, setSignedIn] = useState(isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
+
+  // Another embedded element (comment box, feedback button) may complete
+  // sign-in and call router.refresh() — that re-renders this component with
+  // a new isSignedIn prop, but useState only reads its initial value once, so
+  // sync it explicitly rather than staying stuck showing signed-out.
+  useEffect(() => {
+    if (isSignedIn) {
+      setSignedIn(true);
+    }
+  }, [isSignedIn]);
 
   const disabled = isLocked || isArchived || isPending;
   const tooltip = isLocked

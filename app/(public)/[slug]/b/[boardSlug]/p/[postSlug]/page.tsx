@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PostDetailContent } from "@/components/posts/post-detail-content";
@@ -160,10 +161,22 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
+      {isEmbed && (
+        <EmbedNav
+          active="feedback"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          embedQuery={embedQuery}
+          isSignedIn={isSignedIn}
+          roadmapPublic={workspace.roadmapPublic}
+          slug={slug}
+        />
+      )}
       {!isEmbed && (
         <PortalHeader
           boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
+          currentPath={`/${slug}/b/${boardSlug}/p/${postSlug}${embedQuery}`}
           isMember={isMember}
           isSignedIn={isSignedIn}
           logoUrl={workspace.logoUrl}

@@ -20,6 +20,7 @@ vi.mock("@/lib/authz", async (importOriginal) => {
   return {
     ...actual,
     requireSession: vi.fn(async () => ({ user: sessionUser.value })),
+    getCurrentSession: vi.fn(async () => ({ user: sessionUser.value })),
   };
 });
 vi.mock("@/lib/worker/enqueue", () => ({

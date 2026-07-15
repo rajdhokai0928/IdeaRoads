@@ -14,6 +14,9 @@ interface HoveredImage {
 }
 
 interface QuillEditorProps {
+  // Accessible name for the underlying contenteditable — placeholder text
+  // alone isn't a reliable accessible name for screen readers.
+  ariaLabel?: string;
   disabled?: boolean;
   minHeight?: number;
   onChange: (html: string, text: string) => void;
@@ -38,6 +41,7 @@ export default function QuillEditor({
   placeholder = "Write something…",
   disabled = false,
   minHeight = 80,
+  ariaLabel,
 }: QuillEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -45,6 +49,8 @@ export default function QuillEditor({
   const removeButtonRef = useRef<HTMLButtonElement>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const ariaLabelRef = useRef(ariaLabel);
+  ariaLabelRef.current = ariaLabel;
   const onSubmitRef = useRef(onSubmit);
   onSubmitRef.current = onSubmit;
   const uploadImageRef = useRef(uploadImage);
@@ -181,6 +187,10 @@ export default function QuillEditor({
       });
 
       quillRef.current = quill;
+      quill.root.setAttribute("role", "textbox");
+      if (ariaLabelRef.current) {
+        quill.root.setAttribute("aria-label", ariaLabelRef.current);
+      }
 
       if (value && value !== "<p><br></p>") {
         quill.root.innerHTML = value;

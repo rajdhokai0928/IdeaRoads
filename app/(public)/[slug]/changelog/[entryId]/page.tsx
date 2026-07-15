@@ -7,6 +7,7 @@ import { ChangelogCommentSection } from "@/components/changelog/changelog-commen
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { ImagePreviewThumbnail } from "@/components/ui/image-preview-thumbnail";
@@ -116,6 +117,17 @@ export default async function PublicChangelogEntryPage({
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
+      {isEmbed && (
+        <EmbedNav
+          active="changelog"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          embedQuery={embedQuery}
+          isSignedIn={isSignedIn}
+          roadmapPublic={workspace.roadmapPublic}
+          slug={slug}
+        />
+      )}
       {!isEmbed && (
         <PortalHeader
           active="changelog"

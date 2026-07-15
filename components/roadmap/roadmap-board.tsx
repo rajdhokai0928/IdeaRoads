@@ -14,6 +14,10 @@ interface RoadmapBoardProps {
   // sets this; it's read-only for visitors.
   canManage?: boolean;
   columns: RoadmapStatusColumn[];
+  // Whether a category/search filter is currently narrowing `columns` — an
+  // empty column reads differently ("No matches") than a genuinely empty
+  // roadmap ("Nothing in {name} yet.").
+  isFiltering?: boolean;
   isSignedIn: boolean;
   // Fixed per-route, never per-viewer: true only on the admin-shelled
   // /settings/roadmap page. The public /roadmap page never sets this, even
@@ -39,6 +43,7 @@ export function RoadmapBoard({
   workspaceSlug,
   workspaceId,
   isSignedIn,
+  isFiltering = false,
   useWorkspaceLinks,
   canManage,
 }: RoadmapBoardProps) {
@@ -112,6 +117,7 @@ export function RoadmapBoard({
               color={col.color}
               draggingId={drag?.post.id ?? null}
               isDropTarget={dropTarget === col.id}
+              isFiltering={isFiltering}
               isSignedIn={isSignedIn}
               key={col.id}
               name={col.name}

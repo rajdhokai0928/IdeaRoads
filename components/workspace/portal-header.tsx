@@ -58,9 +58,11 @@ export function PortalHeader({
     "rounded-ir-sm px-3 py-1.5 text-sm font-medium text-ir-primary bg-ir-primary-light/15";
 
   const homeHref = boards[0] ? `/${slug}/b/${boards[0].slug}` : `/${slug}`;
-  const signInHref = currentPath
-    ? `/signin?next=${encodeURIComponent(currentPath)}`
-    : "/signin";
+  // Always carry a same-host `next` — falling back to bare /signin would send
+  // a Portal-host visitor through /post-auth's admin-only default, which
+  // 404s/bounces to the Workspace host since the Portal session cookie it
+  // just received doesn't carry over there.
+  const signInHref = `/signin?next=${encodeURIComponent(currentPath || homeHref)}`;
 
   return (
     <header className="sticky top-0 z-20 border-b border-ir-border bg-ir-surface/90 backdrop-blur-sm">

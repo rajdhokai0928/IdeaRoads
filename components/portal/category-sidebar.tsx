@@ -4,7 +4,6 @@ import {
   UserIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { EmbedProfileLink } from "@/components/embed/embed-profile-link";
 import { Button } from "@/components/ui/button";
 
 interface Category {
@@ -140,7 +139,6 @@ export function CategorySidebar({
             <UserIcon className="size-4" />
             My Posts
           </Link>
-          <EmbedProfileLink slug={slug} />
         </nav>
       )}
     </aside>

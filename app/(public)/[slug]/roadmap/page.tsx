@@ -2,6 +2,7 @@ import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import {
@@ -134,9 +135,12 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
 
   // The public portal never redirects into the workspace app — everyone here
   // (including signed-in members browsing the public roadmap) goes through
-  // the public submission flow, signing in first if needed.
+  // the public submission flow, signing in first if needed. Inside the
+  // embed, always go straight to the form — it handles a signed-out guest
+  // itself (in-place auth at submit time) rather than bouncing them to
+  // /signin before they can even start typing.
   const feedbackHref = activeBoards[0]
-    ? isSignedIn
+    ? isSignedIn || isEmbed
       ? `/${slug}/b/${activeBoards[0].slug}/new${embedQuery}`
       : `/signin?next=${encodeURIComponent(`/${slug}/b/${activeBoards[0].slug}/new${embedQuery}`)}`
     : null;
@@ -147,6 +151,17 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
+      {isEmbed && (
+        <EmbedNav
+          active="roadmap"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          embedQuery={embedQuery}
+          isSignedIn={isSignedIn}
+          roadmapPublic={workspace.roadmapPublic}
+          slug={slug}
+        />
+      )}
       {!isEmbed && (
         <PortalHeader
           active="roadmap"
@@ -197,6 +212,7 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
             <div className="flex-1">
               <RoadmapBoard
                 columns={derivedColumns}
+                isFiltering={!!(validCategoryId || searchQuery)}
                 isSignedIn={isSignedIn}
                 workspaceSlug={slug}
               />

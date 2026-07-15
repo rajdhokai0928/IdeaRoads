@@ -198,7 +198,7 @@ export function NotificationList({
     <div>
       {/* Header + toolbar stick together as one unit while the list scrolls
           beneath them. */}
-      <div className="sticky top-0 z-10 bg-background">
+      <div className="sticky top-0 z-10 bg-[rgba(247,249,251,1)]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>

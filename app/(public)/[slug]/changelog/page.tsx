@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
@@ -110,6 +111,17 @@ export default async function PublicChangelogIndexPage({
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
+      {isEmbed && (
+        <EmbedNav
+          active="changelog"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          embedQuery={embedQuery}
+          isSignedIn={isSignedIn}
+          roadmapPublic={workspace.roadmapPublic}
+          slug={slug}
+        />
+      )}
       {!isEmbed && (
         <PortalHeader
           active="changelog"
@@ -145,11 +157,10 @@ export default async function PublicChangelogIndexPage({
             activeLabel={activeLabel}
             activeSearch={searchQuery}
           />
-          {isSignedIn && (
-            <SubscribeToggle
-              initialSubscribed={notificationPrefs?.emailChangelog ?? true}
-            />
-          )}
+          <SubscribeToggle
+            initialSubscribed={notificationPrefs?.emailChangelog ?? true}
+            isSignedIn={isSignedIn}
+          />
         </div>
 
         {entries.length === 0 ? (

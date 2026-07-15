@@ -13,7 +13,7 @@ import {
   workspaces,
 } from "@/db/schema";
 import { audit } from "@/lib/audit";
-import { requireSession } from "@/lib/authz";
+import { getCurrentSession, requireSession } from "@/lib/authz";
 import { getDefaultCategory } from "@/lib/categories/queries";
 import { db } from "@/lib/db";
 import { isBlocked } from "@/lib/moderation/queries";
@@ -83,7 +83,19 @@ export async function createPostAction(input: {
     postSlug: string;
   }>
 > {
-  const session = await requireSession();
+  // Uses getCurrentSession (not requireSession) — this is called from the
+  // embed widget's NewPostForm too, where a stale/missing session must
+  // surface as a normal error the caller can react to (reopening the
+  // in-place sign-in), not a server-triggered redirect to /signin that would
+  // navigate the whole iframe away.
+  const session = await getCurrentSession();
+  if (!session) {
+    return {
+      success: false,
+      error: "Your session has expired. Please sign in again.",
+      code: "UNAUTHENTICATED",
+    };
+  }
 
   const parsed = createPostSchema.safeParse(input);
   if (!parsed.success) {
@@ -315,7 +327,17 @@ const ALLOWED_POST_IMAGE_TYPES = new Set([
 export async function uploadPostImageAction(
   formData: FormData
 ): Promise<ActionResult<{ url: string }>> {
-  const session = await requireSession();
+  // See createPostAction above — getCurrentSession, not requireSession, so a
+  // stale/missing session surfaces as a normal error instead of a redirect
+  // that would navigate the embed widget's iframe away.
+  const session = await getCurrentSession();
+  if (!session) {
+    return {
+      success: false,
+      error: "Your session has expired. Please sign in again.",
+      code: "UNAUTHENTICATED",
+    };
+  }
   const file = formData.get("image");
 
   if (!(file instanceof File) || file.size === 0) {

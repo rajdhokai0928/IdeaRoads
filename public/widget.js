@@ -263,6 +263,7 @@
     panel.id = panelId;
     panel.className = "ir-widget-panel";
     panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
     panel.setAttribute("aria-label", "Feedback");
     panel.style.cssText =
       "position:fixed;" +
@@ -350,6 +351,33 @@
         setOpen(false);
       },
       { capture: true }
+    );
+
+    // Soft focus trap: the panel's actual content lives inside a
+    // cross-origin iframe, so this page's JS can't see (or intercept) Tab
+    // presses happening inside it — a true trap that loops focus within
+    // the panel's own focusable elements isn't reachable from here. What
+    // *is* reachable: whenever focus lands somewhere else on the host page
+    // while the panel is open, using the capture phase means this fires
+    // before the host page's own handlers do (best-effort — a host page
+    // could still fight it, but that's outside what this widget controls).
+    document.addEventListener(
+      "focusin",
+      (event) => {
+        if (!open) {
+          return;
+        }
+        const target = event.target;
+        if (
+          target === iframe ||
+          target === launcher ||
+          panel.contains(target)
+        ) {
+          return;
+        }
+        iframe.focus();
+      },
+      true
     );
 
     document.body.appendChild(panel);

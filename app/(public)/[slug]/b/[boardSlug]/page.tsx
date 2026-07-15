@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CategoryChip } from "@/components/categories/category-chip";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { CategorySidebar } from "@/components/portal/category-sidebar";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
@@ -206,9 +207,12 @@ export default async function BoardPage({ params, searchParams }: Props) {
     return `/${slug}/b/${boardSlug}${qs ? `?${qs}` : ""}`;
   }
 
+  // Inside the embed, always go straight to the form — it handles a
+  // signed-out guest itself (in-place auth at submit time) rather than
+  // bouncing them to /signin before they can even start typing.
   const newPostHref = board.isArchived
     ? undefined
-    : isSignedIn
+    : isSignedIn || isEmbed
       ? `/${slug}/b/${boardSlug}/new${embedQuery}`
       : `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`;
 
@@ -223,6 +227,17 @@ export default async function BoardPage({ params, searchParams }: Props) {
           with its own internal scroll region below — growing to fit content
           would just get clipped by the panel, so there's nothing to report. */}
       {isEmbed && !isPanel && <EmbedResizeReporter />}
+      {isEmbed && (
+        <EmbedNav
+          active="feedback"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          embedQuery={embedQuery}
+          isSignedIn={isSignedIn}
+          roadmapPublic={workspace.roadmapPublic}
+          slug={slug}
+        />
+      )}
       {!isEmbed && (
         <PortalHeader
           boards={publicBoards}

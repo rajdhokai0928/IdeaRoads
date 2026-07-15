@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { EmbedInlineSignIn } from "@/components/embed/embed-inline-signin";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { ProfileActions } from "@/components/portal/profile-actions";
@@ -59,19 +58,6 @@ export default async function PublicProfilePage({
 
   const session = await getCurrentSession();
   if (!session) {
-    // Embedded in a customer's site — sign in in place instead of
-    // redirecting the whole widget out to a full /signin page.
-    if (isEmbed) {
-      return (
-        <div
-          className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
-          style={embedWrapper.style}
-        >
-          <EmbedResizeReporter />
-          <EmbedInlineSignIn title="My Profile" />
-        </div>
-      );
-    }
     redirect(
       `/signin?next=${encodeURIComponent(`/${slug}/profile${embedQuery}`)}`
     );

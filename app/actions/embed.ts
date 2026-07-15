@@ -5,7 +5,7 @@ import { WORKSPACE_MEMBER } from "@/config/platform";
 import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
 import { getBoardById } from "@/lib/boards/queries";
-import { upsertEmbedConfig } from "@/lib/embed/queries";
+import { getEmbedConfig, upsertEmbedConfig } from "@/lib/embed/queries";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 type ActionResult<T = undefined> =
@@ -14,10 +14,10 @@ type ActionResult<T = undefined> =
 
 const updateSchema = z.object({
   workspaceId: z.string().min(1),
-  // Required: the embed is meaningless without a board to show, and a config
-  // saved without one produces a snippet with no data-board — the exact gap
-  // that sends embedded visitors into a broken, cross-host auth redirect.
-  boardId: z.string().min(1),
+  // Optional: the settings UI doesn't currently expose a board picker, so
+  // callers that don't have one to offer can omit it and keep whatever board
+  // (if any) is already configured.
+  boardId: z.string().min(1).optional(),
   mode: z.enum(["inline", "button"]),
   position: z.enum(["bottom-right", "bottom-left", "top-right", "top-left"]),
   theme: z.enum(["light", "dark", "auto"]),
@@ -30,7 +30,7 @@ const updateSchema = z.object({
 
 export async function updateEmbedConfigAction(input: {
   workspaceId: string;
-  boardId: string;
+  boardId?: string;
   mode: string;
   position: string;
   theme: string;
@@ -61,18 +61,25 @@ export async function updateEmbedConfigAction(input: {
     };
   }
 
-  // The embed is anonymous/public — the board must actually be public, and
-  // must belong to this workspace (cross-tenant safety).
-  const board = await getBoardById(parsed.data.boardId);
-  if (
-    !board ||
-    board.workspaceId !== parsed.data.workspaceId ||
-    !board.isPublic
-  ) {
-    return { success: false, error: "Choose a public board to embed." };
+  // The embed is anonymous/public — if a board is given, it must actually be
+  // public, and must belong to this workspace (cross-tenant safety).
+  if (parsed.data.boardId) {
+    const board = await getBoardById(parsed.data.boardId);
+    if (
+      !board ||
+      board.workspaceId !== parsed.data.workspaceId ||
+      !board.isPublic
+    ) {
+      return { success: false, error: "Choose a public board to embed." };
+    }
   }
 
-  const { workspaceId, ...config } = parsed.data;
+  const { workspaceId, boardId, ...rest } = parsed.data;
+  // Preserve whatever board is already configured when this call doesn't
+  // specify one, rather than wiping it out — the settings UI doesn't
+  // currently expose a picker, so every save would otherwise clear it.
+  const existing = boardId ? null : await getEmbedConfig(workspaceId);
+  const config = { ...rest, boardId: boardId ?? existing?.boardId ?? null };
   await upsertEmbedConfig(workspaceId, config);
 
   audit({

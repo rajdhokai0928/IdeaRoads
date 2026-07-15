@@ -57,6 +57,17 @@ export default async function HomePage() {
         </main>
       </PageTransition>
       <Footer />
+      <script
+        src="http://portal.localhost:3000/widget.js"
+        data-workspace="kalua-workspaces"
+        data-board="feature-requests"
+        data-mode="button"
+        data-position="bottom-right"
+        data-theme="light"
+        data-width="500"
+        data-height="700"
+        data-accent-color="#e5e0e0"
+      ></script>
     </div>
   );
 }

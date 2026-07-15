@@ -2,10 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
-import { useIsEmbed } from "@/components/embed/use-is-embed";
+import { usePathname } from "next/navigation";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { type CommentApi, type CommentData, postsCommentApi } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
@@ -28,8 +26,6 @@ export default function CommentForm({
   onSuccess,
 }: CommentFormProps) {
   const createUrl = (api ?? postsCommentApi(postId)).createUrl;
-  const router = useRouter();
-  const isEmbed = useIsEmbed();
   const [html, setHtml] = useState("");
   const [text, setText] = useState("");
   const [editorKey, setEditorKey] = useState(0);
@@ -37,19 +33,7 @@ export default function CommentForm({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-  const [signedIn, setSignedIn] = useState(isSignedIn);
-  const [authOpen, setAuthOpen] = useState(false);
   const pathname = usePathname();
-
-  // Another embedded element may complete sign-in and call router.refresh()
-  // — that re-renders this component with a new isSignedIn prop, but
-  // useState only reads its initial value once, so sync it explicitly rather
-  // than staying stuck showing signed-out.
-  useEffect(() => {
-    if (isSignedIn) {
-      setSignedIn(true);
-    }
-  }, [isSignedIn]);
 
   // Mirrors of the latest content so the Enter-to-submit handler always reads
   // the current value (not a stale render's state).
@@ -104,16 +88,6 @@ export default function CommentForm({
       const data = await res.json();
 
       if (!res.ok) {
-        // A session can go stale between page load and this submit (expiry,
-        // a sign-out elsewhere). Reopen the in-place prompt instead of
-        // leaving the visitor stuck behind a generic error — the draft stays
-        // intact (it's tracked in refs/state, not reset here) and resubmits
-        // automatically once they're signed in again.
-        if (res.status === 401 && isEmbed) {
-          setSignedIn(false);
-          setAuthOpen(true);
-          return;
-        }
         setError(data.error ?? "Something went wrong.");
         return;
       }
@@ -151,43 +125,17 @@ export default function CommentForm({
     );
   }
 
-  if (!signedIn) {
+  if (!isSignedIn) {
     return (
-      <>
-        <p className="py-2 text-sm text-ir-muted">
-          {isEmbed ? (
-            <button
-              className="font-medium text-ir-primary hover:underline"
-              onClick={() => setAuthOpen(true)}
-              type="button"
-            >
-              Sign in
-            </button>
-          ) : (
-            <Link
-              className="font-medium text-ir-primary hover:underline"
-              href={`/signin?next=${encodeURIComponent(pathname)}`}
-            >
-              Sign in
-            </Link>
-          )}{" "}
-          to join the conversation.
-        </p>
-        {isEmbed && (
-          <EmbedAuthDialog
-            onAuthenticated={() => {
-              setSignedIn(true);
-              router.refresh();
-              // No-ops if the box was empty (a manual "Sign in" click);
-              // resubmits the draft automatically if this reopened after a
-              // 401 mid-submit.
-              submit();
-            }}
-            onOpenChange={setAuthOpen}
-            open={authOpen}
-          />
-        )}
-      </>
+      <p className="py-2 text-sm text-ir-muted">
+        <Link
+          className="font-medium text-ir-primary hover:underline"
+          href={`/signin?next=${encodeURIComponent(pathname)}`}
+        >
+          Sign in
+        </Link>{" "}
+        to join the conversation.
+      </p>
     );
   }
 

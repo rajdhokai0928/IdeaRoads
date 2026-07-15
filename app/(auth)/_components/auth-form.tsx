@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useEffect, useState } from "react";
-import { AuthIllustration } from "@/components/marketing/auth-illustration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
@@ -260,16 +259,17 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
         </div>
 
         {/* Right — brand panel, hidden below the split-screen breakpoint */}
-        <div className="hidden flex-col items-center justify-center gap-8 overflow-hidden bg-ir-primary-light/15 px-10 py-10 lg:flex">
-          <div className="text-center">
-            <p className="text-xs font-bold tracking-eyebrow text-ir-primary uppercase">
-              Feedback · Roadmap · Changelog
-            </p>
-            <h2 className="mt-3 max-w-xs text-2xl font-bold text-ir-heading">
-              Ship what your users actually want.
-            </h2>
-          </div>
-          <AuthIllustration />
+        <div className="hidden flex-col items-center justify-center gap-6 overflow-hidden bg-ir-primary-light/15 px-10 py-10 lg:flex">
+          <h2 className="max-w-sm text-center text-2xl font-bold text-ir-heading">
+            Ship what your users actually want.
+          </h2>
+          <Image
+            alt="A feature roadmap with upvoted ideas, trending feedback, and a voting box — capturing how IdeaRoads turns user feedback into a shared product roadmap"
+            className="h-auto w-full"
+            height={1123}
+            src="/auth-illustration.png"
+            width={1401}
+          />
         </div>
       </div>
     </main>

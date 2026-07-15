@@ -5,7 +5,6 @@ import { EmbedSection } from "@/components/settings/embed-section";
 import { ContentContainer } from "@/components/ui/page";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { requireSession } from "@/lib/authz";
-import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { DEFAULT_EMBED_CONFIG, getEmbedConfig } from "@/lib/embed/queries";
 import { portalBaseUrl } from "@/lib/urls";
 import {
@@ -37,31 +36,13 @@ export default async function EmbedPage({ params }: Props) {
     notFound();
   }
 
-  const [config, allBoards] = await Promise.all([
-    getEmbedConfig(workspace.id),
-    listBoardsForWorkspace(workspace.id),
-  ]);
-  // The embed is anonymous/public — only public, non-archived boards are
-  // valid targets for it.
-  const publicBoards = allBoards.filter((b) => b.isPublic && !b.isArchived);
-  const defaultBoardId =
-    (config?.boardId && publicBoards.some((b) => b.id === config.boardId)
-      ? config.boardId
-      : undefined) ??
-    publicBoards[0]?.id ??
-    "";
+  const config = await getEmbedConfig(workspace.id);
 
   return (
     <ContentContainer>
       <EmbedSection
         appUrl={portalBaseUrl()}
-        boards={publicBoards.map((b) => ({
-          id: b.id,
-          name: b.name,
-          slug: b.slug,
-        }))}
         initialConfig={{
-          boardId: defaultBoardId,
           mode: config?.mode ?? DEFAULT_EMBED_CONFIG.mode,
           position: config?.position ?? DEFAULT_EMBED_CONFIG.position,
           theme: config?.theme ?? DEFAULT_EMBED_CONFIG.theme,

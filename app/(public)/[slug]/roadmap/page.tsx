@@ -1,6 +1,7 @@
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { NewFeedbackButton } from "@/components/embed/new-feedback-button";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import {
@@ -10,6 +11,7 @@ import {
 import type { BoardItem } from "@/components/roadmap/manual/manual-roadmap-card";
 import { ManualRoadmapProvider } from "@/components/roadmap/manual/manual-roadmap-search-context";
 import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
+import { Button } from "@/components/ui/button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
@@ -174,7 +176,14 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
                 : `${totalPosts} item${totalPosts === 1 ? "" : "s"} across all columns`}
             </p>
           </div>
-          {feedbackHref && <NewFeedbackButton href={feedbackHref} />}
+          {feedbackHref && (
+            <Button asChild>
+              <Link href={feedbackHref}>
+                <PlusIcon data-icon="inline-start" />
+                Feedback
+              </Link>
+            </Button>
+          )}
         </div>
 
         {syncEnabled ? (

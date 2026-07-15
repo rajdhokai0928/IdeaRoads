@@ -145,10 +145,11 @@ export default async function PublicChangelogIndexPage({
             activeLabel={activeLabel}
             activeSearch={searchQuery}
           />
-          <SubscribeToggle
-            initialSubscribed={notificationPrefs?.emailChangelog ?? true}
-            isSignedIn={isSignedIn}
-          />
+          {isSignedIn && (
+            <SubscribeToggle
+              initialSubscribed={notificationPrefs?.emailChangelog ?? true}
+            />
+          )}
         </div>
 
         {entries.length === 0 ? (

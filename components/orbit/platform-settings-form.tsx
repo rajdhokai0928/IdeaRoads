@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { updatePlatformSettingsAction } from "@/app/actions/orbit-settings";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 import type { PlatformSettings } from "@/lib/orbit/settings";
 
 interface Props {
@@ -21,6 +22,12 @@ export function PlatformSettingsForm({ settings }: Props) {
     settings.maintenanceMessage ?? ""
   );
   const [isPending, setIsPending] = useState(false);
+  const { isDirty, markClean } = useDirtyState({
+    signupEnabled,
+    maxWorkspaces,
+    maintenanceMode,
+    maintenanceMessage,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +43,12 @@ export function PlatformSettingsForm({ settings }: Props) {
       toast.error(result.error);
     } else {
       toast.success("Settings saved");
+      markClean({
+        signupEnabled,
+        maxWorkspaces,
+        maintenanceMode,
+        maintenanceMessage,
+      });
     }
   }
 
@@ -133,7 +146,7 @@ export function PlatformSettingsForm({ settings }: Props) {
 
       <button
         className="border border-primary bg-primary px-6 py-2.5 text-xs font-semibold uppercase tracking-ui text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        disabled={isPending}
+        disabled={isPending || !isDirty}
         type="submit"
       >
         {isPending ? "Saving…" : "Save Changes"}

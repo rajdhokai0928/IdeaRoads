@@ -23,6 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 
 const initialState: ActionState = {};
 const initialAvatarState: AvatarActionState = {};
@@ -196,17 +197,36 @@ export function AccountIdentityForms({
   );
   const [nameValue, setNameValue] = useState(name);
   const avatarName = nameValue.trim() || email;
+  const { isDirty: nameDirty, markClean: markNameClean } = useDirtyState({
+    name: nameValue,
+  });
   const [emailState, emailAction, emailPending] = useActionState(
     changeEmailAction,
     initialState
   );
+  const [emailValue, setEmailValue] = useState(email);
+  const { isDirty: emailDirty, markClean: markEmailClean } = useDirtyState({
+    email: emailValue,
+  });
 
   useEffect(() => {
     if (nameState.success && nameState.name !== undefined) {
       setNameValue(nameState.name);
+      markNameClean({ name: nameState.name });
       router.refresh();
     }
-  }, [nameState.success, nameState.name, router]);
+  }, [nameState.success, nameState.name, router, markNameClean]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deliberately excludes emailValue — this should only re-run when the action result changes, not on every keystroke
+  useEffect(() => {
+    if (emailState.success) {
+      // The address doesn't take effect until the confirmation link is
+      // clicked — nothing to revert to except "no more changes since the
+      // link was sent," so the button goes back to disabled on the value
+      // that was just submitted.
+      markEmailClean({ email: emailValue });
+    }
+  }, [emailState.success, markEmailClean]);
 
   return (
     <div className="divide-y divide-ir-border overflow-hidden rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
@@ -232,7 +252,11 @@ export function AccountIdentityForms({
               value={nameValue}
             />
             <ActionMessage state={nameState} />
-            <Button disabled={namePending} size="sm" type="submit">
+            <Button
+              disabled={namePending || !nameDirty}
+              size="sm"
+              type="submit"
+            >
               {namePending ? "Saving…" : "Save name"}
             </Button>
           </form>
@@ -251,15 +275,20 @@ export function AccountIdentityForms({
           </div>
           <form action={emailAction} className="min-w-0 flex-1 space-y-3">
             <Input
-              defaultValue={email}
               id="email"
               name="email"
+              onChange={(e) => setEmailValue(e.target.value)}
               placeholder="Enter your email address..."
               required
               type="email"
+              value={emailValue}
             />
             <ActionMessage state={emailState} />
-            <Button disabled={emailPending} size="sm" type="submit">
+            <Button
+              disabled={emailPending || !emailDirty}
+              size="sm"
+              type="submit"
+            >
               {emailPending ? "Sending…" : "Send confirmation link"}
             </Button>
           </form>

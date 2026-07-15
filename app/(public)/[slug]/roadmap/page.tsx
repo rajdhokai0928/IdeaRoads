@@ -2,6 +2,7 @@ import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import {
   type BoardStatus,
@@ -15,6 +16,11 @@ import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import {
+  buildEmbedQuery,
+  embedWrapperProps,
+  parseEmbedParams,
+} from "@/lib/embed/style";
 import { getDerivedRoadmap } from "@/lib/roadmap/derived";
 import { getManualRoadmap } from "@/lib/roadmap/manual";
 import type { RoadmapSort } from "@/lib/roadmap/queries";
@@ -26,7 +32,14 @@ import { RoadmapFilters } from "./_components/roadmap-filters";
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ category?: string; q?: string; sort?: string }>;
+  searchParams: Promise<{
+    accentColor?: string;
+    category?: string;
+    embed?: string;
+    q?: string;
+    sort?: string;
+    theme?: string;
+  }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -43,7 +56,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RoadmapPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { category, q, sort } = await searchParams;
+  const { category, q, sort, embed, theme, accentColor } = await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { isEmbed } = embedParams;
+  const embedQuery = buildEmbedQuery(embedParams);
+  const embedWrapper = embedWrapperProps(embedParams);
 
   const session = await getCurrentSession();
 
@@ -120,28 +137,34 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
   // the public submission flow, signing in first if needed.
   const feedbackHref = activeBoards[0]
     ? isSignedIn
-      ? `/${slug}/b/${activeBoards[0].slug}/new`
-      : `/signin?next=${encodeURIComponent(`/${slug}/b/${activeBoards[0].slug}/new`)}`
+      ? `/${slug}/b/${activeBoards[0].slug}/new${embedQuery}`
+      : `/signin?next=${encodeURIComponent(`/${slug}/b/${activeBoards[0].slug}/new${embedQuery}`)}`
     : null;
 
   return (
-    <div className="min-h-screen bg-ir-background">
-      <PortalHeader
-        active="roadmap"
-        boards={publicBoards}
-        changelogPublic={workspace.changelogPublic}
-        currentPath={`/${slug}/roadmap`}
-        isMember={isMember}
-        isSignedIn={isSignedIn}
-        logoUrl={workspace.logoUrl}
-        roadmapPublic={workspace.roadmapPublic}
-        slug={slug}
-        userEmail={session?.user.email}
-        userImage={session?.user.image}
-        userName={session?.user.name}
-        workspaceName={workspace.name}
-      />
-      <PoweredByBadge />
+    <div
+      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
+      style={embedWrapper.style}
+    >
+      {isEmbed && <EmbedResizeReporter />}
+      {!isEmbed && (
+        <PortalHeader
+          active="roadmap"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          currentPath={`/${slug}/roadmap`}
+          isMember={isMember}
+          isSignedIn={isSignedIn}
+          logoUrl={workspace.logoUrl}
+          roadmapPublic={workspace.roadmapPublic}
+          slug={slug}
+          userEmail={session?.user.email}
+          userImage={session?.user.image}
+          userName={session?.user.name}
+          workspaceName={workspace.name}
+        />
+      )}
+      {!isEmbed && <PoweredByBadge />}
 
       <main className="mx-auto flex max-w-5xl flex-col" id="main-content">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ir-border px-4 py-6 sm:px-8">

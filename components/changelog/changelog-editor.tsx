@@ -33,10 +33,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ContentContainer } from "@/components/ui/page";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 import {
   CHANGELOG_LABEL_VALUES,
   getLabelInfo,
 } from "@/lib/changelog/constants";
+
+// Arrays aren't reference-comparable, so dirty-tracking compares a stable,
+// order-independent string form of the linked-post id list instead.
+function linkedPostsKey(posts: LinkedPost[]): string {
+  return posts
+    .map((p) => p.id)
+    .sort()
+    .join(",");
+}
 
 const QuillEditor = dynamic(
   () => import("@/components/comments/quill-editor"),
@@ -226,6 +236,20 @@ export function ChangelogEditor({
   );
   const isPublished = initialEntry?.isPublished ?? false;
 
+  // Save Draft/Update should stay disabled until something actually changed
+  // since the last time this content was persisted — whether that save was a
+  // manual click or the debounced auto-save below. Publish is a separate,
+  // deliberately excluded case: it's a state transition (draft -> live), not
+  // a "did the content change" save, so it stays available whenever the
+  // title is present, same as before.
+  const { isDirty, markClean } = useDirtyState({
+    title,
+    body,
+    coverImageUrl,
+    label,
+    linkedPosts: linkedPostsKey(linkedPosts),
+  });
+
   // Auto-save: debounced, fires after 30s of idle
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSave = useRef(false);
@@ -259,12 +283,28 @@ export function ChangelogEditor({
           setEntryId(result.data.id);
         }
       }
+      markClean({
+        title,
+        body,
+        coverImageUrl,
+        label,
+        linkedPosts: linkedPostsKey(linkedPosts),
+      });
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch {
       setSaveStatus("idle");
     }
-  }, [entryId, workspaceId, title, body, coverImageUrl, label, linkedPosts]);
+  }, [
+    entryId,
+    workspaceId,
+    title,
+    body,
+    coverImageUrl,
+    label,
+    linkedPosts,
+    markClean,
+  ]);
 
   // Schedule auto-save whenever content changes
   useEffect(() => {
@@ -353,6 +393,13 @@ export function ChangelogEditor({
           return;
         }
         toast.success("Draft saved");
+        markClean({
+          title,
+          body,
+          coverImageUrl,
+          label,
+          linkedPosts: linkedPostsKey(linkedPosts),
+        });
         router.push(`/${workspaceSlug}/settings/changelog`);
       } else {
         const result = await createChangelogEntryAction({
@@ -368,6 +415,13 @@ export function ChangelogEditor({
           return;
         }
         toast.success("Draft saved");
+        markClean({
+          title,
+          body,
+          coverImageUrl,
+          label,
+          linkedPosts: linkedPostsKey(linkedPosts),
+        });
         router.push(`/${workspaceSlug}/settings/changelog`);
       }
     });
@@ -414,6 +468,13 @@ export function ChangelogEditor({
         id = result.data.id;
         setEntryId(id);
       }
+      markClean({
+        title,
+        body,
+        coverImageUrl,
+        label,
+        linkedPosts: linkedPostsKey(linkedPosts),
+      });
 
       const publishResult = await publishChangelogEntryAction({
         entryId: id,
@@ -451,6 +512,13 @@ export function ChangelogEditor({
         return;
       }
       toast.success("Entry updated");
+      markClean({
+        title,
+        body,
+        coverImageUrl,
+        label,
+        linkedPosts: linkedPostsKey(linkedPosts),
+      });
       router.push(`/${workspaceSlug}/settings/changelog`);
     });
   }
@@ -767,7 +835,7 @@ export function ChangelogEditor({
         <div className="flex flex-wrap items-center gap-3">
           {!isPublished && (
             <Button
-              disabled={isPending || !title.trim()}
+              disabled={isPending || !title.trim() || !isDirty}
               onClick={handleSaveDraft}
               type="button"
               variant="outline"
@@ -778,7 +846,7 @@ export function ChangelogEditor({
 
           {isPublished ? (
             <Button
-              disabled={isPending || !title.trim()}
+              disabled={isPending || !title.trim() || !isDirty}
               onClick={handleUpdate}
               type="button"
             >

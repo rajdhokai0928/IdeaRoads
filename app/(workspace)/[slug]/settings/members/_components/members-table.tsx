@@ -59,8 +59,12 @@ interface PendingConfirm {
   title: string;
 }
 
+// Owner and admin both display as "Brand Admin" (workspaceRoleLabel) —
+// ownership is a property, not a separate role (PLATFORM.md §2) — so they
+// share one style here too; two colors under one label reads as a bug, not
+// a distinction.
 const ROLE_BADGE: Record<string, string> = {
-  owner: "bg-ir-primary text-ir-primary-foreground",
+  owner: "bg-ir-primary-light/15 text-ir-primary",
   admin: "bg-ir-primary-light/15 text-ir-primary",
   member: "bg-ir-muted-surface text-ir-muted",
 };
@@ -184,10 +188,14 @@ export function MembersTable({
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <span
-                  className={`shrink-0 rounded-ir-sm px-2 py-0.5 text-xs font-semibold tracking-wider uppercase ${ROLE_BADGE[member.role]}`}
+                  className={`inline-flex shrink-0 items-center rounded-ir-full px-2 py-0.5 text-[11px] font-medium ${ROLE_BADGE[member.role]}`}
                 >
                   {workspaceRoleLabel(member.role)}
                 </span>
+                {/* Reserves the kebab button's footprint even when this row has
+                    no actions, so every row's badge lines up on the same right
+                    edge instead of jumping around based on showMenu. */}
+                {!showMenu && <div aria-hidden className="size-7 shrink-0" />}
                 {showMenu && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -210,7 +218,6 @@ export function MembersTable({
                         <>
                           {member.role === WORKSPACE_MEMBER && (
                             <DropdownMenuItem
-                              className="cursor-pointer"
                               onClick={() =>
                                 handleAction(member.id, () =>
                                   changeRoleAction({
@@ -226,7 +233,6 @@ export function MembersTable({
                           )}
                           {member.role === WORKSPACE_ADMIN && (
                             <DropdownMenuItem
-                              className="cursor-pointer"
                               onClick={() =>
                                 handleAction(member.id, () =>
                                   changeRoleAction({
@@ -244,7 +250,6 @@ export function MembersTable({
                       )}
                       {canTransfer && (
                         <DropdownMenuItem
-                          className="cursor-pointer"
                           onClick={() =>
                             setPendingConfirm({
                               title: "Transfer Ownership",
@@ -269,7 +274,6 @@ export function MembersTable({
                       )}
                       {canRemove && (
                         <DropdownMenuItem
-                          className="cursor-pointer"
                           onClick={() =>
                             setPendingConfirm({
                               title: "Remove Member",

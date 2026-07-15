@@ -1,6 +1,6 @@
 "use server";
 
-import { requireSession } from "@/lib/authz";
+import { getCurrentSession, requireSession } from "@/lib/authz";
 import type { NotificationPreferencesRow } from "@/lib/notifications/queries";
 import {
   getNotificationPreferences,
@@ -9,7 +9,7 @@ import {
 
 type ActionResult<T = undefined> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string; code?: "UNAUTHENTICATED" };
 
 export async function getNotificationPreferencesAction(): Promise<
   ActionResult<NotificationPreferencesRow>
@@ -39,7 +39,19 @@ export async function updateNotificationPreferencesAction(input: {
   inAppNewComment?: boolean;
   inAppChangelog?: boolean;
 }): Promise<ActionResult<NotificationPreferencesRow>> {
-  const session = await requireSession();
+  // Uses getCurrentSession (not requireSession) — this is called from the
+  // embed widget's SubscribeToggle too, where a stale/expired session must
+  // surface as a normal error the caller can react to (reopening the
+  // in-place sign-in), not a server-triggered redirect to /signin that would
+  // navigate the whole iframe away.
+  const session = await getCurrentSession();
+  if (!session) {
+    return {
+      success: false,
+      error: "Your session has expired. Please sign in again.",
+      code: "UNAUTHENTICATED",
+    };
+  }
 
   try {
     const updated = await upsertNotificationPreferences(session.user.id, input);

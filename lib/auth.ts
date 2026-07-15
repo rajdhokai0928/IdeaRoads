@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins/admin";
+import { emailOTP } from "better-auth/plugins/email-otp";
 import { magicLink } from "better-auth/plugins/magic-link";
 import { headers } from "next/headers";
 import { PRODUCT_NAME } from "@/config/platform";
@@ -9,6 +10,7 @@ import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { enqueueEmail } from "@/lib/email";
 import { magicLinkTemplate } from "@/lib/email/templates/magic-link";
+import { otpTemplate } from "@/lib/email/templates/otp";
 import { env } from "@/lib/env";
 import { adminBaseUrl, adminHost, portalBaseUrl, portalHost } from "@/lib/urls";
 
@@ -84,7 +86,7 @@ export const auth = betterAuth({
   },
   accountLinking: {
     enabled: true,
-    trustedProviders: ["google", "magic-link"],
+    trustedProviders: ["google", "magic-link", "email-otp"],
   },
   plugins: [
     admin({
@@ -121,6 +123,39 @@ export const auth = betterAuth({
           description: `Magic link sent to ${email}`,
           entityType: "user",
           metadata: { email, url: magicLinkUrl },
+        });
+      },
+    }),
+    // One-time code sign-in — used by the embed widget so authentication
+    // never needs a second tab (unlike the magic-link email, which has to be
+    // opened somewhere): the visitor types the code back into the same
+    // panel they requested it from. Better Auth's /sign-in/email-otp returns
+    // a session directly (no redirect), so there's no host to get wrong.
+    emailOTP({
+      otpLength: 6,
+      expiresIn: 600,
+      sendVerificationOTP: async ({ email, otp }) => {
+        // Never log recipient emails or OTP codes in production (PII + a live
+        // credential). The dev log is a convenience for local sign-in without SMTP.
+        if (env.NODE_ENV !== "production") {
+          console.log(`[email-otp] recipient=${email} otp=${otp}`);
+        }
+
+        const { html, text } = await otpTemplate({ email, otp });
+
+        await enqueueEmail({
+          to: email,
+          subject: `Your ${PRODUCT_NAME} sign-in code`,
+          html,
+          text,
+        });
+
+        await audit({
+          action: "auth.otp_sent",
+          actorEmail: email,
+          description: `Sign-in code sent to ${email}`,
+          entityType: "user",
+          metadata: { email },
         });
       },
     }),

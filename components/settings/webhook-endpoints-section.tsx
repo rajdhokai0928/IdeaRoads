@@ -13,11 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 import {
   ALL_WEBHOOK_EVENTS,
   WEBHOOK_EVENT_LABELS,
   type WebhookEvent,
 } from "@/lib/webhooks/events";
+
+// Arrays aren't reference-comparable, so dirty-tracking compares a stable,
+// order-independent string form of the selected events instead.
+function eventsKey(events: string[]): string {
+  return [...events].sort().join(",");
+}
 
 interface Endpoint {
   consecutiveFailures: number;
@@ -82,6 +89,10 @@ function EndpointForm({
   const [events, setEvents] = useState<string[]>(initialEvents);
   const [urlError, setUrlError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const { isDirty, markClean } = useDirtyState({
+    url,
+    events: eventsKey(events),
+  });
 
   function toggleEvent(ev: WebhookEvent) {
     setEvents((prev) =>
@@ -135,6 +146,7 @@ function EndpointForm({
         });
       }
 
+      markClean({ url, events: eventsKey(events) });
       onSuccess();
     });
   }
@@ -197,7 +209,7 @@ function EndpointForm({
             Cancel
           </Button>
         )}
-        <Button disabled={isPending} type="submit">
+        <Button disabled={isPending || !isDirty} type="submit">
           {isPending
             ? "Saving…"
             : endpointId

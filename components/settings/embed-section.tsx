@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 import type { EmbedMode, EmbedPosition, EmbedTheme } from "@/lib/embed/queries";
 
 interface Props {
@@ -106,6 +107,14 @@ export function EmbedSection({
   const [accentColor, setAccentColor] = useState(initialConfig.accentColor);
   const [accentColorError, setAccentColorError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const { isDirty, markClean } = useDirtyState({
+    mode,
+    position,
+    theme,
+    width,
+    height,
+    accentColor,
+  });
 
   const widthNum = Number(width) || initialConfig.width;
   const heightNum = Number(height) || initialConfig.height;
@@ -147,6 +156,7 @@ export function EmbedSection({
       }
 
       toast.success("Embed settings saved");
+      markClean({ mode, position, theme, width, height, accentColor });
     });
   }
 
@@ -308,7 +318,7 @@ export function EmbedSection({
         </div>
 
         <div className="flex justify-end">
-          <Button disabled={isPending} type="submit">
+          <Button disabled={isPending || !isDirty} type="submit">
             {isPending ? "Saving…" : "Save changes"}
           </Button>
         </div>

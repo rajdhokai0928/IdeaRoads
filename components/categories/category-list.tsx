@@ -21,6 +21,7 @@ import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { ContentContainer, PageHeader } from "@/components/ui/page";
+import { useDirtyState } from "@/hooks/use-dirty-state";
 import { CategoryChip } from "./category-chip";
 
 interface Category {
@@ -66,10 +67,20 @@ export function CategoryList({
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<Category | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { isDirty, markClean } = useDirtyState({
+    name: form?.name ?? "",
+    description: form?.description ?? "",
+    color: form?.color ?? "",
+  });
 
   function openCreate() {
     setForm({ ...DEFAULT_FORM });
     setError(null);
+    markClean({
+      name: DEFAULT_FORM.name,
+      description: DEFAULT_FORM.description,
+      color: DEFAULT_FORM.color,
+    });
   }
 
   function openEdit(cat: Category) {
@@ -81,6 +92,11 @@ export function CategoryList({
       color: cat.color,
     });
     setError(null);
+    markClean({
+      name: cat.name,
+      description: cat.description ?? "",
+      color: cat.color,
+    });
   }
 
   function closeForm() {
@@ -278,7 +294,7 @@ export function CategoryList({
             {error && <p className="text-xs text-ir-danger">{error}</p>}
 
             <div className="flex items-center gap-2">
-              <Button disabled={isPending} type="submit">
+              <Button disabled={isPending || !isDirty} type="submit">
                 {isPending
                   ? "Saving…"
                   : form.mode === "create"

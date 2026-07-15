@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useEffect, useState } from "react";
-import { HeroMockup } from "@/components/marketing/hero-mockup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
@@ -127,17 +126,17 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
   }
 
   return (
-    <main className="grid h-screen place-items-center overflow-hidden bg-ir-primary-light/20 px-4 py-6">
-      <div className="grid max-h-full w-full max-w-4xl overflow-hidden rounded-ir-xl border border-ir-border bg-ir-surface shadow-ir-lg lg:grid-cols-2">
+    <main className="grid min-h-screen place-items-center overflow-y-auto bg-ir-primary-light/20 px-4 py-6 sm:py-10">
+      <div className="grid w-full max-w-4xl overflow-hidden rounded-ir-xl border border-ir-border bg-ir-surface shadow-ir-lg lg:grid-cols-2">
         {/* Left — sign-in form */}
-        <div className="flex flex-col justify-center overflow-y-auto px-6 py-8 sm:px-10 lg:px-12 lg:py-10">
+        <div className="flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-12 lg:px-12">
           <Link
-            className="mb-6 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mb-8 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 lg:justify-start"
             href="/"
           >
             <Image
               alt={PRODUCT_NAME}
-              className="h-14 w-auto"
+              className="h-12 w-auto"
               height={164}
               priority
               src={LOGO_PATH}
@@ -145,19 +144,19 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
             />
           </Link>
 
-          <h1 className="text-2xl font-bold text-foreground">
-            {sent ? "Check your email" : "Welcome to IdeaRoads"}
+          <h1 className="text-2xl font-bold text-ir-heading sm:text-3xl">
+            {sent ? "Check your email" : "Welcome back"}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-ir-muted">
             {sent
               ? "Your sign-in link is on its way. Click it to continue."
-              : "Sign in or create a free account - no password needed."}
+              : "Sign in or create a free account — no password needed."}
           </p>
 
-          <div className="mt-6">
+          <div className="mt-7">
             {sent ? (
               <div className="space-y-4">
-                <p className="bg-success-subtle p-3 text-sm text-success-foreground">
+                <p className="rounded-ir-sm bg-ir-success/10 p-3 text-sm text-ir-success">
                   Sign-in link sent to <strong>{email}</strong>. Check your
                   inbox and spam folder.
                 </p>
@@ -173,7 +172,7 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
             ) : (
               <div className="space-y-4">
                 {urlError && (
-                  <p className="bg-destructive/10 p-3 text-sm text-destructive">
+                  <p className="rounded-ir-sm bg-ir-danger/10 p-3 text-sm text-ir-danger">
                     {urlError}
                   </p>
                 )}
@@ -192,18 +191,18 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
                     </Button>
 
                     <div className="flex items-center gap-3">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs font-semibold uppercase tracking-ui text-muted-foreground">
+                      <div className="h-px flex-1 bg-ir-border" />
+                      <span className="text-xs font-semibold tracking-ui text-ir-muted uppercase">
                         or continue with email
                       </span>
-                      <div className="h-px flex-1 bg-border" />
+                      <div className="h-px flex-1 bg-ir-border" />
                     </div>
                   </>
                 )}
 
                 <form className="space-y-4" onSubmit={onSubmit}>
                   <label className="block" htmlFor="email">
-                    <span className="mb-2 block text-sm font-semibold text-foreground">
+                    <span className="mb-2 block text-sm font-semibold text-ir-heading">
                       Email
                     </span>
                     <Input
@@ -217,7 +216,7 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
                     />
                   </label>
                   {formError && (
-                    <p className="bg-destructive/10 p-3 text-sm text-destructive">
+                    <p className="rounded-ir-sm bg-ir-danger/10 p-3 text-sm text-ir-danger">
                       {formError}
                     </p>
                   )}
@@ -229,7 +228,7 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
                     >
                       {submitting ? "Sending…" : "Continue with email"}
                     </Button>
-                    <p className="text-center text-xs text-muted-foreground">
+                    <p className="text-center text-xs text-ir-muted">
                       New here? We'll create your account automatically.
                     </p>
                   </div>
@@ -239,13 +238,19 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
           </div>
 
           {!sent && (
-            <p className="mt-6 text-center text-xs text-muted-foreground">
+            <p className="mt-8 text-center text-xs text-ir-muted lg:text-left">
               By continuing you agree to our{" "}
-              <Link className="underline hover:no-underline" href="/terms">
+              <Link
+                className="text-ir-body underline hover:no-underline"
+                href="/terms"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link className="underline hover:no-underline" href="/privacy">
+              <Link
+                className="text-ir-body underline hover:no-underline"
+                href="/privacy"
+              >
                 Privacy Policy
               </Link>
               .
@@ -255,17 +260,16 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
 
         {/* Right — brand panel, hidden below the split-screen breakpoint */}
         <div className="hidden flex-col items-center justify-center gap-6 overflow-hidden bg-ir-primary-light/15 px-10 py-10 lg:flex">
-          <div className="text-center">
-            <p className="text-xs font-bold tracking-eyebrow text-ir-primary uppercase">
-              Feedback · Roadmap · Changelog
-            </p>
-            <h2 className="mt-3 text-2xl font-bold text-ir-heading">
-              Ship what your users actually want.
-            </h2>
-          </div>
-          <div className="w-full origin-top scale-90">
-            <HeroMockup />
-          </div>
+          <h2 className="max-w-sm text-center text-2xl font-bold text-ir-heading">
+            Ship what your users actually want.
+          </h2>
+          <Image
+            alt="A feature roadmap with upvoted ideas, trending feedback, and a voting box — capturing how IdeaRoads turns user feedback into a shared product roadmap"
+            className="h-auto w-full"
+            height={1123}
+            src="/auth-illustration.png"
+            width={1401}
+          />
         </div>
       </div>
     </main>

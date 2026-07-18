@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useEffect, useState } from "react";
+import { useIsEmbedded } from "@/components/embed/use-is-embedded";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
@@ -61,6 +62,7 @@ export function AuthForm({ googleEnabled }: AuthFormProps) {
 function AuthFormInner({ googleEnabled }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isEmbedded = useIsEmbedded();
   const { data: session, isPending } = useSession();
   const [email, setEmail] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -126,36 +128,52 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center overflow-y-auto bg-ir-primary-light/20 px-4 py-6 sm:py-10">
-      <div className="grid w-full max-w-4xl overflow-hidden rounded-ir-xl border border-ir-border bg-ir-surface shadow-ir-lg lg:grid-cols-2">
+    <main className="grid min-h-screen place-items-center overflow-y-auto bg-ir-primary-light/20 px-4 py-6 sm:py-8">
+      <div className="grid w-full max-w-3xl overflow-hidden rounded-ir-xl border border-ir-border bg-ir-surface shadow-ir-lg lg:grid-cols-2">
         {/* Left — sign-in form */}
-        <div className="flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-12 lg:px-12">
-          <Link
-            className="mb-8 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 lg:justify-start"
-            href="/"
-          >
-            <Image
-              alt={PRODUCT_NAME}
-              className="h-12 w-auto"
-              height={164}
-              priority
-              src={LOGO_PATH}
-              width={500}
-            />
-          </Link>
+        <div className="flex flex-col justify-center px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
+          {/* Inside the embed widget's iframe, this logo would otherwise
+              navigate the whole panel to the marketing homepage — render it
+              as plain branding, not a link, when embedded. */}
+          {isEmbedded ? (
+            <div className="mb-6 flex justify-center lg:justify-start">
+              <Image
+                alt={PRODUCT_NAME}
+                className="h-9 w-auto"
+                height={164}
+                priority
+                src={LOGO_PATH}
+                width={500}
+              />
+            </div>
+          ) : (
+            <Link
+              className="mb-6 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 lg:justify-start"
+              href="/"
+            >
+              <Image
+                alt={PRODUCT_NAME}
+                className="h-9 w-auto"
+                height={164}
+                priority
+                src={LOGO_PATH}
+                width={500}
+              />
+            </Link>
+          )}
 
-          <h1 className="text-2xl font-bold text-ir-heading sm:text-3xl">
+          <h1 className="text-xl font-bold text-ir-heading sm:text-2xl">
             {sent ? "Check your email" : "Welcome back"}
           </h1>
-          <p className="mt-2 text-sm text-ir-muted">
+          <p className="mt-1.5 text-sm text-ir-muted">
             {sent
               ? "Your sign-in link is on its way. Click it to continue."
               : "Sign in or create a free account — no password needed."}
           </p>
 
-          <div className="mt-7">
+          <div className="mt-6">
             {sent ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <p className="rounded-ir-sm bg-ir-success/10 p-3 text-sm text-ir-success">
                   Sign-in link sent to <strong>{email}</strong>. Check your
                   inbox and spam folder.
@@ -170,7 +188,7 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {urlError && (
                   <p className="rounded-ir-sm bg-ir-danger/10 p-3 text-sm text-ir-danger">
                     {urlError}
@@ -200,9 +218,9 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
                   </>
                 )}
 
-                <form className="space-y-4" onSubmit={onSubmit}>
+                <form className="space-y-3" onSubmit={onSubmit}>
                   <label className="block" htmlFor="email">
-                    <span className="mb-2 block text-sm font-semibold text-ir-heading">
+                    <span className="mb-1.5 block text-sm font-semibold text-ir-heading">
                       Email
                     </span>
                     <Input
@@ -238,7 +256,7 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
           </div>
 
           {!sent && (
-            <p className="mt-8 text-center text-xs text-ir-muted lg:text-left">
+            <p className="mt-6 text-center text-xs text-ir-muted lg:text-left">
               By continuing you agree to our{" "}
               <Link
                 className="text-ir-body underline hover:no-underline"
@@ -259,8 +277,8 @@ function AuthFormInner({ googleEnabled }: AuthFormProps) {
         </div>
 
         {/* Right — brand panel, hidden below the split-screen breakpoint */}
-        <div className="hidden flex-col items-center justify-center gap-6 overflow-hidden bg-ir-primary-light/15 px-10 py-10 lg:flex">
-          <h2 className="max-w-sm text-center text-2xl font-bold text-ir-heading">
+        <div className="hidden flex-col items-center justify-center gap-5 overflow-hidden bg-ir-primary-light/15 px-8 py-8 lg:flex">
+          <h2 className="max-w-sm text-center text-xl font-bold text-ir-heading">
             Ship what your users actually want.
           </h2>
           <Image

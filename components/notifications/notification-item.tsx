@@ -107,7 +107,7 @@ export function NotificationItem({
 
       {/* Icon */}
       <span
-        className={`mt-0.5 shrink-0 flex size-7 items-center justify-center ${
+        className={`mt-0.5 shrink-0 flex size-7 items-center justify-center rounded-ir-sm ${
           isRemoved
             ? "bg-muted/60 text-muted-foreground/60"
             : "bg-muted text-muted-foreground"
@@ -167,7 +167,7 @@ export function NotificationItem({
         {!isRead && !isRemoved && (
           <button
             aria-label="Mark as read"
-            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-7 items-center justify-center rounded-ir-sm text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={handleMarkReadClick}
             title="Mark as read"
             type="button"
@@ -177,7 +177,7 @@ export function NotificationItem({
         )}
         <button
           aria-label="Remove notification"
-          className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-7 items-center justify-center rounded-ir-sm text-muted-foreground transition-colors hover:bg-background hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onClick={handleRequestClear}
           title="Remove notification"
           type="button"

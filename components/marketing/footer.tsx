@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
+import {
+  DOCS_URL,
+  GITHUB_REPO_URL,
+  LOGO_PATH,
+  PRODUCT_NAME,
+} from "@/config/platform";
 
 const LINKS = [
   {
@@ -16,8 +21,8 @@ const LINKS = [
     heading: "Resources",
     items: [
       { label: "Demo", href: "/demo" },
-      // { label: "Documentation", href: DOCS_URL, external: true },
-      // { label: "Self-hosting Guide", href: DOCS_URL, external: true },
+      { label: "Documentation", href: DOCS_URL, external: true },
+      { label: "GitHub", href: GITHUB_REPO_URL, external: true },
     ],
   },
   {

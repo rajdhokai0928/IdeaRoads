@@ -1,6 +1,5 @@
 "use client";
 
-import { InfoIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -15,7 +14,6 @@ interface RoadmapBoardProps {
   // sets this; it's read-only for visitors.
   canManage?: boolean;
   columns: RoadmapStatusColumn[];
-  isAdmin?: boolean;
   isSignedIn: boolean;
   // Fixed per-route, never per-viewer: true only on the admin-shelled
   // /settings/roadmap page. The public /roadmap page never sets this, even
@@ -41,7 +39,6 @@ export function RoadmapBoard({
   workspaceSlug,
   workspaceId,
   isSignedIn,
-  isAdmin,
   useWorkspaceLinks,
   canManage,
 }: RoadmapBoardProps) {
@@ -95,12 +92,6 @@ export function RoadmapBoard({
 
   return (
     <div className="px-6 pb-12">
-      {isAdmin && (
-        <div className="mt-4 mb-6 flex items-center gap-2 rounded-ir-md border border-ir-warning/30 bg-ir-warning/10 px-3 py-2 text-xs font-medium text-ir-warning">
-          <InfoIcon className="size-3.5 shrink-0" />
-          Admin view includes posts from private boards
-        </div>
-      )}
       {canManage && columns.length > 0 && (
         <p className="mt-4 mb-2 text-xs text-ir-muted">
           Drag a card into another column to change its status.

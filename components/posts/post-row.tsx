@@ -61,7 +61,7 @@ export function PostRow({
 
   return (
     <tr
-      className="cursor-pointer transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface"
+      className="cursor-pointer transition-colors duration-150 ease-ir-standard hover:bg-ir-border/60"
       onClick={() => router.push(href)}
     >
       {selectable && (

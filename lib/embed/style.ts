@@ -3,6 +3,10 @@ import type { CSSProperties } from "react";
 export interface ParsedEmbedParams {
   accentColor?: string;
   isEmbed: boolean;
+  // True when rendering inside the widget's fixed-size floating panel (as
+  // opposed to an inline embed, which grows to fit its content) — see
+  // widget.js's mountFloating for where this is set.
+  isPanel: boolean;
   theme?: "light" | "dark";
 }
 
@@ -27,9 +31,11 @@ const BARE_HEX_COLOR = /^[0-9a-fA-F]{6}$/;
 export function parseEmbedParams(searchParams: {
   accentColor?: string;
   embed?: string;
+  layout?: string;
   theme?: string;
 }): ParsedEmbedParams {
   const isEmbed = searchParams.embed === "1";
+  const isPanel = isEmbed && searchParams.layout === "panel";
   const theme =
     searchParams.theme === "dark" || searchParams.theme === "light"
       ? searchParams.theme
@@ -38,7 +44,7 @@ export function parseEmbedParams(searchParams: {
     searchParams.accentColor && BARE_HEX_COLOR.test(searchParams.accentColor)
       ? `#${searchParams.accentColor}`
       : undefined;
-  return { accentColor, isEmbed, theme };
+  return { accentColor, isEmbed, isPanel, theme };
 }
 
 // Builds the query string used on internal links so embed mode (and the
@@ -54,6 +60,9 @@ export function buildEmbedQuery(params: ParsedEmbedParams): string {
   if (params.accentColor) {
     // Strip the "#" — see the comment on parseEmbedParams for why.
     qs.set("accentColor", params.accentColor.replace("#", ""));
+  }
+  if (params.isPanel) {
+    qs.set("layout", "panel");
   }
   return `?${qs.toString()}`;
 }

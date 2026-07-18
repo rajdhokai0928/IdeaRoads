@@ -1,3 +1,4 @@
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -145,15 +146,18 @@ export default async function WorkspaceRoadmapPage({
         title="Roadmap"
       />
       {isAdmin && (
-        <div className="border-border px-4 py-4 sm:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-border px-4 py-4 sm:px-8">
           <RoadmapSyncToggle enabled={true} workspaceId={workspace.id} />
+          <div className="flex items-center gap-2 rounded-ir-md border border-ir-warning/30 bg-ir-warning/10 px-3 py-2 text-xs font-medium text-ir-warning">
+            <InfoIcon className="size-3.5 shrink-0" />
+            Admin view includes posts from private boards
+          </div>
         </div>
       )}
       <div className="flex-1">
         <RoadmapBoard
           canManage={true}
           columns={columns}
-          isAdmin={true}
           isSignedIn={true}
           useWorkspaceLinks={true}
           workspaceId={workspace.id}

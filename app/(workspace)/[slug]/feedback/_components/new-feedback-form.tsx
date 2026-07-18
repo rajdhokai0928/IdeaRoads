@@ -8,6 +8,7 @@ import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createPostAction, uploadPostImageAction } from "@/app/actions/posts";
 import { Button } from "@/components/ui/button";
+import { ImagePreviewThumbnail } from "@/components/ui/image-preview-thumbnail";
 import {
   Select,
   SelectContent,
@@ -177,6 +178,7 @@ export function NewFeedbackForm({
           Title <span className="text-ir-danger">*</span>
         </label>
         <input
+          autoComplete="off"
           className={`w-full rounded-ir-input border bg-ir-surface px-3 py-2 text-sm text-ir-body placeholder:text-ir-muted focus:outline-none focus:ring-2 focus:ring-ir-primary/40 disabled:opacity-50 ${
             titleError ? "border-ir-danger" : "border-ir-border"
           }`}
@@ -287,10 +289,7 @@ export function NewFeedbackForm({
         </span>
         {imagePreviewUrl ? (
           <div className="relative inline-block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
-            <img
-              alt=""
+            <ImagePreviewThumbnail
               className="max-h-40 w-auto rounded-ir-md border border-ir-border object-contain"
               src={imagePreviewUrl}
             />

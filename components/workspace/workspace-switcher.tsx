@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretUpDown, Check, Plus } from "@phosphor-icons/react";
+import { CaretRight, CaretUpDown, Check, Plus } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
@@ -26,6 +26,11 @@ interface WorkspaceSwitcherProps {
   currentLogoUrl: string | null;
   currentName: string;
   currentSlug: string;
+  // Collapsed rail only: clicking the logo expands the sidebar instead of
+  // opening the workspace-switch dropdown — there's no room for a second
+  // "expand" row underneath, so this button does double duty. Switching
+  // workspaces happens via the full switcher once expanded.
+  onExpand?: () => void;
   workspaces: WorkspaceOption[];
 }
 
@@ -35,9 +40,34 @@ export function WorkspaceSwitcher({
   currentSlug,
   workspaces,
   collapsed = false,
+  onExpand,
 }: WorkspaceSwitcherProps) {
   const shouldReduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
+
+  if (collapsed && onExpand) {
+    return (
+      <button
+        aria-label="Expand sidebar"
+        className="group relative flex h-14 w-full cursor-pointer items-center justify-center border-b border-sidebar-border transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+        onClick={onExpand}
+        title="Expand sidebar"
+        type="button"
+      >
+        <SquareAvatar
+          alt={currentName}
+          className="shrink-0 rounded-ir-md bg-ir-primary text-ir-primary-foreground transition-opacity duration-150 ease-ir-standard group-hover:opacity-0"
+          fallback={
+            <span className="text-xs font-black">
+              {currentName.charAt(0).toUpperCase()}
+            </span>
+          }
+          imageUrl={currentLogoUrl}
+        />
+        <CaretRight className="absolute size-4 text-sidebar-foreground/60 opacity-0 transition-opacity duration-150 ease-ir-standard group-hover:opacity-100" />
+      </button>
+    );
+  }
 
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
@@ -52,7 +82,7 @@ export function WorkspaceSwitcher({
         >
           <SquareAvatar
             alt={currentName}
-            className="shrink-0 bg-ir-primary text-ir-primary-foreground"
+            className="shrink-0 rounded-ir-md bg-ir-primary text-ir-primary-foreground"
             fallback={
               <span className="text-xs font-black">
                 {currentName.charAt(0).toUpperCase()}
@@ -111,7 +141,7 @@ export function WorkspaceSwitcher({
                       on the avatar's light bg-ir-muted-surface square. */}
                   <SquareAvatar
                     alt={ws.name}
-                    className="size-5 shrink-0 text-2xs font-semibold"
+                    className="size-5 shrink-0 rounded-ir-md text-2xs font-semibold"
                     fallback={ws.name.charAt(0).toUpperCase()}
                     imageUrl={ws.logoUrl}
                   />

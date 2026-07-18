@@ -45,23 +45,38 @@ describe("parseEmbedParams", () => {
       parseEmbedParams({ accentColor: "#2563eb" }).accentColor
     ).toBeUndefined();
   });
+
+  it("resolves isPanel only when embed=1 and layout=panel", () => {
+    expect(parseEmbedParams({}).isPanel).toBe(false);
+    expect(parseEmbedParams({ layout: "panel" }).isPanel).toBe(false);
+    expect(parseEmbedParams({ embed: "1" }).isPanel).toBe(false);
+    expect(parseEmbedParams({ embed: "1", layout: "panel" }).isPanel).toBe(
+      true
+    );
+  });
 });
 
 describe("buildEmbedQuery", () => {
   it("returns an empty string when not embedded", () => {
-    expect(buildEmbedQuery({ isEmbed: false })).toBe("");
+    expect(buildEmbedQuery({ isEmbed: false, isPanel: false })).toBe("");
     expect(
-      buildEmbedQuery({ isEmbed: false, theme: "dark", accentColor: "#111111" })
+      buildEmbedQuery({
+        isEmbed: false,
+        isPanel: false,
+        theme: "dark",
+        accentColor: "#111111",
+      })
     ).toBe("");
   });
 
-  it("includes only embed=1 when no theme/accent is set", () => {
-    expect(buildEmbedQuery({ isEmbed: true })).toBe("?embed=1");
+  it("includes only embed=1 when no theme/accent/panel is set", () => {
+    expect(buildEmbedQuery({ isEmbed: true, isPanel: false })).toBe("?embed=1");
   });
 
   it("carries theme and accentColor forward for internal navigation, stripping the # for the query string", () => {
     const query = buildEmbedQuery({
       isEmbed: true,
+      isPanel: false,
       theme: "dark",
       accentColor: "#2563eb",
     });
@@ -70,34 +85,52 @@ describe("buildEmbedQuery", () => {
     expect(params.get("theme")).toBe("dark");
     expect(params.get("accentColor")).toBe("2563eb");
   });
+
+  it("carries layout=panel forward for internal navigation when isPanel", () => {
+    const query = buildEmbedQuery({ isEmbed: true, isPanel: true });
+    const params = new URLSearchParams(query.slice(1));
+    expect(params.get("embed")).toBe("1");
+    expect(params.get("layout")).toBe("panel");
+  });
 });
 
 describe("embedWrapperProps", () => {
   it("applies no class or style overrides by default", () => {
-    const { className, style } = embedWrapperProps({ isEmbed: true });
+    const { className, style } = embedWrapperProps({
+      isEmbed: true,
+      isPanel: false,
+    });
     expect(className).toBe("");
     expect(style).toEqual({});
   });
 
   it("applies the dark class only when theme is dark", () => {
-    expect(embedWrapperProps({ isEmbed: true, theme: "dark" }).className).toBe(
-      "dark"
-    );
-    expect(embedWrapperProps({ isEmbed: true, theme: "light" }).className).toBe(
-      ""
-    );
+    expect(
+      embedWrapperProps({ isEmbed: true, isPanel: false, theme: "dark" })
+        .className
+    ).toBe("dark");
+    expect(
+      embedWrapperProps({ isEmbed: true, isPanel: false, theme: "light" })
+        .className
+    ).toBe("");
   });
 
   it("overrides --primary with the accent color and picks a legible foreground", () => {
     // A light accent color should get a dark foreground for contrast...
-    const light = embedWrapperProps({ isEmbed: true, accentColor: "#f5f5f5" })
-      .style as Record<string, string>;
+    const light = embedWrapperProps({
+      isEmbed: true,
+      isPanel: false,
+      accentColor: "#f5f5f5",
+    }).style as Record<string, string>;
     expect(light["--primary"]).toBe("#f5f5f5");
     expect(light["--primary-foreground"]).toBe("#111111");
 
     // ...and a dark accent color should get a light foreground.
-    const dark = embedWrapperProps({ isEmbed: true, accentColor: "#111111" })
-      .style as Record<string, string>;
+    const dark = embedWrapperProps({
+      isEmbed: true,
+      isPanel: false,
+      accentColor: "#111111",
+    }).style as Record<string, string>;
     expect(dark["--primary"]).toBe("#111111");
     expect(dark["--primary-foreground"]).toBe("#ffffff");
   });

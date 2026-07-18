@@ -149,6 +149,9 @@ export function GeneralSettingsForm({
 }: GeneralSettingsFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isRoadmapPending, startRoadmapTransition] = useTransition();
+  const [isRoadmapSyncPending, startRoadmapSyncTransition] = useTransition();
+  const [isChangelogPending, startChangelogTransition] = useTransition();
 
   // Info form state
   const [name, setName] = useState(workspaceName);
@@ -173,7 +176,7 @@ export function GeneralSettingsForm({
   const appUrl = portalUrl;
 
   function handleRoadmapToggle(value: boolean) {
-    startTransition(async () => {
+    startRoadmapTransition(async () => {
       const result = await updateWorkspaceSettingsAction({
         workspaceId,
         roadmapPublic: value,
@@ -190,7 +193,7 @@ export function GeneralSettingsForm({
   }
 
   function handleRoadmapSyncToggle(value: boolean) {
-    startTransition(async () => {
+    startRoadmapSyncTransition(async () => {
       const result = await setRoadmapSyncAction({
         workspaceId,
         enabled: value,
@@ -209,7 +212,7 @@ export function GeneralSettingsForm({
   }
 
   function handleChangelogToggle(value: boolean) {
-    startTransition(async () => {
+    startChangelogTransition(async () => {
       const result = await updateWorkspaceSettingsAction({
         workspaceId,
         changelogPublic: value,
@@ -387,14 +390,14 @@ export function GeneralSettingsForm({
           <ToggleRow
             checked={roadmapPublic}
             description={`Show your roadmap at ${appUrl}/${workspaceSlug}/roadmap.`}
-            disabled={isPending || !canManage}
+            disabled={isRoadmapPending || !canManage}
             label="Public Roadmap"
             onChange={handleRoadmapToggle}
           />
           <ToggleRow
             checked={changelogPublic}
             description={`Show your changelog at ${appUrl}/${workspaceSlug}/changelog.`}
-            disabled={isPending || !canManage}
+            disabled={isChangelogPending || !canManage}
             label="Public Changelog"
             onChange={handleChangelogToggle}
           />
@@ -411,7 +414,7 @@ export function GeneralSettingsForm({
           <ToggleRow
             checked={roadmapSyncEnabled}
             description="On: roadmap columns are generated from your feedback statuses and stay read-only. Off: manage roadmap items and columns manually, with drag-and-drop."
-            disabled={isPending || !canManage}
+            disabled={isRoadmapSyncPending || !canManage}
             label="Sync Roadmap from Feedback"
             onChange={handleRoadmapSyncToggle}
           />

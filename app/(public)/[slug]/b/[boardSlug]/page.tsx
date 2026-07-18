@@ -1,4 +1,8 @@
-import { ChatCircleIcon, PushPinIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  ChatCircleIcon,
+  PlusIcon,
+  PushPinIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { formatDistanceToNow } from "date-fns";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -9,6 +13,7 @@ import { CategorySidebar } from "@/components/portal/category-sidebar";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PostStatusBadge } from "@/components/posts/post-status-badge";
 import { PostsPagination } from "@/components/posts/posts-pagination";
+import { Button } from "@/components/ui/button";
 import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
@@ -39,6 +44,7 @@ interface Props {
     mine?: string;
     page?: string;
     embed?: string;
+    layout?: string;
     theme?: string;
     accentColor?: string;
   }>;
@@ -65,11 +71,12 @@ export default async function BoardPage({ params, searchParams }: Props) {
     mine,
     page,
     embed,
+    layout,
     theme,
     accentColor,
   } = await searchParams;
-  const embedParams = parseEmbedParams({ embed, theme, accentColor });
-  const { isEmbed } = embedParams;
+  const embedParams = parseEmbedParams({ accentColor, embed, layout, theme });
+  const { isEmbed, isPanel } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
 
@@ -183,6 +190,9 @@ export default async function BoardPage({ params, searchParams }: Props) {
     if (embed) {
       params.set("embed", embed);
     }
+    if (layout) {
+      params.set("layout", layout);
+    }
     if (theme) {
       params.set("theme", theme);
     }
@@ -204,10 +214,15 @@ export default async function BoardPage({ params, searchParams }: Props) {
 
   return (
     <div
-      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
+      className={`${
+        isPanel ? "flex h-dvh flex-col overflow-hidden" : "min-h-screen"
+      } bg-ir-background ${embedWrapper.className}`}
       style={embedWrapper.style}
     >
-      {isEmbed && <EmbedResizeReporter />}
+      {/* Panel mode (the widget's floating launcher) is a fixed-size iframe
+          with its own internal scroll region below — growing to fit content
+          would just get clipped by the panel, so there's nothing to report. */}
+      {isEmbed && !isPanel && <EmbedResizeReporter />}
       {!isEmbed && (
         <PortalHeader
           boards={publicBoards}
@@ -226,9 +241,18 @@ export default async function BoardPage({ params, searchParams }: Props) {
       )}
       {!isEmbed && <PoweredByBadge />}
 
-      <main className="mx-auto flex max-w-5xl flex-col" id="main-content">
-        {/* Page header */}
-        <div className="border-b border-ir-border px-4 py-6 sm:px-8">
+      <main
+        className={
+          isPanel
+            ? "mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden"
+            : "mx-auto flex max-w-5xl flex-col"
+        }
+        id="main-content"
+      >
+        {/* Page header — pinned in panel mode so only the content below scrolls */}
+        <div
+          className={`border-b border-ir-border px-4 py-6 sm:px-8 ${isPanel ? "shrink-0" : ""}`}
+        >
           <h1 className="text-xl font-semibold text-ir-heading">
             {board.name}
           </h1>
@@ -243,7 +267,13 @@ export default async function BoardPage({ params, searchParams }: Props) {
           )}
         </div>
 
-        <div className="flex flex-col gap-6 px-4 py-6 sm:px-8 lg:flex-row lg:items-start lg:gap-8">
+        <div
+          className={`flex flex-col gap-6 px-4 py-6 sm:px-8 lg:flex-row lg:items-start lg:gap-8 ${
+            isPanel
+              ? "min-h-0 flex-1 overflow-y-scroll [scrollbar-gutter:stable]"
+              : ""
+          }`}
+        >
           {/* Main content */}
           <div className="min-w-0 flex-1 rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
             <BoardFilters
@@ -376,7 +406,9 @@ export default async function BoardPage({ params, searchParams }: Props) {
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar — in panel mode its own "+ Feedback" button is
+              suppressed in favor of the pinned footer below, so the CTA
+              stays reachable without scrolling through the post list. */}
           <CategorySidebar
             activeCategoryId={validCategoryId}
             activeSearch={searchQuery}
@@ -386,10 +418,23 @@ export default async function BoardPage({ params, searchParams }: Props) {
             categories={categories}
             isMine={mineActive}
             isSignedIn={isSignedIn}
-            newPostHref={newPostHref}
+            newPostHref={isPanel ? undefined : newPostHref}
             slug={slug}
           />
         </div>
+
+        {/* Pinned footer — panel mode only; the standalone page keeps the
+            "+ Feedback" button in the sidebar above instead. */}
+        {isPanel && newPostHref && (
+          <div className="shrink-0 border-t border-ir-border bg-ir-surface px-4 py-3 sm:px-8">
+            <Button asChild className="w-full">
+              <Link href={newPostHref}>
+                <PlusIcon data-icon="inline-start" />
+                Feedback
+              </Link>
+            </Button>
+          </div>
+        )}
       </main>
     </div>
   );

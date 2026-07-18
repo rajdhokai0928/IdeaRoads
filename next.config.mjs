@@ -5,6 +5,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The dev tools badge renders inside the embed iframe too (portal.localhost
+  // shares this same dev server) and sits on top of the widget's floating
+  // panel content — disable it rather than trying to style around it.
+  devIndicators: false,
   turbopack: {
     root: resolve(__dirname),
   },

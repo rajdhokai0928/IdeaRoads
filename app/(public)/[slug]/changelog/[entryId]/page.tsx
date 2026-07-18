@@ -9,6 +9,7 @@ import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
+import { ImagePreviewThumbnail } from "@/components/ui/image-preview-thumbnail";
 import VoteButton from "@/components/voting/vote-button";
 import { PortalHeader } from "@/components/workspace/portal-header";
 import { WORKSPACE_MEMBER } from "@/config/platform";
@@ -169,10 +170,7 @@ export default async function PublicChangelogEntryPage({
 
         {/* Cover image */}
         {entry.coverImageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          // biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image
-          <img
-            alt=""
+          <ImagePreviewThumbnail
             className="mb-8 max-h-96 w-full rounded-ir-sm border border-ir-border object-cover"
             src={entry.coverImageUrl}
           />

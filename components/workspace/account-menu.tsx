@@ -61,7 +61,7 @@ export function AccountMenu({
         >
           <SquareAvatar
             alt={email}
-            className="shrink-0"
+            className="shrink-0 rounded-ir-md"
             fallback={email.charAt(0).toUpperCase()}
             imageUrl={userImage}
           />
@@ -97,6 +97,7 @@ export function AccountMenu({
         <DropdownMenuLabel className="flex items-center gap-2.5 font-normal normal-case tracking-normal">
           <SquareAvatar
             alt={email}
+            className="rounded-ir-md"
             fallback={email.charAt(0).toUpperCase()}
             imageUrl={userImage}
           />

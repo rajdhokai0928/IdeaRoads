@@ -14,6 +14,44 @@ interface FeedbackSearchPanelProps {
   workspaceId: string;
 }
 
+interface CachedSearch {
+  hasMore: boolean;
+  results: FeedbackSearchResult[];
+}
+
+// The dialog this panel lives in unmounts its content on close (Radix drops
+// closed DialogContent from the tree), so component state can't survive a
+// close/reopen on its own. Caching the last page per workspace+query here lets
+// a reopen paint instantly from cache instead of flashing empty -> spinner ->
+// list every single time; the effect below still revalidates in the background.
+const searchCache = new Map<string, CachedSearch>();
+
+function cacheKey(workspaceId: string, query: string): string {
+  return `${workspaceId}:${query}`;
+}
+
+// Warms the cache for the default (no-query) list before the dialog is ever
+// opened — called from AddRoadmapItemDialog's mount effect so the very first
+// open of a session (or the first open after a router.refresh() remounts the
+// board) can also paint from cache instead of showing the spinner.
+export function prefetchFeedbackSearch(workspaceId: string) {
+  if (searchCache.has(cacheKey(workspaceId, ""))) {
+    return;
+  }
+  searchRoadmapFeedbackAction({
+    workspaceId,
+    query: undefined,
+    offset: 0,
+  }).then((res) => {
+    if (res.success) {
+      searchCache.set(cacheKey(workspaceId, ""), {
+        results: res.data.results,
+        hasMore: res.data.hasMore,
+      });
+    }
+  });
+}
+
 // Feedback bodies may be rich-text HTML; show a plain-text preview.
 function htmlToText(html: string): string {
   return html
@@ -28,9 +66,12 @@ export function FeedbackSearchPanel({
   onFill,
 }: FeedbackSearchPanelProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<FeedbackSearchResult[]>([]);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const initialCache = searchCache.get(cacheKey(workspaceId, ""));
+  const [results, setResults] = useState<FeedbackSearchResult[]>(
+    initialCache?.results ?? []
+  );
+  const [hasMore, setHasMore] = useState(initialCache?.hasMore ?? false);
+  const [loading, setLoading] = useState(!initialCache);
   const [, startTransition] = useTransition();
   // Guards against out-of-order responses clobbering a newer query's results.
   const requestIdRef = useRef(0);
@@ -54,9 +95,17 @@ export function FeedbackSearchPanel({
           return;
         }
         setHasMore(res.data.hasMore);
-        setResults((prev) =>
-          offset === 0 ? res.data.results : [...prev, ...res.data.results]
-        );
+        setResults((prev) => {
+          const next =
+            offset === 0 ? res.data.results : [...prev, ...res.data.results];
+          if (offset === 0) {
+            searchCache.set(cacheKey(workspaceId, q), {
+              results: next,
+              hasMore: res.data.hasMore,
+            });
+          }
+          return next;
+        });
       });
     },
     [workspaceId]

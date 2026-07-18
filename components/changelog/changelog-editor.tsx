@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImagePreviewThumbnail } from "@/components/ui/image-preview-thumbnail";
 import { ContentContainer } from "@/components/ui/page";
 import { useDirtyState } from "@/hooks/use-dirty-state";
 import {
@@ -535,10 +536,7 @@ export function ChangelogEditor({
         </label>
         {coverImageUrl ? (
           <div className="relative block w-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {/* biome-ignore lint/performance/noImgElement: dynamic S3/R2/local upload URL, not known at build time for next/image */}
-            <img
-              alt=""
+            <ImagePreviewThumbnail
               className="max-h-64 w-full rounded-ir-sm border border-ir-border bg-ir-muted-surface object-contain"
               src={coverImageUrl}
             />

@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImagePreviewThumbnail } from "@/components/ui/image-preview-thumbnail";
 import type { BoardItem } from "./manual-roadmap-card";
 
 interface ManualItemDetailDialogProps {
@@ -51,9 +52,7 @@ export function ManualItemDetailDialog({
         {item && (
           <>
             {item.coverImage && (
-              // biome-ignore lint/performance/noImgElement: dynamic user-uploaded cover URL
-              <img
-                alt=""
+              <ImagePreviewThumbnail
                 className="-mx-6 -mt-6 mb-2 h-48 w-[calc(100%+3rem)] max-w-none rounded-t-ir-xl border-b border-ir-border object-cover"
                 src={item.coverImage}
               />

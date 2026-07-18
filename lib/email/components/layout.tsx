@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { ReactNode } from "react";
 import {
   Body,
@@ -12,6 +14,14 @@ import {
   Text,
 } from "react-email";
 import { PRODUCT_NAME } from "@/config/platform";
+
+// Inlined as a data URI (rather than an absolute URL) so the logo always
+// renders regardless of whether the app host is publicly reachable from the
+// recipient's email client. Pre-sized at 2x (400x131) for a crisp display at
+// the 200x66 size it's rendered at below.
+const DEFAULT_LOGO_DATA_URL = `data:image/png;base64,${readFileSync(
+  join(process.cwd(), "lib/email/assets/logo.png")
+).toString("base64")}`;
 
 export const emailStyles = {
   body: {
@@ -84,13 +94,22 @@ export function EmailLayout({
       <Preview>{preview}</Preview>
       <Body style={emailStyles.body}>
         <Container style={emailStyles.container}>
-          <Section style={{ marginBottom: "24px" }}>
+          <Section style={{ marginBottom: "24px", textAlign: "left" }}>
             {logoUrl ? (
-              <Img alt={productName} height="32" src={logoUrl} />
+              <Img
+                alt={productName}
+                height="32"
+                src={logoUrl}
+                style={{ display: "block" }}
+              />
             ) : (
-              <Text style={{ fontWeight: 900, letterSpacing: "0" }}>
-                {productName}
-              </Text>
+              <Img
+                alt={productName}
+                height="66"
+                src={DEFAULT_LOGO_DATA_URL}
+                style={{ display: "block", objectFit: "contain" }}
+                width="200"
+              />
             )}
           </Section>
           {children}

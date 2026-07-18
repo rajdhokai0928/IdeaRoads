@@ -18,6 +18,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImagePreviewThumbnail } from "@/components/ui/image-preview-thumbnail";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FeedbackSearchPanel } from "./feedback-search-panel";
+import {
+  FeedbackSearchPanel,
+  prefetchFeedbackSearch,
+} from "./feedback-search-panel";
 import type { BoardItem } from "./manual-roadmap-card";
 
 // Rich-text editor is client-only (Quill touches the DOM on mount). Reuses the
@@ -100,6 +104,25 @@ export function AddRoadmapItemDialog({
   // programmatic changes (open/reset and Fill from Feedback) reflect in the
   // editor; plain typing does NOT bump it, so the editor keeps focus/caret.
   const [editorKey, setEditorKey] = useState(0);
+
+  // Warm the Quill chunks and (for the create flow) the default feedback list
+  // as soon as this always-mounted dialog component exists, so the very first
+  // real open — including the first open after a router.refresh() remounts
+  // the board post-save — never pays for either dynamic import or the network
+  // round trip. Without this, Radix only renders DialogContent (and its
+  // children) once `open` is true, so on every open QuillEditor mounts an
+  // empty container, then its own internal `import("quill")` (quill-editor.tsx)
+  // resolves and pops the toolbar/content in a beat later — the visible
+  // flicker. Preloading both the wrapper and the underlying "quill" package
+  // here means that inner import resolves from cache before the user ever
+  // sees the empty box.
+  useEffect(() => {
+    import("@/components/comments/quill-editor");
+    import("quill");
+    if (!isEdit) {
+      prefetchFeedbackSearch(workspaceId);
+    }
+  }, [isEdit, workspaceId]);
 
   // Reset the form whenever the dialog opens (create) or targets a new item (edit).
   useEffect(() => {
@@ -316,9 +339,7 @@ export function AddRoadmapItemDialog({
               </span>
               {coverImage ? (
                 <div className="relative block w-full">
-                  {/* biome-ignore lint/performance/noImgElement: dynamic upload URL, not known at build time for next/image */}
-                  <img
-                    alt=""
+                  <ImagePreviewThumbnail
                     className="max-h-40 w-full rounded-ir-md border border-ir-border bg-ir-muted-surface object-contain"
                     src={coverImage}
                   />

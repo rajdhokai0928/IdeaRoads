@@ -221,10 +221,10 @@ export function NotificationList({
         {/* Toolbar: filter tabs + bulk actions */}
         {items.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-border">
-            <div className="flex items-center gap-1 rounded-md bg-muted/50 p-0.5">
+            <div className="flex items-center gap-1 rounded-ir-md bg-muted/50 p-0.5">
               <button
                 className={cn(
-                  "rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                  "rounded-ir-sm px-2.5 py-1 text-xs font-medium transition-colors",
                   filter === "all"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -236,7 +236,7 @@ export function NotificationList({
               </button>
               <button
                 className={cn(
-                  "flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                  "flex items-center gap-1.5 rounded-ir-sm px-2.5 py-1 text-xs font-medium transition-colors",
                   filter === "unread"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"

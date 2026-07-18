@@ -90,17 +90,15 @@
     // Auth's magic-link email link. lib/embed/style.ts re-adds it on read.
     iframeQuery.set("accentColor", accentColor.slice(1));
   }
-  const iframeSrc = origin + path + "?" + iframeQuery.toString();
-
-  // Simple sRGB luminance check so the launcher button's text stays legible
-  // against any admin-chosen accent color.
-  function contrastForeground(hex) {
-    const r = Number.parseInt(hex.slice(1, 3), 16);
-    const g = Number.parseInt(hex.slice(3, 5), 16);
-    const b = Number.parseInt(hex.slice(5, 7), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.6 ? "#111111" : "#ffffff";
+  if (mode === "button") {
+    // Tells the embedded page it's rendering inside the fixed-size floating
+    // panel (as opposed to an inline embed that grows to fit its content) —
+    // lib/embed/style.ts uses this to switch to a fixed-height layout with
+    // its own internal scroll region instead of letting the page grow past
+    // the panel and rely on the iframe's own document scrollbar.
+    iframeQuery.set("layout", "panel");
   }
+  const iframeSrc = origin + path + "?" + iframeQuery.toString();
 
   // CSS corner offsets for the floating panel and its launcher button.
   function cornerCss(inset) {
@@ -128,12 +126,24 @@
       "margin:-14px 0 0 -14px;border:3px solid rgba(0,0,0,0.12);" +
       "border-top-color:rgba(0,0,0,0.4);border-radius:50%;" +
       "animation:ir-widget-spin 0.7s linear infinite;}" +
-      ".ir-widget-launcher:focus-visible{outline:2px solid #fff;outline-offset:2px;" +
+      ".ir-widget-launcher{transition:transform 0.15s ease,box-shadow 0.15s ease;}" +
+      ".ir-widget-launcher:hover{transform:scale(1.06);" +
+      "box-shadow:0 6px 20px rgba(0,0,0,0.25),0 0 0 2px var(--ir-launcher-color,#111);}" +
+      ".ir-widget-launcher:active{transform:scale(0.94);" +
+      "box-shadow:0 2px 8px rgba(0,0,0,0.2),0 0 0 2px var(--ir-launcher-color,#111);}" +
+      ".ir-widget-launcher:focus-visible{outline:2px solid #2563eb;outline-offset:2px;" +
       "box-shadow:0 4px 14px rgba(0,0,0,0.2),0 0 0 4px rgba(37,99,235,0.5);}" +
+      ".ir-widget-close{transition:background 0.15s ease;}" +
+      ".ir-widget-close:hover{background:#fff;}" +
+      ".ir-widget-close:focus-visible{outline:2px solid #2563eb;outline-offset:2px;}" +
+      // top and bottom are both pinned (instead of anchoring from the
+      // bottom alone with an implicit top) so the panel gets a matching
+      // margin on both edges — height is left to resolve automatically
+      // from that span rather than a fixed/viewport-relative value that
+      // could leave one edge flush against the screen.
       "@media (max-width:480px){.ir-widget-panel{left:12px!important;right:12px!important;" +
-      "bottom:12px!important;top:auto!important;width:auto!important;" +
-      "height:min(80vh,640px)!important;max-width:none!important;" +
-      "max-height:calc(100vh - 24px)!important;}}";
+      "top:16px!important;bottom:16px!important;width:auto!important;" +
+      "height:auto!important;max-width:none!important;max-height:none!important;}}";
     document.head.appendChild(style);
   }
 
@@ -192,6 +202,30 @@
     });
   }
 
+  // Small X button pinned to the panel's own top-right corner, independent
+  // of which screen corner data-position floats the panel in — the panel's
+  // content (e.g. the sign-in form) has no header of its own to put a close
+  // affordance in, and the launcher button alone isn't a discoverable way to
+  // close it.
+  function createCloseButton(onClose) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "ir-widget-close";
+    button.setAttribute("aria-label", "Close feedback panel");
+    button.style.cssText =
+      "position:absolute;top:8px;right:8px;width:28px;height:28px;padding:0;" +
+      "display:flex;align-items:center;justify-content:center;" +
+      "background:rgba(255,255,255,0.9);border:none;border-radius:50%;" +
+      "box-shadow:0 1px 4px rgba(0,0,0,0.15);color:#111;line-height:1;" +
+      "cursor:pointer;z-index:1;";
+    button.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
+      '<path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+      "</svg>";
+    button.addEventListener("click", onClose);
+    return button;
+  }
+
   function mountInline() {
     const iframe = createIframe();
     const wrapper = withLoadingSpinner(iframe, false);
@@ -209,15 +243,20 @@
   }
 
   function mountFloating() {
+    // Guards against a second floating launcher — e.g. a host page/dev
+    // environment that ends up running this script twice (double embed
+    // snippet, a framework remounting the embedding component, etc.). Only
+    // one launcher + panel should ever exist on a page at a time.
+    if (document.querySelector(".ir-widget-launcher")) {
+      return;
+    }
+
     const iframe = createIframe();
     iframe.style.height = "100%";
     iframe.style.width = "100%";
     iframe.setAttribute("tabindex", "0");
 
     const launcherColor = accentColor || "#111";
-    const launcherTextColor = accentColor
-      ? contrastForeground(accentColor)
-      : "#fff";
 
     const panelId = instanceId + "-panel";
     const panel = document.createElement("div");
@@ -237,37 +276,54 @@
       "box-shadow:0 8px 30px rgba(0,0,0,0.18);border-radius:12px;" +
       "overflow:hidden;display:none;z-index:2147483000;background:#fff;";
     panel.appendChild(withLoadingSpinner(iframe, true));
+    panel.appendChild(createCloseButton(() => setOpen(false)));
 
     const launcher = document.createElement("button");
     launcher.type = "button";
     launcher.className = "ir-widget-launcher";
-    launcher.textContent = "Feedback";
     launcher.setAttribute("aria-label", "Open feedback");
     launcher.setAttribute("aria-expanded", "false");
     launcher.setAttribute("aria-controls", panelId);
     launcher.style.cssText =
       "position:fixed;" +
       cornerCss(24) +
-      "min-width:44px;min-height:44px;padding:12px 20px;" +
-      "background:" +
+      "width:56px;height:56px;padding:0;display:flex;" +
+      "align-items:center;justify-content:center;" +
+      "background:#fff;border:none;border-radius:50%;" +
+      "box-shadow:0 4px 14px rgba(0,0,0,0.2),0 0 0 2px " +
       launcherColor +
-      ";color:" +
-      launcherTextColor +
-      ";border:none;border-radius:999px;" +
-      "font:600 14px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;" +
-      "cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.2);z-index:2147483000;";
+      ";cursor:pointer;z-index:2147483000;--ir-launcher-color:" +
+      launcherColor +
+      ";";
+
+    const launcherIcon = document.createElement("img");
+    launcherIcon.src = origin + "/logo.png";
+    launcherIcon.alt = "";
+    launcherIcon.width = 30;
+    launcherIcon.height = 30;
+    launcherIcon.style.cssText =
+      "display:block;width:30px;height:30px;object-fit:contain;pointer-events:none;";
+    launcher.appendChild(launcherIcon);
 
     let open = false;
+    let hostOverflow = "";
 
+    // Locks the host page's own scroll while the panel is open — without
+    // this, the panel floats over a still-scrollable page, and the page's
+    // scrollbar ends up sitting right beside (and fighting with) the panel's
+    // own, reading as a broken "double scrollbar".
     function setOpen(next) {
       open = next;
       panel.style.display = open ? "block" : "none";
       launcher.setAttribute("aria-expanded", String(open));
       if (open) {
+        hostOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
         // Wait a frame so display:block has taken effect before focusing —
         // an element that's still display:none can't receive focus.
         requestAnimationFrame(() => iframe.focus());
       } else {
+        document.body.style.overflow = hostOverflow;
         launcher.focus();
       }
     }
@@ -279,6 +335,22 @@
         setOpen(false);
       }
     });
+
+    // Capture phase so this still fires even if the host page's own click
+    // handlers call stopPropagation() before it would otherwise bubble here.
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (!open) {
+          return;
+        }
+        if (panel.contains(event.target) || launcher.contains(event.target)) {
+          return;
+        }
+        setOpen(false);
+      },
+      { capture: true }
+    );
 
     document.body.appendChild(panel);
     document.body.appendChild(launcher);

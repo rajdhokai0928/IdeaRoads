@@ -197,7 +197,6 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
             <div className="flex-1">
               <RoadmapBoard
                 columns={derivedColumns}
-                isAdmin={false}
                 isSignedIn={isSignedIn}
                 workspaceSlug={slug}
               />

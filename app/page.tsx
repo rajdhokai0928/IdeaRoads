@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Comparison } from "@/components/marketing/comparison";
 import { FeaturesGrid } from "@/components/marketing/features-grid";
+import { FeedbackWidgetLauncher } from "@/components/marketing/feedback-widget-launcher";
+import { FeedbackWidgetSection } from "@/components/marketing/feedback-widget-section";
 import { FinalCta } from "@/components/marketing/final-cta";
 import { Footer } from "@/components/marketing/footer";
 import { Hero } from "@/components/marketing/hero";
@@ -12,6 +14,7 @@ import { ProductTour } from "@/components/marketing/product-tour";
 import { PageTransition } from "@/components/motion/page-transition";
 import { LOGO_PATH, PRODUCT_NAME } from "@/config/platform";
 import { getCurrentSession } from "@/lib/authz";
+import { portalBaseUrl } from "@/lib/urls";
 
 const TITLE = `${PRODUCT_NAME} — Collect feedback, ship faster, close the loop`;
 const DESCRIPTION =
@@ -52,22 +55,13 @@ export default async function HomePage() {
           <ProductTour />
           <FeaturesGrid />
           <LiveDemo />
+          <FeedbackWidgetSection appUrl={portalBaseUrl()} />
           <Comparison />
           <FinalCta />
         </main>
       </PageTransition>
       <Footer />
-      <script
-        src="http://portal.localhost:3000/widget.js"
-        data-workspace="kalua-workspaces"
-        data-board="feature-requests"
-        data-mode="button"
-        data-position="bottom-right"
-        data-theme="light"
-        data-width="500"
-        data-height="700"
-        data-accent-color="#e5e0e0"
-      ></script>
+      <FeedbackWidgetLauncher appUrl={portalBaseUrl()} />
     </div>
   );
 }

@@ -20,6 +20,11 @@ interface CategorySidebarProps {
   activeStatus: string;
   boardSlug: string;
   categories: Category[];
+  // Carries embed=1/theme/accentColor into these filter links so switching
+  // category/My-Posts while embedded doesn't fall back to full Public Portal
+  // chrome. Already URL-prefixed with "?" when set (see buildEmbedQuery);
+  // empty outside the embed.
+  embedQuery?: string;
   isMine: boolean;
   isSignedIn: boolean;
   newPostHref?: string;
@@ -29,6 +34,7 @@ interface CategorySidebarProps {
 function buildHref(
   slug: string,
   boardSlug: string,
+  embedQuery: string,
   params: {
     category?: string;
     mine?: boolean;
@@ -54,7 +60,11 @@ function buildHref(
     qs.set("mine", "1");
   }
   const s = qs.toString();
-  return `/${slug}/b/${boardSlug}${s ? `?${s}` : ""}`;
+  if (!s) {
+    return `/${slug}/b/${boardSlug}${embedQuery}`;
+  }
+  const separator = embedQuery ? "&" : "?";
+  return `/${slug}/b/${boardSlug}${embedQuery}${separator}${s}`;
 }
 
 // Right-hand nav for the public board page — "+ Feedback" submission button
@@ -73,6 +83,7 @@ export function CategorySidebar({
   slug,
   boardSlug,
   newPostHref,
+  embedQuery = "",
 }: CategorySidebarProps) {
   const activeCategories = categories.filter((c) => !c.isArchived);
   const itemClass = (isActive: boolean) =>
@@ -96,7 +107,7 @@ export function CategorySidebar({
       <nav className="space-y-0.5">
         <Link
           className={itemClass(!activeCategoryId && !isMine)}
-          href={buildHref(slug, boardSlug, {
+          href={buildHref(slug, boardSlug, embedQuery, {
             sort: activeSort,
             status: activeStatus,
             search: activeSearch,
@@ -108,7 +119,7 @@ export function CategorySidebar({
         {activeCategories.map((category) => (
           <Link
             className={itemClass(!isMine && activeCategoryId === category.id)}
-            href={buildHref(slug, boardSlug, {
+            href={buildHref(slug, boardSlug, embedQuery, {
               sort: activeSort,
               status: activeStatus,
               search: activeSearch,
@@ -129,7 +140,7 @@ export function CategorySidebar({
         <nav className="space-y-0.5 border-t border-ir-border pt-4">
           <Link
             className={itemClass(isMine)}
-            href={buildHref(slug, boardSlug, {
+            href={buildHref(slug, boardSlug, embedQuery, {
               sort: activeSort,
               status: activeStatus,
               search: activeSearch,

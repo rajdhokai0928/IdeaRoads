@@ -11,8 +11,6 @@ import { isBlocked } from "@/lib/moderation/queries";
 import { createNotification } from "@/lib/notifications/create";
 import { isEmailNotificationEnabled } from "@/lib/notifications/queries";
 import { portalBaseUrl } from "@/lib/urls";
-import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
-import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 import { commentPreviewText } from "./preview";
 
 export class CommentBlockedError extends Error {
@@ -164,12 +162,6 @@ export async function createComment(
       post,
       workspace?.commentModeration ?? false
     ).catch((err) => console.error("[comments] notification error", err));
-
-    dispatchWebhookEvent(workspaceId, WEBHOOK_EVENTS.COMMENT_CREATED, {
-      id: comment.id,
-      postId,
-      parentId: comment.parentId,
-    });
   }
 
   return comment;

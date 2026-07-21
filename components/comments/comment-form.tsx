@@ -3,10 +3,12 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
 import { useIsEmbed } from "@/components/embed/use-is-embed";
 import { Button } from "@/components/ui/button";
+import { embedFetch } from "@/lib/embed/fetch";
+import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
 import { type CommentApi, type CommentData, postsCommentApi } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
 
@@ -37,19 +39,9 @@ export default function CommentForm({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-  const [signedIn, setSignedIn] = useState(isSignedIn);
+  const [signedIn, setSignedIn] = useEmbedSignedIn(isEmbed, isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
   const pathname = usePathname();
-
-  // Another embedded element may complete sign-in and call router.refresh()
-  // — that re-renders this component with a new isSignedIn prop, but
-  // useState only reads its initial value once, so sync it explicitly rather
-  // than staying stuck showing signed-out.
-  useEffect(() => {
-    if (isSignedIn) {
-      setSignedIn(true);
-    }
-  }, [isSignedIn]);
 
   // Mirrors of the latest content so the Enter-to-submit handler always reads
   // the current value (not a stale render's state).
@@ -95,7 +87,7 @@ export default function CommentForm({
     setIsPending(true);
 
     try {
-      const res = await fetch(createUrl, {
+      const res = await embedFetch(createUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body: currentHtml }),

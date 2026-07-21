@@ -2,10 +2,8 @@
 
 import { getCurrentSession, requireSession } from "@/lib/authz";
 import type { NotificationPreferencesRow } from "@/lib/notifications/queries";
-import {
-  getNotificationPreferences,
-  upsertNotificationPreferences,
-} from "@/lib/notifications/queries";
+import { getNotificationPreferences } from "@/lib/notifications/queries";
+import { updatePreferences } from "@/lib/notifications/update-preferences";
 
 type ActionResult<T = undefined> =
   | { success: true; data: T }
@@ -39,11 +37,12 @@ export async function updateNotificationPreferencesAction(input: {
   inAppNewComment?: boolean;
   inAppChangelog?: boolean;
 }): Promise<ActionResult<NotificationPreferencesRow>> {
-  // Uses getCurrentSession (not requireSession) — this is called from the
-  // embed widget's SubscribeToggle too, where a stale/expired session must
-  // surface as a normal error the caller can react to (reopening the
-  // in-place sign-in), not a server-triggered redirect to /signin that would
-  // navigate the whole iframe away.
+  // Direct/non-embed callers only now — the embed widget's SubscribeToggle
+  // calls the bearer-authenticated app/api/embed/notification-preferences
+  // Route Handler instead (a Server Action can't carry a custom
+  // Authorization header from the client). Still getCurrentSession (not
+  // requireSession): a stale/expired cookie session should surface as a
+  // normal error the caller can react to, not a server-triggered redirect.
   const session = await getCurrentSession();
   if (!session) {
     return {
@@ -53,14 +52,9 @@ export async function updateNotificationPreferencesAction(input: {
     };
   }
 
-  try {
-    const updated = await upsertNotificationPreferences(session.user.id, input);
-    return { success: true, data: updated };
-  } catch (err) {
-    return {
-      success: false,
-      error:
-        err instanceof Error ? err.message : "Failed to update preferences.",
-    };
+  const result = await updatePreferences(session.user.id, input);
+  if (!result.ok) {
+    return { success: false, error: result.error };
   }
+  return { success: true, data: result.data };
 }

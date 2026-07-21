@@ -2,7 +2,7 @@
 
 import { SmileyIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
 import { useIsEmbed } from "@/components/embed/use-is-embed";
 import {
@@ -11,6 +11,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { REACTION_EMOJIS } from "@/config/platform";
+import { embedFetch } from "@/lib/embed/fetch";
+import { useEmbedReactionCorrections } from "@/lib/embed/personalization-context";
+import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
 import type { ReactionGroup } from "@/lib/changelog-comments/reactions";
 
 function formatReactorNames(names: string[]): string {
@@ -39,15 +42,31 @@ export function ChangelogReactions({
   const [reactions, setReactions] = useState<ReactionGroup[]>(initialReactions);
   const [showPicker, setShowPicker] = useState(false);
   const [pendingEmoji, setPendingEmoji] = useState<string | null>(null);
-  const [signedIn, setSignedIn] = useState(isSignedIn);
+  const [signedIn, setSignedIn] = useEmbedSignedIn(isEmbed, isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
   const [afterAuthEmoji, setAfterAuthEmoji] = useState<string | null>(null);
 
+  // Server-rendered `hasReacted` is computed from a cookie session, always
+  // false for a bearer-authenticated embed visitor — correct it once at
+  // mount, the same way VoteButton corrects `hasVoted` (see
+  // lib/embed/personalization-context.tsx). Guarded by a ref: the
+  // personalization fetch is re-triggered by a sign-in that can happen in
+  // this SAME flow (sign in via this row's own dialog, which immediately
+  // reacts) and can resolve AFTER that reaction's own request — a slower
+  // correction response carrying pre-reaction data would otherwise clobber
+  // it. Once the visitor has reacted locally, that action is authoritative
+  // for the rest of this component's lifetime.
+  const hasLocalActionRef = useRef(false);
+  const correctedReactions = useEmbedReactionCorrections(
+    changelogEntryId,
+    initialReactions
+  );
   useEffect(() => {
-    if (isSignedIn) {
-      setSignedIn(true);
+    if (hasLocalActionRef.current) {
+      return;
     }
-  }, [isSignedIn]);
+    setReactions(correctedReactions);
+  }, [correctedReactions]);
 
   // Escape closes the picker the same way clicking the overlay does.
   useEffect(() => {
@@ -64,6 +83,7 @@ export function ChangelogReactions({
   }, [showPicker]);
 
   async function castReaction(emoji: string) {
+    hasLocalActionRef.current = true;
     setPendingEmoji(emoji);
     setShowPicker(false);
 
@@ -106,11 +126,14 @@ export function ChangelogReactions({
     }
 
     try {
-      const res = await fetch(`/api/changelog/${changelogEntryId}/reactions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emoji }),
-      });
+      const res = await embedFetch(
+        `/api/changelog/${changelogEntryId}/reactions`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emoji }),
+        }
+      );
       // A session can go stale between page load and this click (expiry, a
       // sign-out elsewhere). Reopen the in-place prompt instead of leaving
       // the visitor stuck behind a silently-reverted reaction.

@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { REACTION_EMOJIS } from "@/config/platform";
-import { commentReactions } from "@/db/schema";
+import { comments, commentReactions } from "@/db/schema";
 import { user } from "@/db/schema/auth";
 import { db } from "@/lib/db";
 
@@ -49,6 +49,43 @@ export async function getReactionsForComments(
       reactorNames: row.reactorNames ?? [],
     });
     map.set(row.commentId, existing);
+  }
+  return map;
+}
+
+// Which emojis THIS user has reacted with, across every comment/reply on the
+// given posts — used by the embed personalization endpoint (bearer identity
+// instead of a cookie session) to correct `hasReacted` after mount, the same
+// way getOwnCommentIds corrects `isOwn`. Scoped by postId (not a caller-
+// supplied comment-id list) for the same reason: the page-level provider
+// never enumerates comment ids itself — CommentSection fetches those.
+export async function getOwnReactedEmojisForPosts(
+  postIds: string[],
+  userId: string
+): Promise<Map<string, string[]>> {
+  if (postIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .select({
+      commentId: commentReactions.commentId,
+      emoji: commentReactions.emoji,
+    })
+    .from(commentReactions)
+    .innerJoin(comments, eq(commentReactions.commentId, comments.id))
+    .where(
+      and(
+        inArray(comments.postId, postIds),
+        eq(commentReactions.userId, userId)
+      )
+    );
+
+  const map = new Map<string, string[]>();
+  for (const row of rows) {
+    const arr = map.get(row.commentId) ?? [];
+    arr.push(row.emoji);
+    map.set(row.commentId, arr);
   }
   return map;
 }

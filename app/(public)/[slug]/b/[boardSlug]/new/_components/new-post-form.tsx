@@ -21,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { embedFetch } from "@/lib/embed/fetch";
+import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
 
 const QuillEditor = dynamic(
   () => import("@/components/comments/quill-editor"),
@@ -115,26 +117,17 @@ export default function NewPostForm({
   const [body, setBody] = useState("");
   const [categoryId, setCategoryId] = useState(defaultCategoryId);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
-  const [signedIn, setSignedIn] = useState(isSignedIn);
+  const [signedIn, setSignedIn] = useEmbedSignedIn(isEmbed, isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const boardHref = `/${workspaceSlug}/b/${boardSlug}${embedQuery}`;
-
-  // Another embedded element may complete sign-in and call router.refresh()
-  // — that re-renders this component with a new isSignedIn prop, but
-  // useState only reads its initial value once, so sync it explicitly rather
-  // than staying stuck showing signed-out.
-  useEffect(() => {
-    if (isSignedIn) {
-      setSignedIn(true);
-    }
-  }, [isSignedIn]);
 
   // Recover a draft left behind by an actual reload — the auth-modal
   // interruption never unmounts this component in the first place, so it
@@ -183,7 +176,73 @@ export default function NewPostForm({
     }
   }
 
+  // Inside the embed, mutations go through embedFetch to the bearer-
+  // authenticated /api/embed/* routes instead of these Server Actions,
+  // since a Server Action invocation can't carry an Authorization header
+  // (see the implementation plan). Outside the embed this is byte-for-byte
+  // the same createPostAction/uploadPostImageAction flow as before —
+  // nothing about the direct Public Portal path changes.
+  async function doSubmitEmbed() {
+    let imageUrl: string | undefined;
+
+    if (imageFile) {
+      const imageFormData = new FormData();
+      imageFormData.set("image", imageFile);
+      const uploadRes = await embedFetch("/api/embed/posts/upload-image", {
+        method: "POST",
+        body: imageFormData,
+      });
+      if (uploadRes.status === 401) {
+        setSignedIn(false);
+        setAuthOpen(true);
+        return;
+      }
+      if (!uploadRes.ok) {
+        const data = await uploadRes.json().catch(() => null);
+        setImageError(data?.error ?? "Something went wrong.");
+        return;
+      }
+      imageUrl = (await uploadRes.json()).url;
+    }
+
+    const postRes = await embedFetch("/api/embed/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        boardId,
+        workspaceId,
+        title: title.trim(),
+        body: body.trim() || undefined,
+        categoryId: categoryId || undefined,
+        imageUrl,
+      }),
+    });
+
+    if (postRes.status === 401) {
+      setSignedIn(false);
+      setAuthOpen(true);
+      return;
+    }
+    if (!postRes.ok) {
+      const data = await postRes.json().catch(() => null);
+      if (data?.field === "title") {
+        setTitleError(data.error);
+      } else {
+        setGeneralError(data?.error ?? "Something went wrong.");
+      }
+      return;
+    }
+
+    clearDraft(boardId);
+    setSubmitted(true);
+  }
+
   async function doSubmit() {
+    if (isEmbed) {
+      await doSubmitEmbed();
+      return;
+    }
+
     let imageUrl: string | undefined;
 
     if (imageFile) {
@@ -191,15 +250,6 @@ export default function NewPostForm({
       imageFormData.set("image", imageFile);
       const uploadResult = await uploadPostImageAction(imageFormData);
       if (!uploadResult.success) {
-        // A session can go stale between page load and this submit (expiry,
-        // a sign-out elsewhere). Reopen the in-place prompt instead of
-        // leaving the visitor stuck behind a generic error — nothing here
-        // has been touched yet, so re-submitting after auth retries cleanly.
-        if (uploadResult.code === "UNAUTHENTICATED" && isEmbed) {
-          setSignedIn(false);
-          setAuthOpen(true);
-          return;
-        }
         setImageError(uploadResult.error);
         return;
       }
@@ -216,11 +266,6 @@ export default function NewPostForm({
     });
 
     if (!result.success) {
-      if (result.code === "UNAUTHENTICATED" && isEmbed) {
-        setSignedIn(false);
-        setAuthOpen(true);
-        return;
-      }
       if (result.field === "title") {
         setTitleError(result.error);
       } else {
@@ -231,15 +276,6 @@ export default function NewPostForm({
 
     clearDraft(boardId);
 
-    // Inside the embed, stay put — show a success state instead of
-    // navigating to the new post's detail page, matching the widget's
-    // "never leave the page" premise. Outside the embed, keep the existing
-    // Public Portal behavior unchanged.
-    if (isEmbed) {
-      setSubmitted(true);
-      return;
-    }
-
     router.push(
       `/${workspaceSlug}/b/${boardSlug}/p/${result.data.postSlug}${embedQuery}`
     );
@@ -248,10 +284,16 @@ export default function NewPostForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setTitleError(null);
+    setCategoryError(null);
     setGeneralError(null);
 
     if (title.trim().length < 3) {
       setTitleError("Title must be at least 3 characters.");
+      return;
+    }
+
+    if (categories.length > 0 && !categoryId) {
+      setCategoryError("Choose a category.");
       return;
     }
 
@@ -396,10 +438,19 @@ export default function NewPostForm({
               </label>
               <Select
                 disabled={isPending}
-                onValueChange={setCategoryId}
+                onValueChange={(v) => {
+                  setCategoryId(v);
+                  if (categoryError) {
+                    setCategoryError(null);
+                  }
+                }}
                 value={categoryId}
               >
-                <SelectTrigger className="w-full" id="post-category">
+                <SelectTrigger
+                  aria-invalid={!!categoryError}
+                  className="w-full"
+                  id="post-category"
+                >
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -410,6 +461,9 @@ export default function NewPostForm({
                   ))}
                 </SelectContent>
               </Select>
+              {categoryError && (
+                <p className="mt-1 text-xs text-ir-danger">{categoryError}</p>
+              )}
             </div>
           )}
 

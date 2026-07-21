@@ -14,6 +14,10 @@ interface RoadmapBoardProps {
   // sets this; it's read-only for visitors.
   canManage?: boolean;
   columns: RoadmapStatusColumn[];
+  // Threaded through to each card's post-detail link so opening an item from
+  // the embedded roadmap stays inside the widget instead of dropping back to
+  // full Public Portal chrome. Empty/undefined outside the embed.
+  embedQuery?: string;
   // Whether a category/search filter is currently narrowing `columns` — an
   // empty column reads differently ("No matches") than a genuinely empty
   // roadmap ("Nothing in {name} yet.").
@@ -46,6 +50,7 @@ export function RoadmapBoard({
   isFiltering = false,
   useWorkspaceLinks,
   canManage,
+  embedQuery,
 }: RoadmapBoardProps) {
   const router = useRouter();
   const [cols, setCols] = useState<Cols>(() => buildCols(columns));
@@ -116,6 +121,7 @@ export function RoadmapBoard({
               canManage={canManage}
               color={col.color}
               draggingId={drag?.post.id ?? null}
+              embedQuery={embedQuery}
               isDropTarget={dropTarget === col.id}
               isFiltering={isFiltering}
               isSignedIn={isSignedIn}

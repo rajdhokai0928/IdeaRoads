@@ -3,10 +3,13 @@
 import { CaretUpIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
 import { useIsEmbed } from "@/components/embed/use-is-embed";
+import { embedFetch } from "@/lib/embed/fetch";
+import { useEmbedVoteState } from "@/lib/embed/personalization-context";
+import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
 
 interface VoteButtonProps {
   // Smaller, borderless, label-less rendering for dense card/table layouts —
@@ -35,18 +38,31 @@ export default function VoteButton({
   const [count, setCount] = useState(initialCount);
   const [hasVoted, setHasVoted] = useState(initialHasVoted);
   const [isPending, setIsPending] = useState(false);
-  const [signedIn, setSignedIn] = useState(isSignedIn);
+  const [signedIn, setSignedIn] = useEmbedSignedIn(isEmbed, isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
 
-  // Another embedded element (comment box, feedback button) may complete
-  // sign-in and call router.refresh() — that re-renders this component with
-  // a new isSignedIn prop, but useState only reads its initial value once, so
-  // sync it explicitly rather than staying stuck showing signed-out.
+  // Server-rendered `initialHasVoted` is computed from a cookie session,
+  // which is always null for an embed visitor authenticated via bearer
+  // token — always shows "not voted" on reload even when they already have.
+  // Correct it once the embed personalization fetch resolves (no-op outside
+  // embed, or before any provider is wired up a page — see
+  // lib/embed/personalization-context.tsx). Guarded by a ref rather than
+  // applied unconditionally: the personalization fetch can be triggered by
+  // this SAME sign-in (the provider re-fetches on every token change, not
+  // just at mount) and can resolve AFTER a vote the visitor casts in the
+  // same flow (e.g. sign in via this button's own dialog, which immediately
+  // calls castVote()) — without the guard, a slower correction response
+  // carrying pre-vote data would clobber the just-cast vote back to
+  // "not voted". Once the visitor has interacted locally, their own action
+  // is authoritative for the rest of this component's lifetime.
+  const hasLocalActionRef = useRef(false);
+  const correctedHasVoted = useEmbedVoteState(postId, initialHasVoted);
   useEffect(() => {
-    if (isSignedIn) {
-      setSignedIn(true);
+    if (hasLocalActionRef.current) {
+      return;
     }
-  }, [isSignedIn]);
+    setHasVoted(correctedHasVoted);
+  }, [correctedHasVoted]);
 
   const disabled = isLocked || isArchived || isPending;
   const tooltip = isLocked
@@ -56,6 +72,7 @@ export default function VoteButton({
       : undefined;
 
   async function castVote() {
+    hasLocalActionRef.current = true;
     const wasVoted = hasVoted;
     const prevCount = count;
     setHasVoted(!wasVoted);
@@ -64,7 +81,7 @@ export default function VoteButton({
 
     try {
       const method = wasVoted ? "DELETE" : "POST";
-      const res = await fetch(`/api/posts/${postId}/vote`, { method });
+      const res = await embedFetch(`/api/posts/${postId}/vote`, { method });
 
       if (!res.ok) {
         // Revert optimistic update

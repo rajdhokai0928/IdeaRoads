@@ -1,6 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { REACTION_EMOJIS } from "@/config/platform";
 import {
+  changelogComments,
   changelogCommentReactions,
   changelogEntryReactions,
 } from "@/db/schema";
@@ -89,6 +90,59 @@ export async function getReactionsForEntries(
   return grouped;
 }
 
+// Which emojis THIS user has reacted with on the entry itself — mirrors
+// lib/comments/reactions.getOwnReactedEmojisForPosts, used by the embed
+// personalization endpoint to correct `hasReacted` after mount.
+export async function getOwnReactedEntryEmojis(
+  changelogEntryId: string,
+  userId: string
+): Promise<string[]> {
+  const rows = await db
+    .select({ emoji: changelogEntryReactions.emoji })
+    .from(changelogEntryReactions)
+    .where(
+      and(
+        eq(changelogEntryReactions.changelogEntryId, changelogEntryId),
+        eq(changelogEntryReactions.userId, userId)
+      )
+    );
+
+  return rows.map((r) => r.emoji);
+}
+
+// Batched version of getOwnReactedEntryEmojis for a list of entries (e.g.
+// the public changelog index, which renders one ChangelogReactions per
+// entry) — mirrors getReactionsForEntries' batching for the same reason.
+export async function getOwnReactedEntryEmojisBatch(
+  changelogEntryIds: string[],
+  userId: string
+): Promise<Map<string, string[]>> {
+  if (changelogEntryIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await db
+    .select({
+      changelogEntryId: changelogEntryReactions.changelogEntryId,
+      emoji: changelogEntryReactions.emoji,
+    })
+    .from(changelogEntryReactions)
+    .where(
+      and(
+        inArray(changelogEntryReactions.changelogEntryId, changelogEntryIds),
+        eq(changelogEntryReactions.userId, userId)
+      )
+    );
+
+  const map = new Map<string, string[]>();
+  for (const row of rows) {
+    const arr = map.get(row.changelogEntryId) ?? [];
+    arr.push(row.emoji);
+    map.set(row.changelogEntryId, arr);
+  }
+  return map;
+}
+
 export async function toggleEntryReaction(
   changelogEntryId: string,
   emoji: string,
@@ -166,6 +220,40 @@ export async function getReactionsForChangelogComments(
       reactorNames: row.reactorNames ?? [],
     });
     map.set(row.commentId, existing);
+  }
+  return map;
+}
+
+// Mirrors getOwnReactedEmojisForPosts (lib/comments/reactions.ts) for
+// changelog comments — scoped by changelogEntryId (the page-level provider's
+// existing trigger for changelog comment ownership) via a join, rather than
+// a caller-supplied comment-id list.
+export async function getOwnReactedEmojisForChangelogEntry(
+  changelogEntryId: string,
+  userId: string
+): Promise<Map<string, string[]>> {
+  const rows = await db
+    .select({
+      commentId: changelogCommentReactions.commentId,
+      emoji: changelogCommentReactions.emoji,
+    })
+    .from(changelogCommentReactions)
+    .innerJoin(
+      changelogComments,
+      eq(changelogCommentReactions.commentId, changelogComments.id)
+    )
+    .where(
+      and(
+        eq(changelogComments.changelogEntryId, changelogEntryId),
+        eq(changelogCommentReactions.userId, userId)
+      )
+    );
+
+  const map = new Map<string, string[]>();
+  for (const row of rows) {
+    const arr = map.get(row.commentId) ?? [];
+    arr.push(row.emoji);
+    map.set(row.commentId, arr);
   }
   return map;
 }

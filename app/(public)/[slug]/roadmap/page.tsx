@@ -17,6 +17,7 @@ import { PortalHeader } from "@/components/workspace/portal-header";
 import { getCurrentSession } from "@/lib/authz";
 import { listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import { EmbedPersonalizationProvider } from "@/lib/embed/personalization-context";
 import {
   buildEmbedQuery,
   embedWrapperProps,
@@ -35,6 +36,7 @@ interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{
     accentColor?: string;
+    board?: string;
     category?: string;
     embed?: string;
     q?: string;
@@ -57,8 +59,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RoadmapPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { category, q, sort, embed, theme, accentColor } = await searchParams;
-  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { category, q, sort, embed, theme, accentColor, board } =
+    await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor, board });
   const { isEmbed } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
@@ -139,103 +142,116 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
   // embed, always go straight to the form — it handles a signed-out guest
   // itself (in-place auth at submit time) rather than bouncing them to
   // /signin before they can even start typing.
-  const feedbackHref = activeBoards[0]
+  // Prefer the board this embed instance is configured for (if it's still a
+  // valid target) over an arbitrary first board, so "+ Feedback" from the
+  // embedded roadmap submits to the same board the widget shows elsewhere.
+  const feedbackBoard =
+    activeBoards.find((b) => b.slug === embedParams.board) ?? activeBoards[0];
+  const feedbackHref = feedbackBoard
     ? isSignedIn || isEmbed
-      ? `/${slug}/b/${activeBoards[0].slug}/new${embedQuery}`
-      : `/signin?next=${encodeURIComponent(`/${slug}/b/${activeBoards[0].slug}/new${embedQuery}`)}`
+      ? `/${slug}/b/${feedbackBoard.slug}/new${embedQuery}`
+      : `/signin?next=${encodeURIComponent(`/${slug}/b/${feedbackBoard.slug}/new${embedQuery}`)}`
     : null;
 
   return (
-    <div
-      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
-      style={embedWrapper.style}
+    <EmbedPersonalizationProvider
+      isEmbed={isEmbed}
+      postIds={derivedColumns.flatMap((c) => c.posts.map((p) => p.id))}
+      workspaceId={workspace.id}
     >
-      {isEmbed && <EmbedResizeReporter />}
-      {isEmbed && (
-        <EmbedNav
-          active="roadmap"
-          boards={publicBoards}
-          changelogPublic={workspace.changelogPublic}
-          embedQuery={embedQuery}
-          isSignedIn={isSignedIn}
-          roadmapPublic={workspace.roadmapPublic}
-          slug={slug}
-        />
-      )}
-      {!isEmbed && (
-        <PortalHeader
-          active="roadmap"
-          boards={publicBoards}
-          changelogPublic={workspace.changelogPublic}
-          currentPath={`/${slug}/roadmap`}
-          isMember={isMember}
-          isSignedIn={isSignedIn}
-          logoUrl={workspace.logoUrl}
-          roadmapPublic={workspace.roadmapPublic}
-          slug={slug}
-          userEmail={session?.user.email}
-          userImage={session?.user.image}
-          userName={session?.user.name}
-          workspaceName={workspace.name}
-        />
-      )}
-      {!isEmbed && <PoweredByBadge />}
+      <div
+        className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
+        style={embedWrapper.style}
+      >
+        {isEmbed && <EmbedResizeReporter />}
+        {isEmbed && (
+          <EmbedNav
+            active="roadmap"
+            boards={publicBoards}
+            changelogPublic={workspace.changelogPublic}
+            embedQuery={embedQuery}
+            feedbackBoardSlug={embedParams.board}
+            isSignedIn={isSignedIn}
+            roadmapPublic={workspace.roadmapPublic}
+            slug={slug}
+          />
+        )}
+        {!isEmbed && (
+          <PortalHeader
+            active="roadmap"
+            boards={publicBoards}
+            changelogPublic={workspace.changelogPublic}
+            currentPath={`/${slug}/roadmap`}
+            isMember={isMember}
+            isSignedIn={isSignedIn}
+            logoUrl={workspace.logoUrl}
+            roadmapPublic={workspace.roadmapPublic}
+            slug={slug}
+            userEmail={session?.user.email}
+            userImage={session?.user.image}
+            userName={session?.user.name}
+            workspaceName={workspace.name}
+          />
+        )}
+        {!isEmbed && <PoweredByBadge />}
 
-      <main className="mx-auto flex max-w-5xl flex-col" id="main-content">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ir-border px-4 py-6 sm:px-8">
-          <div>
-            <h1 className="text-xl font-semibold text-ir-heading">Roadmap</h1>
-            <p className="mt-1 text-sm text-ir-muted">
-              {totalPosts === 0
-                ? "No items on the roadmap yet."
-                : `${totalPosts} item${totalPosts === 1 ? "" : "s"} across all columns`}
-            </p>
-          </div>
-          {feedbackHref && (
-            <Button asChild>
-              <Link href={feedbackHref}>
-                <PlusIcon data-icon="inline-start" />
-                Feedback
-              </Link>
-            </Button>
-          )}
-        </div>
-
-        {syncEnabled ? (
-          <>
-            <RoadmapFilters
-              activeCategoryId={validCategoryId}
-              activeSearch={searchQuery}
-              activeSort={validSort}
-              categories={categories}
-            />
-            <div className="flex-1">
-              <RoadmapBoard
-                columns={derivedColumns}
-                isFiltering={!!(validCategoryId || searchQuery)}
-                isSignedIn={isSignedIn}
-                workspaceSlug={slug}
-              />
+        <main className="mx-auto flex max-w-5xl flex-col" id="main-content">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ir-border px-4 py-6 sm:px-8">
+            <div>
+              <h1 className="text-xl font-semibold text-ir-heading">Roadmap</h1>
+              <p className="mt-1 text-sm text-ir-muted">
+                {totalPosts === 0
+                  ? "No items on the roadmap yet."
+                  : `${totalPosts} item${totalPosts === 1 ? "" : "s"} across all columns`}
+              </p>
             </div>
-          </>
-        ) : (
-          <div className="flex-1">
-            {/* Manual roadmap is read-only on the public portal. The board
+            {feedbackHref && (
+              <Button asChild>
+                <Link href={feedbackHref}>
+                  <PlusIcon data-icon="inline-start" />
+                  Feedback
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          {syncEnabled ? (
+            <>
+              <RoadmapFilters
+                activeCategoryId={validCategoryId}
+                activeSearch={searchQuery}
+                activeSort={validSort}
+                categories={categories}
+              />
+              <div className="flex-1">
+                <RoadmapBoard
+                  columns={derivedColumns}
+                  embedQuery={embedQuery}
+                  isFiltering={!!(validCategoryId || searchQuery)}
+                  isSignedIn={isSignedIn}
+                  workspaceSlug={slug}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex-1">
+              {/* Manual roadmap is read-only on the public portal. The board
               still reads its (unused, since canManage is false) manage/add
               controls from this context internally, so it needs a provider
               here too even though the public page never renders the
               search/manage/add trigger buttons that normally supply it. */}
-            <ManualRoadmapProvider>
-              <ManualRoadmapBoard
-                canManage={false}
-                items={manualItems}
-                statuses={manualStatuses}
-                workspaceId={workspace.id}
-              />
-            </ManualRoadmapProvider>
-          </div>
-        )}
-      </main>
-    </div>
+              <ManualRoadmapProvider>
+                <ManualRoadmapBoard
+                  canManage={false}
+                  items={manualItems}
+                  statuses={manualStatuses}
+                  workspaceId={workspace.id}
+                />
+              </ManualRoadmapProvider>
+            </div>
+          )}
+        </main>
+      </div>
+    </EmbedPersonalizationProvider>
   );
 }

@@ -4,7 +4,7 @@ import {
   DotsThreeIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 
 // Build the compact page window with ellipses, e.g. for page 6 of 20:

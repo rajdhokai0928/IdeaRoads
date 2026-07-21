@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins/admin";
+import { bearer } from "better-auth/plugins/bearer";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { magicLink } from "better-auth/plugins/magic-link";
 import { headers } from "next/headers";
@@ -111,6 +112,17 @@ export const auth = betterAuth({
     trustedProviders: ["google", "magic-link", "email-otp"],
   },
   plugins: [
+    // Bearer-token auth is additive: cookies keep working exactly as
+    // before for the Admin Panel and Public Portal. This exists solely
+    // for the embed widget, whose iframe is always cross-site relative
+    // to whatever page embeds it — its session cookie gets
+    // SameSite=Lax-blocked by the browser and never persists (confirmed
+    // live via the Chrome DevTools Protocol; see the implementation
+    // plan). A request with no Authorization header is completely
+    // unaffected by this plugin — see node_modules/better-auth/dist/
+    // plugins/bearer/index.mjs, whose `before` hook only activates when
+    // one is present.
+    bearer(),
     admin({
       impersonationSessionDuration: 3600,
       allowImpersonatingAdmins: false,

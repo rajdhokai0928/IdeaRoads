@@ -98,6 +98,26 @@ export async function listChangelogCommentsWithReplies(
   }));
 }
 
+// Mirrors lib/comments/queries.getOwnCommentIds for changelog comments —
+// used by the embed personalization endpoint, which resolves identity from a
+// bearer token instead of a cookie.
+export async function getOwnChangelogCommentIds(
+  changelogEntryId: string,
+  userId: string
+): Promise<Set<string>> {
+  const rows = await db
+    .select({ id: changelogComments.id })
+    .from(changelogComments)
+    .where(
+      and(
+        eq(changelogComments.changelogEntryId, changelogEntryId),
+        eq(changelogComments.authorId, userId)
+      )
+    );
+
+  return new Set(rows.map((r) => r.id));
+}
+
 export async function getChangelogCommentById(commentId: string) {
   const [row] = await db
     .select()

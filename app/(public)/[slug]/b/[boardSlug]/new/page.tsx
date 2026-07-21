@@ -41,6 +41,10 @@ export default async function NewPostPage({ params, searchParams }: Props) {
   const { slug, boardSlug } = await params;
   const { embed, theme, accentColor } = await searchParams;
   const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  // This page's own route param is the authoritative "current board" —
+  // override whatever (if anything) was in the incoming URL so outgoing
+  // links (Roadmap/Changelog nav, etc.) always carry the right one forward.
+  embedParams.board = boardSlug;
   const { isEmbed } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
@@ -95,6 +99,7 @@ export default async function NewPostPage({ params, searchParams }: Props) {
           boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
           embedQuery={embedQuery}
+          feedbackBoardSlug={boardSlug}
           isSignedIn={!!session}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}

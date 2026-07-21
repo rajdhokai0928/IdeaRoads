@@ -4,7 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ApiKeyCodeBlock } from "./api-key-code-block";
+import { CodeBlock } from "./code-block";
 
 interface EmbedDocsProps {
   appUrl: string;
@@ -35,13 +35,15 @@ export function EmbedDocs({ appUrl }: EmbedDocsProps) {
                 {appUrl}/{"{workspace}"}/b/{"{board}"}
               </code>
               , so it's public and anonymous by design — visitors don't sign in
-              with anything related to your account, and no API key is involved.
-              That's a separate feature: API keys authenticate server-to-server
-              calls to the read-only{" "}
-              <code className="text-xs rounded-ir-xs bg-ir-muted-surface px-1 py-0.5">
-                /api/v1/*
-              </code>{" "}
-              endpoints, not the embed widget.
+              with anything related to your account.
+            </p>
+            <p className="text-ir-muted">
+              Visitors get a full experience without leaving your site — a
+              Feedback / Roadmap / Changelog tab bar (whichever of those you've
+              made public), browsing, submitting feedback, voting, and
+              commenting all happen in place, with sign-in itself handled by an
+              in-panel email code so nothing ever navigates away from the
+              widget.
             </p>
           </AccordionContent>
         </AccordionItem>
@@ -100,7 +102,7 @@ export function EmbedDocs({ appUrl }: EmbedDocsProps) {
               one to copy — it always includes the board you've selected. A
               typical inline embed looks like this:
             </p>
-            <ApiKeyCodeBlock
+            <CodeBlock
               code={`<script src="${appUrl}/widget.js"
         data-workspace="acme"
         data-board="feature-requests"
@@ -214,11 +216,14 @@ export function EmbedDocs({ appUrl }: EmbedDocsProps) {
               </li>
               <li>
                 <strong className="text-ir-heading">
-                  Visitors can't submit feedback from the widget
+                  A visitor is asked to sign in before submitting, voting, or
+                  commenting
                 </strong>{" "}
-                — submitting, voting, and commenting still require the visitor
-                to sign in, same as the public portal. The widget only skips
-                your sign-in, not theirs.
+                — that's expected; those actions still require a visitor
+                account, same as the public portal. Inside the widget it's a
+                one-time email code entered without leaving the panel, and
+                whatever they were doing (a draft, a vote, a comment) resumes
+                automatically once they're signed in.
               </li>
             </ul>
           </AccordionContent>
@@ -240,11 +245,6 @@ export function EmbedDocs({ appUrl }: EmbedDocsProps) {
                 Use the floating launcher for marketing/product pages where
                 feedback is secondary, and inline for a dedicated feedback page
                 or in-app panel.
-              </li>
-              <li>
-                The widget never needs an API key — if you're building a custom
-                integration instead of using this script, that's what API keys
-                are for (see Settings → API Keys).
               </li>
             </ul>
           </AccordionContent>

@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { setEmbedToken } from "@/lib/embed/token";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -120,6 +121,34 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
 
   useEffect(() => () => popupRef.current?.close(), []);
 
+  // The Google popup relay: app/embed-auth-complete/page.tsx posts its
+  // session token back here once it detects a signed-in session, so the
+  // Google path captures a bearer token the same way the OTP path does
+  // below, instead of relying on the poll/focus-check above (which only
+  // confirms a cookie session exists — useless for the embed's own
+  // subsequent bearer-authenticated requests). Origin-checked: popup and
+  // this panel are both served from the portal origin, so comparing
+  // against this window's own origin is exact, not a loosened check.
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      const data = event.data;
+      if (
+        data?.source !== "idearoads-widget" ||
+        data.type !== "embed-auth-token" ||
+        typeof data.token !== "string"
+      ) {
+        return;
+      }
+      setEmbedToken(data.token);
+      onAuthenticatedRef.current();
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   async function sendCode() {
     setFormError(null);
     const result = await authClient.emailOtp.sendVerificationOtp({
@@ -164,6 +193,9 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
     if (result.error) {
       setFormError(result.error.message ?? "Invalid code. Please try again.");
       return;
+    }
+    if (result.data?.token) {
+      setEmbedToken(result.data.token);
     }
     onAuthenticatedRef.current();
   }

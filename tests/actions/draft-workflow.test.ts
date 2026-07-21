@@ -26,9 +26,6 @@ vi.mock("@/lib/authz", async (importOriginal) => {
 vi.mock("@/lib/worker/enqueue", () => ({
   enqueueJob: vi.fn(async () => undefined),
 }));
-vi.mock("@/lib/webhooks/dispatch", () => ({
-  dispatchWebhookEvent: vi.fn(async () => undefined),
-}));
 // revalidatePath needs a Next request/static-generation context that the test
 // runner has no way to provide; it's a no-op concern for these assertions.
 vi.mock("next/cache", () => ({

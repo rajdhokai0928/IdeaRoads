@@ -10,7 +10,6 @@ import type { CommentApi, CommentData, ReplyData } from "./types";
 interface CommentThreadProps {
   api?: CommentApi;
   canModerate: boolean;
-  currentUserId: string | null;
   initialComments: CommentData[];
   isLocked: boolean;
   isSignedIn: boolean;
@@ -29,7 +28,6 @@ export default function CommentThread({
   postId,
   isSignedIn,
   isLocked,
-  currentUserId,
   canModerate,
 }: CommentThreadProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -127,7 +125,6 @@ export default function CommentThread({
               api={api}
               canModerate={canModerate}
               comment={thread.comment}
-              currentUserId={currentUserId}
               depth={0}
               isLocked={isLocked}
               isReplyOpen={thread.showReplyForm}
@@ -148,7 +145,6 @@ export default function CommentThread({
                       api={api}
                       canModerate={canModerate}
                       comment={reply}
-                      currentUserId={currentUserId}
                       depth={1}
                       isLocked={isLocked}
                       isSignedIn={isSignedIn}

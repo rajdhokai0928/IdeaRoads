@@ -8,8 +8,15 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useIsEmbed } from "@/components/embed/use-is-embed";
 import { FeedbackBody } from "@/components/posts/feedback-body";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { embedFetch } from "@/lib/embed/fetch";
+import {
+  useEmbedCommentOwnership,
+  useEmbedIsModerator,
+} from "@/lib/embed/personalization-context";
+import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
 import CommentEditForm from "./comment-edit-form";
 import CommentReactions from "./comment-reactions";
 import type { CommentApi, CommentData, ReplyData } from "./types";
@@ -31,7 +38,6 @@ interface CommentItemProps {
   api?: CommentApi;
   canModerate: boolean;
   comment: CommentData | ReplyData;
-  currentUserId: string | null;
   depth?: number;
   isLocked: boolean;
   isReplyOpen?: boolean;
@@ -43,7 +49,6 @@ interface CommentItemProps {
 export default function CommentItem({
   api,
   comment,
-  currentUserId,
   canModerate,
   isLocked,
   isReplyOpen = false,
@@ -60,16 +65,33 @@ export default function CommentItem({
   // Local copy of the body so an inline edit shows immediately (optimistic).
   const [body, setBody] = useState(comment.body);
 
+  // Server-rendered `isSignedIn`/`comment.isOwn` are computed from a cookie
+  // session, always false/false for an embed visitor authenticated via
+  // bearer token — correct them the same way VoteButton/EmbedNav already do
+  // (see lib/embed/personalization-context.tsx and
+  // lib/embed/use-embed-signed-in.ts). No-op outside the embed.
+  const isEmbed = useIsEmbed();
+  const [signedIn] = useEmbedSignedIn(isEmbed, isSignedIn);
+  const isOwn = useEmbedCommentOwnership(comment.id, comment.isOwn);
+  // `canModerate` is also cookie-derived (getWorkspaceMember via
+  // getCurrentSession), always false for a bearer-authenticated embed
+  // visitor even if they really are a workspace admin/owner. Corrected here
+  // for the moderator-delete privilege only — the pending-approval queue
+  // itself still requires the server to have fetched unapproved comments in
+  // the first place (gated on the SAME uncorrected canModerate at query
+  // time), which this client-side correction can't retroactively provide;
+  // that's a known, tracked follow-up, not something this fixes.
+  const isModerator = useEmbedIsModerator(canModerate);
+
   const displayName = comment.isDeleted
     ? "Deleted"
     : (comment.authorName ?? "User");
   const initials = getInitials(comment.authorName);
 
   const canDelete =
-    !comment.isDeleted &&
-    (canModerate || (!!currentUserId && !!comment.authorName));
+    !comment.isDeleted && (isModerator || (signedIn && !!comment.authorName));
   // Only the comment's own author may edit it (never a moderator).
-  const canEdit = isSignedIn && comment.isOwn && !comment.isDeleted;
+  const canEdit = signedIn && isOwn && !comment.isDeleted;
   // Replying to a deleted comment stays allowed — the thread is preserved
   // (Feature 07), so a deleted comment keeps its place as a valid reply target.
   const canReply = depth === 0 && !isLocked && onReply;
@@ -78,7 +100,7 @@ export default function CommentItem({
   async function handleConfirmDelete() {
     setIsDeleting(true);
     try {
-      const res = await fetch(`${commentBaseUrl}/${comment.id}`, {
+      const res = await embedFetch(`${commentBaseUrl}/${comment.id}`, {
         method: "DELETE",
       });
       if (res.ok || res.status === 204) {
@@ -106,7 +128,7 @@ export default function CommentItem({
           className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-ir-muted-surface text-xs font-semibold text-ir-muted ${depth === 1 ? "size-6" : "size-7"} ${comment.isDeleted ? "opacity-50" : ""}`}
         >
           {comment.authorAvatar && !avatarFailed ? (
-            // eslint-disable-next-line @next/next/no-img-element
+            // biome-ignore lint/performance/noImgElement: dynamic user-uploaded avatar URL, not known at build time for next/image
             // biome-ignore lint/a11y/noNoninteractiveElementInteractions: onError is an image-load fallback, not a user interaction
             <img
               alt={displayName}

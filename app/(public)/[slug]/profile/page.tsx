@@ -31,6 +31,7 @@ interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{
     accentColor?: string;
+    board?: string;
     embed?: string;
     theme?: string;
   }>;
@@ -46,8 +47,8 @@ export default async function PublicProfilePage({
   searchParams,
 }: Props) {
   const { slug } = await params;
-  const { embed, theme, accentColor } = await searchParams;
-  const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  const { embed, theme, accentColor, board } = await searchParams;
+  const embedParams = parseEmbedParams({ embed, theme, accentColor, board });
   const { isEmbed } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
@@ -117,6 +118,7 @@ export default async function PublicProfilePage({
           boards={publicBoards}
           changelogPublic={workspace.changelogPublic}
           embedQuery={embedQuery}
+          feedbackBoardSlug={embedParams.board}
           isSignedIn={true}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}

@@ -15,6 +15,7 @@ interface RoadmapColumnProps {
   canManage?: boolean;
   color: string;
   draggingId?: string | null;
+  embedQuery?: string;
   isDropTarget?: boolean;
   isFiltering?: boolean;
   isSignedIn: boolean;
@@ -36,6 +37,7 @@ export function RoadmapColumn({
   workspaceSlug,
   isSignedIn,
   useWorkspaceLinks,
+  embedQuery,
   canManage = false,
   draggingId = null,
   isDropTarget = false,
@@ -120,6 +122,7 @@ export function RoadmapColumn({
                   >
                     <RoadmapPostCard
                       canManage={canManage}
+                      embedQuery={embedQuery}
                       isSignedIn={isSignedIn}
                       post={post}
                       useWorkspaceLinks={useWorkspaceLinks}

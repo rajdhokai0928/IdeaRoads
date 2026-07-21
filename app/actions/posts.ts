@@ -1,23 +1,15 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { WORKSPACE_MEMBER } from "@/config/platform";
-import {
-  boards,
-  categories,
-  user,
-  votes,
-  workspaceMembers,
-  workspaces,
-} from "@/db/schema";
+import { boards, user, votes, workspaces } from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { getCurrentSession, requireSession } from "@/lib/authz";
-import { getDefaultCategory } from "@/lib/categories/queries";
 import { db } from "@/lib/db";
-import { isBlocked } from "@/lib/moderation/queries";
 import { createNotification } from "@/lib/notifications/create";
+import { enqueueNewPostAlerts } from "@/lib/posts/notify";
 import { mergePost } from "@/lib/posts/merge";
 import {
   approvePost,
@@ -35,9 +27,8 @@ import {
   updatePost,
   updatePostStatus,
 } from "@/lib/posts/queries";
-import { uploadFile } from "@/lib/storage";
-import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
-import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
+import { submitFeedback } from "@/lib/posts/submit-feedback";
+import { uploadPostImage } from "@/lib/posts/upload-image";
 import { enqueueJob } from "@/lib/worker/enqueue";
 import { JOB_NAMES } from "@/lib/worker/job-types";
 import { getWorkspaceStatusBySlug } from "@/lib/workspace-statuses/queries";
@@ -48,23 +39,6 @@ type ActionResult<T = undefined> =
   | { success: false; error: string; field?: string; code?: string };
 
 // ─── Create Post ──────────────────────────────────────────────────────────────
-
-const createPostSchema = z.object({
-  boardId: z.string().min(1),
-  workspaceId: z.string().min(1),
-  title: z
-    .string()
-    .min(3, "Title must be at least 3 characters.")
-    .max(150, "Title must be 150 characters or fewer."),
-  body: z
-    .string()
-    .max(10_000, "Description must be 10,000 characters or fewer.")
-    .optional(),
-  categoryId: z.string().min(1).optional(),
-  imageUrl: z.url().optional(),
-  status: z.string().min(1).optional(),
-  saveAsDraft: z.boolean().optional(),
-});
 
 export async function createPostAction(input: {
   boardId: string;
@@ -97,232 +71,43 @@ export async function createPostAction(input: {
     };
   }
 
-  const parsed = createPostSchema.safeParse(input);
-  if (!parsed.success) {
-    const first = parsed.error.issues[0];
+  // The actual creation logic (validation, moderation, category/status
+  // resolution, the DB write, audit log, admin alerts) is shared with
+  // app/api/embed/posts, the bearer-authenticated equivalent of this
+  // action for the embed widget — see lib/posts/submit-feedback.ts.
+  const result = await submitFeedback(session.user, input);
+  if (!result.ok) {
     return {
       success: false,
-      error: first?.message ?? "Invalid input.",
-      field: first?.path[0] as string | undefined,
+      error: result.error,
+      field: result.field,
+      code: result.code,
     };
-  }
-
-  // Verify the board belongs to the workspace and check visibility.
-  // Any signed-in User may submit on a public, non-archived board; private or
-  // archived boards remain restricted to workspace members.
-  const [boardRow] = await db
-    .select({
-      slug: boards.slug,
-      workspaceId: boards.workspaceId,
-      isPublic: boards.isPublic,
-      isArchived: boards.isArchived,
-    })
-    .from(boards)
-    .where(eq(boards.id, parsed.data.boardId))
-    .limit(1);
-
-  if (!boardRow || boardRow.workspaceId !== parsed.data.workspaceId) {
-    return { success: false, error: "Board not found." };
-  }
-  if (boardRow.isArchived) {
-    return {
-      success: false,
-      error: "This board is no longer accepting feedback.",
-    };
-  }
-
-  const actorMember = await getWorkspaceMember(
-    parsed.data.workspaceId,
-    session.user.id
-  );
-  if (!boardRow.isPublic && !actorMember) {
-    return { success: false, error: "This board is private." };
-  }
-
-  // Block check
-  const blocked = await isBlocked(parsed.data.workspaceId, {
-    userId: session.user.id,
-    userEmail: session.user.email,
-  });
-  if (blocked) {
-    return {
-      success: false,
-      error: "You are not allowed to post in this workspace.",
-      code: "BLOCKED",
-    };
-  }
-
-  // Fetch workspace moderation settings
-  const [workspaceRow] = await db
-    .select({
-      slug: workspaces.slug,
-      moderationMode: workspaces.moderationMode,
-      spamKeywords: workspaces.spamKeywords,
-    })
-    .from(workspaces)
-    .where(eq(workspaces.id, parsed.data.workspaceId))
-    .limit(1);
-
-  // Spam keyword check
-  const spamKeywords = workspaceRow?.spamKeywords ?? [];
-  const titleLower = parsed.data.title.toLowerCase();
-  const bodyLower = (parsed.data.body ?? "").toLowerCase();
-  const isSpam = spamKeywords.some(
-    (kw) => titleLower.includes(kw) || bodyLower.includes(kw)
-  );
-
-  // Determine approval status
-  const moderationMode = workspaceRow?.moderationMode ?? "off";
-  const isApproved =
-    !isSpam &&
-    moderationMode !== "manual" &&
-    (moderationMode !== "auto" || !isSpam);
-
-  // Every post always has a category. Validate an explicit choice belongs to
-  // this workspace (cross-tenant safety); otherwise fall back to the
-  // workspace's default category rather than leaving it unset.
-  let categoryId: string | null = null;
-  if (parsed.data.categoryId) {
-    const [category] = await db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(
-        and(
-          eq(categories.id, parsed.data.categoryId),
-          eq(categories.workspaceId, parsed.data.workspaceId)
-        )
-      )
-      .limit(1);
-    if (!category) {
-      return {
-        success: false,
-        error: "Invalid category.",
-        field: "categoryId",
-      };
-    }
-    categoryId = category.id;
-  } else {
-    const defaultCategory = await getDefaultCategory(parsed.data.workspaceId);
-    categoryId = defaultCategory?.id ?? null;
-  }
-
-  // Setting an initial status at creation is a triage action, same as
-  // changing status afterward — restricted to workspace members (PLATFORM.md
-  // §4). A public User's request can never set this, even if passed.
-  let status: string | undefined;
-  if (parsed.data.status && actorMember) {
-    const targetStatus = await getWorkspaceStatusBySlug(
-      parsed.data.workspaceId,
-      parsed.data.status
-    );
-    if (!targetStatus) {
-      return {
-        success: false,
-        error: "Invalid status.",
-        field: "status",
-      };
-    }
-    status = targetStatus.slug;
-  }
-
-  // Saving as a draft is a workspace-member (triage) capability — a public
-  // User's submission can never be a draft, even if the flag is forged. Drafts
-  // are held back from every public surface and fire no notifications/webhooks
-  // until published (see publishPostAction).
-  const isDraft = Boolean(parsed.data.saveAsDraft) && Boolean(actorMember);
-
-  const slug = await generatePostSlug(parsed.data.boardId, parsed.data.title);
-
-  const post = await createPost({
-    boardId: parsed.data.boardId,
-    workspaceId: parsed.data.workspaceId,
-    slug,
-    title: parsed.data.title,
-    body: parsed.data.body,
-    categoryId,
-    authorId: session.user.id,
-    authorName: session.user.name ?? null,
-    authorEmail: session.user.email,
-    imageUrl: parsed.data.imageUrl,
-    status,
-    isApproved,
-    isDraft,
-  });
-
-  audit({
-    workspaceId: parsed.data.workspaceId,
-    action: "post.created",
-    actorId: session.user.id,
-    actorEmail: session.user.email,
-    actorName: session.user.name ?? null,
-    entityType: "post",
-    entityId: post.id,
-    description: isDraft
-      ? `Saved draft: ${parsed.data.title}`
-      : `Created post: ${parsed.data.title}`,
-    metadata: {
-      boardId: parsed.data.boardId,
-      workspaceId: parsed.data.workspaceId,
-      title: parsed.data.title,
-      slug,
-      isApproved,
-      isDraft,
-    },
-  });
-
-  // Only notify admins / fire webhooks when the post is immediately visible —
-  // never for a draft (those side-effects run at publish time instead).
-  if (post.isApproved && !isDraft) {
-    enqueueNewPostAlerts({
-      postId: post.id,
-      postTitle: parsed.data.title,
-      postBody: parsed.data.body ?? null,
-      postSlug: slug,
-      boardId: parsed.data.boardId,
-      workspaceId: parsed.data.workspaceId,
-      authorId: session.user.id,
-      authorName: session.user.name ?? session.user.email,
-    }).catch((err) =>
-      console.error("[posts] failed to enqueue new-post alerts", err)
-    );
-
-    dispatchWebhookEvent(parsed.data.workspaceId, WEBHOOK_EVENTS.POST_CREATED, {
-      id: post.id,
-      title: parsed.data.title,
-      slug: post.slug,
-      boardId: parsed.data.boardId,
-    });
   }
 
   // Keep the admin feedback list (and the public board, for a live post) in
   // sync so a freshly created draft/post shows up without a manual reload.
-  if (workspaceRow?.slug) {
-    revalidatePath(`/${workspaceRow.slug}/feedback`);
-    if (!isDraft && post.isApproved) {
-      revalidatePath(`/${workspaceRow.slug}/b/${boardRow.slug}`);
+  // Server-Action/RSC-cache-specific — the Route Handler equivalent has no
+  // counterpart and relies on the client updating its own local state.
+  if (result.data.workspaceSlug) {
+    revalidatePath(`/${result.data.workspaceSlug}/feedback`);
+    if (!result.data.isDraft && !result.data.isPending) {
+      revalidatePath(`/${result.data.workspaceSlug}/b/${result.data.boardSlug}`);
     }
   }
 
   return {
     success: true,
     data: {
-      postId: post.id,
-      postSlug: post.slug,
-      isPending: !post.isApproved,
-      isDraft: post.isDraft,
+      postId: result.data.postId,
+      postSlug: result.data.postSlug,
+      isPending: result.data.isPending,
+      isDraft: result.data.isDraft,
     },
   };
 }
 
 // ─── Upload Post Image ────────────────────────────────────────────────────────
-
-const MAX_POST_IMAGE_BYTES = 4 * 1024 * 1024;
-const ALLOWED_POST_IMAGE_TYPES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/gif",
-]);
 
 export async function uploadPostImageAction(
   formData: FormData
@@ -338,27 +123,17 @@ export async function uploadPostImageAction(
       code: "UNAUTHENTICATED",
     };
   }
+
   const file = formData.get("image");
-
-  if (!(file instanceof File) || file.size === 0) {
-    return { success: false, error: "Choose an image to upload." };
-  }
-  if (!ALLOWED_POST_IMAGE_TYPES.has(file.type)) {
-    return { success: false, error: "Use a PNG, JPEG, WEBP, or GIF image." };
-  }
-  if (file.size > MAX_POST_IMAGE_BYTES) {
-    return { success: false, error: "Image must be 4MB or smaller." };
-  }
-
-  const extension = file.type.split("/")[1];
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const url = await uploadFile(
-    `posts/${session.user.id}-${Date.now()}.${extension}`,
-    buffer,
-    file.type
+  const result = await uploadPostImage(
+    session.user.id,
+    file instanceof File ? file : null
   );
+  if (!result.ok) {
+    return { success: false, error: result.error };
+  }
 
-  return { success: true, data: { url } };
+  return { success: true, data: result.data };
 }
 
 // ─── Update Post Status ───────────────────────────────────────────────────────
@@ -439,7 +214,7 @@ export async function updatePostStatusAction(input: {
   });
 
   // A draft isn't public yet, so a status change on it must not notify voters
-  // or fire webhooks — those outbound workflows only run once it's published.
+  // — that only runs once it's published.
   if (!post.isDraft) {
     // Notify voters (fire-and-forget)
     enqueueStatusChangeEmails({
@@ -453,17 +228,6 @@ export async function updatePostStatusAction(input: {
       changedById: session.user.id,
     }).catch((err) =>
       console.error("[posts] failed to enqueue status-change emails", err)
-    );
-
-    dispatchWebhookEvent(
-      parsed.data.workspaceId,
-      WEBHOOK_EVENTS.POST_STATUS_CHANGED,
-      {
-        id: parsed.data.postId,
-        title: post.title,
-        fromStatus: post.status,
-        toStatus: parsed.data.status,
-      }
     );
   }
 
@@ -556,11 +320,6 @@ export async function deletePostAction(input: {
       title: post.title,
       wasAuthor: isAuthor,
     },
-  });
-
-  dispatchWebhookEvent(input.workspaceId, WEBHOOK_EVENTS.POST_DELETED, {
-    id: input.postId,
-    title: post.title,
   });
 
   return { success: true, data: undefined };
@@ -915,13 +674,6 @@ export async function publishPostAction(input: {
         err
       )
     );
-
-    dispatchWebhookEvent(input.workspaceId, WEBHOOK_EVENTS.POST_CREATED, {
-      id: post.id,
-      title: post.title,
-      slug: post.slug,
-      boardId: post.boardId,
-    });
   }
 
   // Now that it's live, refresh the admin views and every public surface it can
@@ -1120,11 +872,6 @@ export async function mergePostAction(input: {
     metadata: { workspaceId: input.workspaceId, targetId: input.targetId },
   });
 
-  dispatchWebhookEvent(input.workspaceId, WEBHOOK_EVENTS.POST_MERGED, {
-    sourceId: input.sourceId,
-    targetId: input.targetId,
-  });
-
   return { success: true, data: undefined };
 }
 
@@ -1217,67 +964,6 @@ async function enqueueStatusChangeEmails(input: {
       voterName: voter.userName ?? voter.accountName ?? email.split("@")[0],
       voterUserId: voter.userId ?? null,
       changedById: input.changedById,
-    });
-  }
-}
-
-async function enqueueNewPostAlerts(input: {
-  postId: string;
-  postTitle: string;
-  postBody: string | null;
-  postSlug: string;
-  boardId: string;
-  workspaceId: string;
-  authorId: string;
-  authorName: string;
-}) {
-  const [boardRow] = await db
-    .select({ slug: boards.slug, name: boards.name })
-    .from(boards)
-    .where(eq(boards.id, input.boardId))
-    .limit(1);
-
-  const [workspaceRow] = await db
-    .select({ slug: workspaces.slug, name: workspaces.name })
-    .from(workspaces)
-    .where(eq(workspaces.id, input.workspaceId))
-    .limit(1);
-
-  if (!boardRow || !workspaceRow) {
-    return;
-  }
-
-  const { user: userTable } = await import("@/db/schema/auth");
-
-  const admins = await db
-    .select({
-      userId: workspaceMembers.userId,
-      email: userTable.email,
-      name: userTable.name,
-    })
-    .from(workspaceMembers)
-    .innerJoin(userTable, eq(workspaceMembers.userId, userTable.id))
-    .where(eq(workspaceMembers.workspaceId, input.workspaceId));
-
-  for (const admin of admins) {
-    if (admin.userId === input.authorId) {
-      continue;
-    }
-
-    await enqueueJob(JOB_NAMES.SEND_NEW_POST_ALERT, {
-      postId: input.postId,
-      postTitle: input.postTitle,
-      postBody: input.postBody,
-      postSlug: input.postSlug,
-      workspaceId: input.workspaceId,
-      workspaceSlug: workspaceRow.slug,
-      workspaceName: workspaceRow.name,
-      boardName: boardRow.name,
-      boardSlug: boardRow.slug,
-      authorName: input.authorName,
-      authorId: input.authorId,
-      adminEmail: admin.email,
-      adminUserId: admin.userId,
     });
   }
 }

@@ -23,11 +23,12 @@
  *           data-theme="light"
  *           data-accent-color="#2563eb"></script>
  *
- * data-workspace and data-board are both required — there's no public page
- * at the bare workspace root, so omitting data-board will load a 404 inside
- * the iframe. Settings → Embed always generates both for you. data-position,
- * data-width, data-height, data-theme and data-accent-color are all
- * optional and are generated for you by Settings → Embed.
+ * data-workspace and data-board are both required — omitting either shows a
+ * small "configuration error" notice in place of the widget (no iframe, no
+ * navigation) — check the console for details. Settings → Embed always
+ * generates both for you. data-position, data-width, data-height,
+ * data-theme and data-accent-color are all optional and are generated for
+ * you by Settings → Embed.
  */
 (() => {
   const MESSAGE_SOURCE = "idearoads-widget";
@@ -42,10 +43,29 @@
   const workspace = script.getAttribute("data-workspace");
   if (!workspace) {
     console.error("[IdeaRoads widget] data-workspace attribute is required");
+    renderConfigError(
+      script,
+      "Feedback widget: missing data-workspace — re-copy the install snippet."
+    );
     return;
   }
 
   const board = script.getAttribute("data-board");
+  if (!board) {
+    // There's no public page at the bare workspace root, so this would
+    // otherwise silently load a 404 inside the iframe. Settings → Embed
+    // always generates data-board now — this only fires for a hand-edited
+    // or stale snippet (e.g. the configured board was later deleted).
+    console.error(
+      '[IdeaRoads widget] data-board attribute is required (e.g. data-board="feature-requests"). Re-copy the snippet from Settings → Embed.'
+    );
+    renderConfigError(
+      script,
+      "Feedback widget: missing data-board — re-copy the install snippet."
+    );
+    return;
+  }
+
   const mode =
     script.getAttribute("data-mode") === "button" ? "button" : "inline";
   const containerId = script.getAttribute("data-container");
@@ -224,6 +244,28 @@
       "</svg>";
     button.addEventListener("click", onClose);
     return button;
+  }
+
+  // Renders a small visible notice in place of the widget — used only for a
+  // broken install (missing required config), never for a normal runtime
+  // error, so a site owner sees *something* actionable instead of a blank
+  // gap or a 404 quietly loading inside an iframe.
+  function renderConfigError(scriptEl, message) {
+    const el = document.createElement("div");
+    el.textContent = message;
+    el.style.cssText =
+      "font:13px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;" +
+      "color:#991b1b;background:#fef2f2;border:1px solid #fecaca;" +
+      "border-radius:6px;padding:10px 12px;max-width:420px;";
+    const targetContainerId = scriptEl.getAttribute("data-container");
+    const container = targetContainerId
+      ? document.getElementById(targetContainerId)
+      : null;
+    if (container) {
+      container.appendChild(el);
+    } else if (scriptEl.parentNode) {
+      scriptEl.parentNode.insertBefore(el, scriptEl.nextSibling);
+    }
   }
 
   function mountInline() {

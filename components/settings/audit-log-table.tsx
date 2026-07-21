@@ -23,15 +23,7 @@ interface Props {
   workspaceSlug: string;
 }
 
-const ENTITY_TYPES = [
-  "workspace",
-  "post",
-  "comment",
-  "member",
-  "webhook",
-  "api_key",
-  "changelog",
-];
+const ENTITY_TYPES = ["workspace", "post", "comment", "member", "changelog"];
 
 function buildUrl(
   slug: string,

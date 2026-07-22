@@ -24,6 +24,7 @@ import {
   getPendingEmailChangeByToken,
 } from "@/lib/profile/email-change";
 import { deleteFile, uploadFile } from "@/lib/storage";
+import { countCharacters } from "@/lib/text-metrics";
 import { adminBaseUrl } from "@/lib/urls";
 
 export interface ActionState {
@@ -147,7 +148,7 @@ export async function updateNameAction(
   if (!name) {
     return { error: "Name is required." };
   }
-  if (name.length > 100) {
+  if (countCharacters(name) > 100) {
     return { error: "Name must be 100 characters or fewer." };
   }
 

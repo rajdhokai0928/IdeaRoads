@@ -103,7 +103,7 @@ function PendingCommentRow({
         <div className="flex shrink-0 items-start gap-2 pt-0.5">
           <button
             aria-label="Approve comment"
-            className="rounded-ir-sm p-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none disabled:opacity-50"
+            className="cursor-pointer rounded-ir-sm p-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none disabled:opacity-50"
             disabled={isApproving || isDeleting}
             onClick={handleApprove}
             title="Approve"
@@ -113,7 +113,7 @@ function PendingCommentRow({
           </button>
           <button
             aria-label="Delete comment"
-            className="rounded-ir-sm p-1 text-xs text-ir-danger transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none disabled:opacity-50"
+            className="cursor-pointer rounded-ir-sm p-1 text-xs text-ir-danger transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none disabled:opacity-50"
             disabled={isApproving || isDeleting}
             onClick={() => setShowDeleteDialog(true)}
             title="Delete"

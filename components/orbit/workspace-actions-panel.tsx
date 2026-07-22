@@ -73,7 +73,7 @@ export function WorkspaceActionsPanel({
     <div className="flex flex-wrap gap-2">
       {isSuspended ? (
         <button
-          className="border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent disabled:opacity-50"
+          className="cursor-pointer border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent disabled:opacity-50"
           disabled={isPending}
           onClick={handleUnsuspend}
           type="button"
@@ -82,7 +82,7 @@ export function WorkspaceActionsPanel({
         </button>
       ) : (
         <button
-          className="border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent"
+          className="cursor-pointer border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent"
           onClick={() => setSuspendOpen(true)}
           type="button"
         >
@@ -91,7 +91,7 @@ export function WorkspaceActionsPanel({
       )}
 
       <button
-        className="border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-ui text-destructive transition-colors hover:bg-destructive/10"
+        className="cursor-pointer border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-ui text-destructive transition-colors hover:bg-destructive/10"
         onClick={() => {
           setDeleteSlugInput("");
           setDeleteOpen(true);

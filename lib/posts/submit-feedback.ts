@@ -7,6 +7,10 @@ import { db } from "@/lib/db";
 import { isBlocked } from "@/lib/moderation/queries";
 import { enqueueNewPostAlerts } from "@/lib/posts/notify";
 import { createPost, generatePostSlug } from "@/lib/posts/queries";
+import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
 import { getWorkspaceStatusBySlug } from "@/lib/workspace-statuses/queries";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
@@ -23,11 +27,14 @@ export const submitFeedbackSchema = z.object({
   workspaceId: z.string().min(1),
   title: z
     .string()
-    .min(3, "Title must be at least 3 characters.")
-    .max(150, "Title must be 150 characters or fewer."),
+    .refine(minMeaningfulLength(3), "Title must be at least 3 characters.")
+    .refine(maxMeaningfulLength(150), "Title must be 150 characters or fewer."),
   body: z
     .string()
-    .max(10_000, "Description must be 10,000 characters or fewer.")
+    .refine(
+      maxMeaningfulLength(10_000),
+      "Description must be 10,000 characters or fewer."
+    )
     .optional(),
   categoryId: z.string().min(1).optional(),
   imageUrl: z.url().optional(),

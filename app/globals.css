@@ -368,6 +368,8 @@ body {
   font-size: 0.875rem;
   line-height: 1.65;
   color: hsl(var(--foreground));
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .ql-editor.ql-blank::before {
   right: 12px;
@@ -494,6 +496,16 @@ body {
 }
 
 /* Comment body rendered HTML */
+.comment-body {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.comment-body img {
+  max-width: 100%;
+  height: auto;
+  cursor: zoom-in;
+  border-radius: var(--radius-ir-md);
+}
 .comment-body p {
   margin: 0 0 0.25rem;
 }

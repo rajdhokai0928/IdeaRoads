@@ -79,7 +79,7 @@ export function UserAdminActions({
     <div className="flex flex-wrap gap-2">
       {impersonationEnabled && !isCurrentUser && (
         <button
-          className="border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent disabled:opacity-50"
+          className="cursor-pointer border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent disabled:opacity-50"
           disabled={isImpersonating}
           onClick={handleImpersonate}
           type="button"
@@ -90,7 +90,7 @@ export function UserAdminActions({
 
       {isAdmin ? (
         <button
-          className="border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-ui text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-ui text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-40"
           disabled={isCurrentUser}
           onClick={() => setRevokeOpen(true)}
           title={
@@ -102,7 +102,7 @@ export function UserAdminActions({
         </button>
       ) : (
         <button
-          className="border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent"
+          className="cursor-pointer border border-border bg-card px-3 py-1.5 text-xs font-semibold uppercase tracking-ui transition-colors hover:bg-accent"
           onClick={() => setGrantOpen(true)}
           type="button"
         >

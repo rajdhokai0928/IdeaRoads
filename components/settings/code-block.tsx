@@ -24,7 +24,7 @@ export function CodeBlock({ code }: CodeBlockProps) {
       </pre>
       <button
         aria-label="Copy code"
-        className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-ir-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+        className="absolute top-2 right-2 flex size-6 cursor-pointer items-center justify-center rounded-ir-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
         onClick={handleCopy}
         type="button"
       >

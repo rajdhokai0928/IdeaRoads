@@ -169,7 +169,7 @@ export function BulkActionBar({
             </Button>
             <button
               aria-label="Clear selection"
-              className="ml-auto flex size-7 shrink-0 items-center justify-center rounded-ir-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading"
+              className="ml-auto flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-ir-sm text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading"
               onClick={clearSelection}
               type="button"
             >

@@ -18,6 +18,7 @@ import { enqueueEmail } from "@/lib/email";
 import { MemberRemovedEmail } from "@/lib/email/components/member-removed";
 import { renderEmailTemplate } from "@/lib/email/renderer";
 import { adminBaseUrl } from "@/lib/urls";
+import { maxMeaningfulLength } from "@/lib/validation/text-length";
 import {
   createInviteLink,
   getInviteLinkById,
@@ -359,7 +360,13 @@ export async function revokeAllInvitesAction(input: {
 const createLinkSchema = z.object({
   workspaceId: z.string().min(1),
   role: z.enum(["member", "admin"]),
-  label: z.string().max(INVITE_LINK_LABEL_MAX).optional(),
+  label: z
+    .string()
+    .refine(
+      maxMeaningfulLength(INVITE_LINK_LABEL_MAX),
+      `Label must be ${INVITE_LINK_LABEL_MAX} characters or fewer.`
+    )
+    .optional(),
   maxUses: z.number().int().positive().optional(),
   expiresInDays: z.number().int().positive().max(365).optional(),
 });

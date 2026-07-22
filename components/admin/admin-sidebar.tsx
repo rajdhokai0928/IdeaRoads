@@ -119,7 +119,7 @@ export function AdminSidebar({
                     "group relative flex cursor-pointer items-center gap-3 rounded-ir-sm px-3 py-2.5 text-xs font-semibold tracking-ui uppercase transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
                     isActive
                       ? "bg-ir-primary/15 text-ir-primary-light"
-                      : "text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   )}
                   href={href}
                   key={href}
@@ -150,7 +150,7 @@ export function AdminSidebar({
         {workspaceSlug && (
           <div className="border-b border-sidebar-border px-2.5 py-2">
             <Link
-              className="flex cursor-pointer items-center gap-2.5 rounded-ir-sm px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+              className="flex cursor-pointer items-center gap-2.5 rounded-ir-sm px-3 py-2 text-xs font-semibold text-sidebar-foreground/85 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               href={`/${workspaceSlug}`}
             >
               <ArrowLeft className="size-3.5 shrink-0" size={13} />
@@ -179,7 +179,7 @@ export function AdminSidebar({
               </span>
               <motion.span
                 animate={{ rotate: accountOpen ? 180 : 0 }}
-                className="shrink-0 text-sidebar-foreground/40"
+                className="shrink-0 text-sidebar-foreground/60"
                 transition={{
                   duration: shouldReduceMotion ? 0 : 0.15,
                   ease: "easeOut",
@@ -242,7 +242,7 @@ export function AdminSidebar({
           <SheetTrigger asChild>
             <motion.button
               aria-label="Open navigation"
-              className="flex cursor-pointer items-center justify-center rounded-ir-sm p-1 text-sidebar-foreground/70 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+              className="flex cursor-pointer items-center justify-center rounded-ir-sm p-1 text-sidebar-foreground/90 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               type="button"
               whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
             >

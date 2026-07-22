@@ -39,6 +39,7 @@ import {
   CHANGELOG_LABEL_VALUES,
   getLabelInfo,
 } from "@/lib/changelog/constants";
+import { countCharacters } from "@/lib/text-metrics";
 
 // Arrays aren't reference-comparable, so dirty-tracking compares a stable,
 // order-independent string form of the linked-post id list instead.
@@ -589,7 +590,7 @@ export function ChangelogEditor({
             value={title}
           />
           <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-ir-muted">
-            {title.length}/200
+            {countCharacters(title)}/200
           </span>
         </div>
       </div>
@@ -695,7 +696,7 @@ export function ChangelogEditor({
                 </button>
                 <button
                   aria-label={`Rename ${l.name}`}
-                  className="text-ir-muted hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
+                  className="cursor-pointer text-ir-muted hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
                   disabled={labelBusy}
                   onClick={() => {
                     setEditingLabelId(l.id);
@@ -707,7 +708,7 @@ export function ChangelogEditor({
                 </button>
                 <button
                   aria-label={`Delete ${l.name}`}
-                  className="text-ir-muted hover:text-ir-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
+                  className="cursor-pointer text-ir-muted hover:text-ir-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50"
                   disabled={labelBusy}
                   onClick={() => removeLabel(l.id, l.name)}
                   type="button"
@@ -734,7 +735,7 @@ export function ChangelogEditor({
 
           <button
             aria-label="Add label"
-            className="inline-flex items-center justify-center rounded-ir-sm border border-dashed border-ir-border p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+            className="inline-flex cursor-pointer items-center justify-center rounded-ir-sm border border-dashed border-ir-border p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/40 hover:text-ir-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             onClick={() => setLabelModalOpen(true)}
             title="Add label"
             type="button"

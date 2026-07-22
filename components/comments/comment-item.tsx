@@ -202,7 +202,7 @@ export default function CommentItem({
               {canReply && (
                 <button
                   aria-expanded={isReplyOpen}
-                  className="inline-flex items-center gap-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                  className="inline-flex cursor-pointer items-center gap-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={onReply}
                   type="button"
                 >
@@ -212,7 +212,7 @@ export default function CommentItem({
               )}
               {canEdit && (
                 <button
-                  className="inline-flex items-center gap-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                  className="inline-flex cursor-pointer items-center gap-1 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={() => setIsEditing(true)}
                   type="button"
                 >
@@ -223,7 +223,7 @@ export default function CommentItem({
               {canDelete && (
                 <button
                   aria-label="Delete comment"
-                  className="inline-flex items-center gap-1 text-xs text-ir-danger transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none"
+                  className="inline-flex cursor-pointer items-center gap-1 text-xs text-ir-danger transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none"
                   onClick={() => setShowDeleteDialog(true)}
                   type="button"
                 >

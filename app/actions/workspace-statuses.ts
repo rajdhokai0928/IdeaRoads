@@ -4,6 +4,10 @@ import { z } from "zod";
 import { WORKSPACE_MEMBER } from "@/config/platform";
 import { audit } from "@/lib/audit";
 import { requireSession } from "@/lib/authz";
+import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
 import { createWorkspaceStatus } from "@/lib/workspace-statuses/create";
 import { deleteWorkspaceStatus } from "@/lib/workspace-statuses/delete";
 import { getWorkspaceStatusById } from "@/lib/workspace-statuses/queries";
@@ -24,8 +28,8 @@ const createStatusSchema = z.object({
   workspaceId: z.string().min(1),
   name: z
     .string()
-    .min(1, "Name is required.")
-    .max(48, "Name must be 48 characters or fewer."),
+    .refine(minMeaningfulLength(1), "Name is required.")
+    .refine(maxMeaningfulLength(48), "Name must be 48 characters or fewer."),
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Invalid color.")
@@ -96,7 +100,11 @@ export async function createWorkspaceStatusAction(input: {
 const updateStatusSchema = z.object({
   statusId: z.string().min(1),
   workspaceId: z.string().min(1),
-  name: z.string().min(1).max(48).optional(),
+  name: z
+    .string()
+    .refine(minMeaningfulLength(1), "Name is required.")
+    .refine(maxMeaningfulLength(48), "Name must be 48 characters or fewer.")
+    .optional(),
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/)

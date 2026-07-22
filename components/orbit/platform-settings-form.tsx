@@ -63,7 +63,7 @@ export function PlatformSettingsForm({ settings }: Props) {
         <label className="mt-4 flex cursor-pointer items-center gap-3">
           <button
             aria-checked={signupEnabled}
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center border-2 border-transparent transition-colors ${
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center border-2 border-transparent transition-colors ${
               signupEnabled ? "bg-primary" : "bg-muted"
             }`}
             onClick={() => setSignupEnabled((v) => !v)}
@@ -111,7 +111,7 @@ export function PlatformSettingsForm({ settings }: Props) {
         <label className="mt-4 flex cursor-pointer items-center gap-3">
           <button
             aria-checked={maintenanceMode}
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center border-2 border-transparent transition-colors ${
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center border-2 border-transparent transition-colors ${
               maintenanceMode ? "bg-destructive" : "bg-muted"
             }`}
             onClick={() => setMaintenanceMode((v) => !v)}

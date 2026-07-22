@@ -270,7 +270,7 @@ export function PostActionsMenu({
               {mergeResults.length > 0 ? (
                 mergeResults.map((r) => (
                   <button
-                    className={`block w-full px-3 py-2 text-left text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none ${
+                    className={`block w-full cursor-pointer px-3 py-2 text-left text-sm transition-colors duration-150 ease-ir-standard focus-visible:outline-none ${
                       mergeSelected?.id === r.id
                         ? "bg-ir-primary-light/20 text-ir-primary"
                         : "text-ir-body hover:bg-ir-muted-surface"

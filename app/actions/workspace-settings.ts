@@ -11,6 +11,10 @@ import { enqueueEmail } from "@/lib/email";
 import { WorkspaceDeletedEmail } from "@/lib/email/components/workspace-deleted";
 import { renderEmailTemplate } from "@/lib/email/renderer";
 import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
+import {
   getWorkspaceBySlug,
   getWorkspaceMember,
 } from "@/lib/workspaces/queries";
@@ -92,13 +96,16 @@ const updateInfoSchema = z.object({
   workspaceId: z.string().min(1),
   name: z
     .string()
-    .min(2, "Name must be at least 2 characters.")
-    .max(64, "Name must be 64 characters or fewer.")
+    .refine(minMeaningfulLength(2), "Name must be at least 2 characters.")
+    .refine(maxMeaningfulLength(64), "Name must be 64 characters or fewer.")
     .optional(),
   slug: z.string().min(2).max(48).optional(),
   description: z
     .string()
-    .max(300, "Description must be 300 characters or fewer.")
+    .refine(
+      maxMeaningfulLength(300),
+      "Description must be 300 characters or fewer."
+    )
     .optional()
     .nullable(),
   logoUrl: z.string().url("Must be a valid URL.").optional().nullable(),
@@ -301,7 +308,10 @@ const moderationSchema = z.object({
   workspaceId: z.string().min(1),
   moderationMode: z.enum(["off", "auto", "manual"]).optional(),
   commentModeration: z.boolean().optional(),
-  spamKeywords: z.array(z.string().min(1).max(100)).max(50).optional(),
+  spamKeywords: z
+    .array(z.string().min(1).refine(maxMeaningfulLength(100)))
+    .max(50)
+    .optional(),
 });
 
 export async function updateModerationSettingsAction(input: {

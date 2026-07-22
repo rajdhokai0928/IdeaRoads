@@ -6,7 +6,12 @@ import { MAX_WORKSPACES_PER_USER, RESERVED_SLUGS } from "@/config/platform";
 import { workspaceMembers } from "@/db/schema";
 import { requireSession } from "@/lib/authz";
 import { db } from "@/lib/db";
+import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
 import { createWorkspace } from "@/lib/workspaces/create";
+import { seedWorkspaceDemoContent } from "@/lib/workspaces/seed-demo-content";
 import {
   isSlugAvailable,
   isSlugReserved,
@@ -20,12 +25,15 @@ type ActionResult<T = undefined> =
 const createWorkspaceSchema = z.object({
   name: z
     .string()
-    .min(2, "Name must be at least 2 characters.")
-    .max(64, "Name must be 64 characters or fewer."),
+    .refine(minMeaningfulLength(2), "Name must be at least 2 characters.")
+    .refine(maxMeaningfulLength(64), "Name must be 64 characters or fewer."),
   slug: z.string().min(2).max(48),
   description: z
     .string()
-    .max(300, "Description must be 300 characters or fewer.")
+    .refine(
+      maxMeaningfulLength(300),
+      "Description must be 300 characters or fewer."
+    )
     .optional(),
 });
 
@@ -78,13 +86,20 @@ export async function createWorkspaceAction(formData: {
     };
   }
 
-  await createWorkspace({
+  const workspaceId = await createWorkspace({
     name: name.trim(),
     slug,
     description: description || null,
     ownerId: session.user.id,
     ownerEmail: session.user.email,
   });
+
+  // Best-effort: a brand-new workspace ships with one example post so the
+  // board isn't empty on first visit. Never let a seeding failure block
+  // workspace creation itself.
+  seedWorkspaceDemoContent(workspaceId).catch((err) =>
+    console.error("[workspace] failed to seed demo content", err)
+  );
 
   return { success: true, data: { slug } };
 }

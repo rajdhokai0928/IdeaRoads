@@ -9,8 +9,8 @@ import { audit } from "@/lib/audit";
 import { getCurrentSession, requireSession } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { createNotification } from "@/lib/notifications/create";
-import { enqueueNewPostAlerts } from "@/lib/posts/notify";
 import { mergePost } from "@/lib/posts/merge";
+import { enqueueNewPostAlerts } from "@/lib/posts/notify";
 import {
   approvePost,
   assignPost,
@@ -29,6 +29,10 @@ import {
 } from "@/lib/posts/queries";
 import { submitFeedback } from "@/lib/posts/submit-feedback";
 import { uploadPostImage } from "@/lib/posts/upload-image";
+import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
 import { enqueueJob } from "@/lib/worker/enqueue";
 import { JOB_NAMES } from "@/lib/worker/job-types";
 import { getWorkspaceStatusBySlug } from "@/lib/workspace-statuses/queries";
@@ -92,7 +96,9 @@ export async function createPostAction(input: {
   if (result.data.workspaceSlug) {
     revalidatePath(`/${result.data.workspaceSlug}/feedback`);
     if (!result.data.isDraft && !result.data.isPending) {
-      revalidatePath(`/${result.data.workspaceSlug}/b/${result.data.boardSlug}`);
+      revalidatePath(
+        `/${result.data.workspaceSlug}/b/${result.data.boardSlug}`
+      );
     }
   }
 
@@ -398,11 +404,14 @@ const updatePostSchema = z.object({
   workspaceId: z.string().min(1),
   title: z
     .string()
-    .min(3, "Title must be at least 3 characters.")
-    .max(150, "Title must be 150 characters or fewer."),
+    .refine(minMeaningfulLength(3), "Title must be at least 3 characters.")
+    .refine(maxMeaningfulLength(150), "Title must be 150 characters or fewer."),
   body: z
     .string()
-    .max(10_000, "Description must be 10,000 characters or fewer.")
+    .refine(
+      maxMeaningfulLength(10_000),
+      "Description must be 10,000 characters or fewer."
+    )
     .optional(),
   // Omit to leave the image untouched, null to remove it, a URL to replace it.
   imageUrl: z.url().nullish(),

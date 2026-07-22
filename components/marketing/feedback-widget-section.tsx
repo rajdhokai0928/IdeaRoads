@@ -26,7 +26,7 @@ export function FeedbackWidgetSection({ appUrl }: FeedbackWidgetSectionProps) {
           </p>
         </div>
 
-        <div className="mx-auto mt-10 w-full max-w-[380px]">
+        <div className="mx-auto mt-10 w-full max-w-95">
           <div
             className="overflow-hidden rounded-ir-lg border border-ir-border shadow-ir-sm"
             id={WIDGET_CONTAINER_ID}

@@ -37,14 +37,14 @@ export function FeedbackWidgetLauncher({
     const script = document.createElement("script");
     script.id = LAUNCHER_SCRIPT_ID;
     script.src = `${appUrl}/widget.js`;
-    script.dataset.workspace = "deep-sir";
+    script.dataset.workspace = "testing-workspace";
     script.dataset.board = "feature-requests";
     script.dataset.mode = "button";
     script.dataset.position = "bottom-right";
     script.dataset.theme = "light";
-    script.dataset.width = "420";
+    script.dataset.width = "500";
     script.dataset.height = "560";
-    script.dataset.accentColor = "#e5e0e0";
+    script.dataset.accentColor = "#d12323";
     document.body.appendChild(script);
   }, [appUrl]);
 

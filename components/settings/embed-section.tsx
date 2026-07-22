@@ -202,8 +202,8 @@ export function EmbedSection({
           No public boards yet
         </h2>
         <p className="mt-1 text-xs text-ir-muted">
-          The embed widget shows one board's feedback. Create a board and
-          mark it public before generating a snippet.
+          The embed widget shows one board's feedback. Create a board and mark
+          it public before generating a snippet.
         </p>
       </div>
     );
@@ -333,7 +333,7 @@ export function EmbedSection({
             <div className="flex items-center gap-2">
               <input
                 aria-label="Pick accent color"
-                className="h-10 w-10 shrink-0 rounded-ir-input border border-ir-border bg-ir-surface p-0.5"
+                className="h-10 w-10 shrink-0 cursor-pointer rounded-ir-input border border-ir-border bg-ir-surface p-0.5 [&::-webkit-color-swatch]:rounded-ir-sm [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:rounded-ir-sm [&::-webkit-color-swatch-wrapper]:p-0"
                 disabled={isPending}
                 onChange={(e) => setAccentColor(e.target.value)}
                 type="color"

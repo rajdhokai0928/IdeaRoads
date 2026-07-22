@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { embedFetch } from "@/lib/embed/fetch";
 import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
+import { countCharacters } from "@/lib/text-metrics";
 
 const QuillEditor = dynamic(
   () => import("@/components/comments/quill-editor"),
@@ -287,7 +288,7 @@ export default function NewPostForm({
     setCategoryError(null);
     setGeneralError(null);
 
-    if (title.trim().length < 3) {
+    if (countCharacters(title) < 3) {
       setTitleError("Title must be at least 3 characters.");
       return;
     }
@@ -404,7 +405,7 @@ export default function NewPostForm({
                 <span />
               )}
               <span className="ml-2 shrink-0 text-xs text-ir-muted">
-                {title.length}/150
+                {countCharacters(title)}/150
               </span>
             </div>
           </div>
@@ -483,7 +484,7 @@ export default function NewPostForm({
                 />
                 <button
                   aria-label="Remove image"
-                  className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-ir-full border border-ir-border bg-ir-surface text-ir-danger shadow-ir-sm transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                  className="absolute -top-2 -right-2 flex size-6 cursor-pointer items-center justify-center rounded-ir-full border border-ir-border bg-ir-surface text-ir-danger shadow-ir-sm transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   disabled={isPending}
                   onClick={removeImage}
                   type="button"
@@ -527,7 +528,7 @@ export default function NewPostForm({
               Cancel
             </Link>
             <Button
-              disabled={isPending || title.trim().length < 3}
+              disabled={isPending || countCharacters(title) < 3}
               type="submit"
             >
               {isPending ? "Submitting…" : "Submit feedback"}

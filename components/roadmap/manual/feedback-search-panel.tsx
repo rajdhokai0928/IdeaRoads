@@ -204,7 +204,7 @@ export function FeedbackSearchPanel({
 
             {hasMore && (
               <button
-                className="w-full rounded-ir-sm border border-dashed border-ir-border py-2 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                className="w-full cursor-pointer rounded-ir-sm border border-dashed border-ir-border py-2 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                 disabled={loading}
                 onClick={() => runSearch(query, results.length)}
                 type="button"

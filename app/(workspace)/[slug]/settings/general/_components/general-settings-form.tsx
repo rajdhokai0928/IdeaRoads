@@ -17,6 +17,7 @@ import { ContentContainer } from "@/components/ui/page";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useDirtyState } from "@/hooks/use-dirty-state";
+import { countCharacters } from "@/lib/text-metrics";
 
 interface GeneralSettingsFormProps {
   canManage: boolean;
@@ -345,7 +346,7 @@ export function GeneralSettingsForm({
                 value={description}
               />
               <p className="mt-1 text-right text-xs text-ir-muted">
-                {description.length}/300
+                {countCharacters(description)}/300
               </p>
             </FormField>
 

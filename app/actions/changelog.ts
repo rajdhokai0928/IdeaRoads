@@ -23,6 +23,10 @@ import {
 import { searchWorkspacePosts } from "@/lib/changelog/queries";
 import { updateChangelogEntry } from "@/lib/changelog/update";
 import { uploadFile } from "@/lib/storage";
+import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 type ActionResult<T = undefined> =
@@ -39,9 +43,15 @@ const createEntrySchema = z.object({
   workspaceId: z.string().min(1),
   title: z
     .string()
-    .min(1, "Title is required.")
-    .max(200, "Title must be 200 characters or fewer."),
-  body: z.string().max(50_000).default(""),
+    .refine(minMeaningfulLength(1), "Title is required.")
+    .refine(maxMeaningfulLength(200), "Title must be 200 characters or fewer."),
+  body: z
+    .string()
+    .refine(
+      maxMeaningfulLength(50_000),
+      "Body must be 50,000 characters or fewer."
+    )
+    .default(""),
   coverImageUrl: z.url().optional(),
   // A built-in key or any custom label the author created. Kept short and plain
   // (rendered as text in a badge, so no markup handling needed).
@@ -49,7 +59,7 @@ const createEntrySchema = z.object({
     .string()
     .trim()
     .min(1)
-    .max(40, "Label must be 40 characters or fewer.")
+    .refine(maxMeaningfulLength(40), "Label must be 40 characters or fewer.")
     .default("new_feature"),
   postIds: z.array(z.string()).max(20).default([]),
 });
@@ -116,10 +126,25 @@ export async function createChangelogEntryAction(input: {
 const updateEntrySchema = z.object({
   entryId: z.string().min(1),
   workspaceId: z.string().min(1),
-  title: z.string().min(1).max(200).optional(),
-  body: z.string().max(50_000).optional(),
+  title: z
+    .string()
+    .refine(minMeaningfulLength(1), "Title is required.")
+    .refine(maxMeaningfulLength(200), "Title must be 200 characters or fewer.")
+    .optional(),
+  body: z
+    .string()
+    .refine(
+      maxMeaningfulLength(50_000),
+      "Body must be 50,000 characters or fewer."
+    )
+    .optional(),
   coverImageUrl: z.union([z.url(), z.literal(null)]).optional(),
-  label: z.string().trim().min(1).max(40).optional(),
+  label: z
+    .string()
+    .trim()
+    .min(1)
+    .refine(maxMeaningfulLength(40), "Label must be 40 characters or fewer.")
+    .optional(),
   postIds: z.array(z.string()).max(20).optional(),
 });
 

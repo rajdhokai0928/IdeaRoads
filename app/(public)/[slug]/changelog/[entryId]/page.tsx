@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ChangelogCommentSection } from "@/components/changelog/changelog-comment-section";
 import { ChangelogLabelBadge } from "@/components/changelog/changelog-label-badge";
 import { ChangelogReactions } from "@/components/changelog/changelog-reactions";
+import { ChangelogRenderedBody } from "@/components/changelog/changelog-rendered-body";
 import { ChangelogShareButton } from "@/components/changelog/changelog-share-button";
 import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
@@ -199,10 +200,9 @@ export default async function PublicChangelogEntryPage({
           )}
 
           {/* Rendered body */}
-          <div
-            className="prose prose-sm max-w-none text-ir-body prose-headings:font-semibold prose-headings:text-ir-heading prose-a:text-ir-primary prose-code:bg-ir-muted-surface prose-code:px-1 prose-code:py-0.5 prose-pre:bg-ir-muted-surface"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: server-side sanitized via DOMPurify
-            dangerouslySetInnerHTML={{ __html: renderedBody }}
+          <ChangelogRenderedBody
+            className="prose prose-sm wrap-break-word max-w-none text-ir-body prose-headings:font-semibold prose-headings:text-ir-heading prose-a:text-ir-primary prose-code:bg-ir-muted-surface prose-code:px-1 prose-code:py-0.5 prose-pre:bg-ir-muted-surface prose-img:cursor-zoom-in prose-img:rounded-ir-md"
+            html={renderedBody}
           />
 
           {/* Reactions + share */}

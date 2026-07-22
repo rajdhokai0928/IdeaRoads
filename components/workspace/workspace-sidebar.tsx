@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CaretLeft,
   CircleDashed,
   Code,
   List,
@@ -77,7 +76,7 @@ function NavLink({
         collapsed ? "justify-center px-0 py-2" : "px-3 py-2",
         isActive
           ? "bg-ir-primary/15 font-medium text-ir-primary-light"
-          : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground"
       )}
       href={href}
       title={collapsed ? children : undefined}
@@ -148,11 +147,11 @@ export function WorkspaceSidebar({
 
   const sidebarContent = (
     <>
-      {/* Workspace switcher + collapse toggle. The toggle sits inline next to
-          the switcher when expanded (desktop only — mobile has no rail to
-          collapse); when the rail is collapsed there's no room for a second
-          row, so the logo itself becomes the expand trigger (hover swaps it
-          for a caret via WorkspaceSwitcher's onExpand path). */}
+      {/* Workspace switcher + collapse toggle, ChatGPT-style: when the rail
+          is collapsed, hovering the logo swaps it for an expand caret
+          (WorkspaceSwitcher's onExpand path); when expanded, hovering the
+          logo swaps it for a collapse caret instead (onCollapse path).
+          Mobile has no persistent rail, so neither toggle applies there. */}
       {effectiveCollapsed ? (
         <WorkspaceSwitcher
           collapsed
@@ -163,27 +162,13 @@ export function WorkspaceSidebar({
           workspaces={workspaces}
         />
       ) : (
-        <div className="flex border-b border-sidebar-border">
-          <div className="min-w-0 flex-1">
-            <WorkspaceSwitcher
-              currentLogoUrl={workspaceLogoUrl}
-              currentName={workspaceName}
-              currentSlug={workspaceSlug}
-              workspaces={workspaces}
-            />
-          </div>
-          {!isMobile && (
-            <button
-              aria-label="Collapse sidebar"
-              className="flex h-14 w-10 shrink-0 cursor-pointer items-center justify-center text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
-              onClick={toggleCollapsed}
-              title="Collapse sidebar"
-              type="button"
-            >
-              <CaretLeft className="size-4" />
-            </button>
-          )}
-        </div>
+        <WorkspaceSwitcher
+          currentLogoUrl={workspaceLogoUrl}
+          currentName={workspaceName}
+          currentSlug={workspaceSlug}
+          onCollapse={isMobile ? undefined : toggleCollapsed}
+          workspaces={workspaces}
+        />
       )}
 
       {/* Navigation */}
@@ -295,7 +280,7 @@ export function WorkspaceSidebar({
           >
             <Link
               className={cn(
-                "flex cursor-pointer items-center gap-2.5 rounded-ir-md text-xs font-semibold text-sidebar-foreground/50 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
+                "flex cursor-pointer items-center gap-2.5 rounded-ir-md text-xs font-semibold text-sidebar-foreground/70 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40",
                 effectiveCollapsed ? "justify-center px-0 py-2" : "px-3 py-2"
               )}
               href="/orbit"
@@ -329,7 +314,7 @@ export function WorkspaceSidebar({
           <SheetTrigger asChild>
             <motion.button
               aria-label="Open navigation"
-              className="flex cursor-pointer items-center justify-center rounded-ir-sm p-1 text-sidebar-foreground/70 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+              className="flex cursor-pointer items-center justify-center rounded-ir-sm p-1 text-sidebar-foreground/90 transition-colors duration-150 ease-ir-standard hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
               type="button"
               whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
             >

@@ -35,6 +35,11 @@ import {
   updateRoadmapStatus,
 } from "@/lib/roadmap/statuses";
 import { uploadFile } from "@/lib/storage";
+import { countCharacters } from "@/lib/text-metrics";
+import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 type ActionResult<T = undefined> =
@@ -149,7 +154,10 @@ export async function setRoadmapSyncAction(input: {
 
 const statusInputSchema = z.object({
   workspaceId: z.string().min(1),
-  name: z.string().min(1, "Name is required.").max(48, "Name is too long."),
+  name: z
+    .string()
+    .refine(minMeaningfulLength(1), "Name is required.")
+    .refine(maxMeaningfulLength(48), "Name is too long."),
   color: z.string().regex(COLOR_RE, "Invalid color.").optional(),
 });
 
@@ -187,7 +195,7 @@ export async function updateRoadmapStatusAction(input: {
   if (!auth.ok) {
     return { success: false, error: auth.error };
   }
-  if (input.name !== undefined && input.name.trim().length === 0) {
+  if (input.name !== undefined && countCharacters(input.name) === 0) {
     return { success: false, error: "Name is required." };
   }
   if (input.color !== undefined && !COLOR_RE.test(input.color)) {
@@ -244,9 +252,18 @@ export async function reorderRoadmapStatusesAction(input: {
 const itemInputSchema = z.object({
   workspaceId: z.string().min(1),
   statusId: z.string().min(1),
-  title: z.string().min(1, "Title is required.").max(160, "Title is too long."),
+  title: z
+    .string()
+    .refine(minMeaningfulLength(1), "Title is required.")
+    .refine(maxMeaningfulLength(160), "Title is too long."),
   // Rich-text HTML from the Quill editor — allow room for markup.
-  description: z.string().max(50_000).nullish(),
+  description: z
+    .string()
+    .refine(
+      maxMeaningfulLength(50_000),
+      "Description must be 50,000 characters or fewer."
+    )
+    .nullish(),
   launchDate: z.string().nullish(),
   coverImage: z.string().url("Cover image must be a valid URL.").nullish(),
   feedbackId: z.string().nullish(),

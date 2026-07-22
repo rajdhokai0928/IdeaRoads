@@ -55,7 +55,7 @@ export default async function HomePage() {
           <ProductTour />
           <FeaturesGrid />
           <LiveDemo />
-          <FeedbackWidgetSection appUrl={portalBaseUrl()} />
+          {/* <FeedbackWidgetSection appUrl={portalBaseUrl()} /> */}
           <Comparison />
           <FinalCta />
         </main>

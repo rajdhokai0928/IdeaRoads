@@ -199,7 +199,7 @@ export default function CommentReactions({
       {reactions.map((r) => {
         const pill = (
           <button
-            className={`inline-flex items-center gap-1 rounded-ir-full border px-2 py-0.5 text-xs transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40 disabled:opacity-60 ${
+            className={`inline-flex cursor-pointer items-center gap-1 rounded-ir-full border px-2 py-0.5 text-xs transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40 disabled:opacity-60 ${
               r.hasReacted
                 ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
                 : "border-ir-border bg-transparent text-ir-body hover:border-ir-primary/30"
@@ -232,7 +232,7 @@ export default function CommentReactions({
           <button
             aria-expanded={showPicker}
             aria-label="Add reaction"
-            className="inline-flex items-center gap-1 rounded-ir-full border border-ir-border px-2 py-0.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-ir-full border border-ir-border px-2 py-0.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40"
             disabled={!!pendingEmoji}
             onClick={handleAddReactionClick}
             type="button"
@@ -244,14 +244,14 @@ export default function CommentReactions({
             <>
               <button
                 aria-label="Close emoji picker"
-                className="fixed inset-0 z-10"
+                className="fixed inset-0 z-10 cursor-pointer"
                 onClick={() => setShowPicker(false)}
                 type="button"
               />
               <div className="absolute bottom-full left-0 z-20 mb-1.5 flex gap-1 rounded-ir-md border border-ir-border bg-ir-surface p-1.5 shadow-ir-md">
                 {REACTION_EMOJIS.map((emoji) => (
                   <button
-                    className="rounded-ir-sm p-1 text-base leading-none transition-colors duration-100 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40"
+                    className="cursor-pointer rounded-ir-sm p-1 text-base leading-none transition-colors duration-100 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40"
                     key={emoji}
                     onClick={() => handleReact(emoji)}
                     title={emoji}

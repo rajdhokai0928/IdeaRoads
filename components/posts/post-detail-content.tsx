@@ -134,7 +134,7 @@ export function PostDetailContent({
       {!isEmbed && (
         <div
           className={`sticky z-10 border-b border-ir-border px-4 py-4 sm:px-8 ${
-            isPublicPortal ? "top-16 bg-ir-background" : "top-0 bg-background"
+            isPublicPortal ? "top-16 bg-ir-background" : "top-0"
           }`}
         >
           <Link
@@ -183,9 +183,16 @@ export function PostDetailContent({
             </div>
           )}
 
-          {/* Post header */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-            <div className="min-w-0 flex-1">
+          {/* Post header — title/badges are a bounded-width column (not
+            flex-1), so the row's total width is just "title column + gap +
+            vote button", however wide the page itself is. Previously the
+            title column used flex-1, which stretched it to fill the whole
+            (wide) page, so a short title left a large empty gap before the
+            vote button trailing after it. Bounding the width instead of
+            growing it keeps the vote button right next to the title at any
+            screen size, with no gap possible. */}
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 max-w-2xl flex-1">
               <EditableTitle
                 className="text-xl font-semibold leading-snug text-ir-heading"
                 title={post.title}
@@ -265,7 +272,7 @@ export function PostDetailContent({
             editing (title stays editable in the header above). */}
           <EditablePostContent
             body={post.body}
-            className="text-sm leading-relaxed text-ir-body"
+            className="text-sm leading-relaxed text-ir-body wrap-break-word"
             imageUrl={post.imageUrl}
           />
 

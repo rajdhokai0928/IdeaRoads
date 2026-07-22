@@ -195,7 +195,7 @@ export function ChangelogReactions({
       {reactions.map((r) => {
         const pill = (
           <button
-            className={`inline-flex items-center gap-1 rounded-ir-sm border px-2 py-0.5 text-xs transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-60 ${
+            className={`inline-flex cursor-pointer items-center gap-1 rounded-ir-sm border px-2 py-0.5 text-xs transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-60 ${
               r.hasReacted
                 ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-heading"
                 : "border-ir-border bg-transparent text-ir-heading hover:border-ir-primary/30"
@@ -229,7 +229,7 @@ export function ChangelogReactions({
             aria-expanded={showPicker}
             aria-haspopup="true"
             aria-label="Add reaction"
-            className="inline-flex items-center gap-1 rounded-ir-sm border border-ir-border px-2 py-0.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-ir-sm border border-ir-border px-2 py-0.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             disabled={!!pendingEmoji}
             onClick={handleAddReactionClick}
             type="button"
@@ -241,7 +241,7 @@ export function ChangelogReactions({
             <>
               <button
                 aria-label="Close emoji picker"
-                className="fixed inset-0 z-10"
+                className="fixed inset-0 z-10 cursor-pointer"
                 onClick={() => setShowPicker(false)}
                 type="button"
               />
@@ -249,7 +249,7 @@ export function ChangelogReactions({
                 {REACTION_EMOJIS.map((emoji) => (
                   <button
                     aria-label={`React with ${emoji}`}
-                    className="rounded-ir-xs p-1 text-base leading-none transition-colors duration-100 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                    className="cursor-pointer rounded-ir-xs p-1 text-base leading-none transition-colors duration-100 ease-ir-standard hover:bg-ir-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                     key={emoji}
                     onClick={() => handleReact(emoji)}
                     type="button"

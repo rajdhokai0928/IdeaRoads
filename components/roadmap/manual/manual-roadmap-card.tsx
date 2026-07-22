@@ -94,7 +94,7 @@ export function ManualRoadmapCard({
                 by a dialog instead of navigation (manual items have no
                 detail route). */}
             <button
-              className="text-left text-sm leading-snug font-medium text-ir-heading after:absolute after:inset-0 after:content-[''] hover:text-ir-primary hover:underline focus-visible:underline focus-visible:outline-none"
+              className="cursor-pointer text-left text-sm leading-snug font-medium text-ir-heading after:absolute after:inset-0 after:content-[''] hover:text-ir-primary hover:underline focus-visible:underline focus-visible:outline-none"
               onClick={() => onView?.(item)}
               type="button"
             >
@@ -133,7 +133,7 @@ export function ManualRoadmapCard({
               {onEdit && (
                 <button
                   aria-label="Edit item"
-                  className="rounded-ir-sm p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                  className="cursor-pointer rounded-ir-sm p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={() => onEdit(item)}
                   type="button"
                 >
@@ -143,7 +143,7 @@ export function ManualRoadmapCard({
               {onDelete && (
                 <button
                   aria-label="Delete item"
-                  className="rounded-ir-sm p-1.5 text-ir-danger transition-colors duration-150 ease-ir-standard hover:bg-ir-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                  className="cursor-pointer rounded-ir-sm p-1.5 text-ir-danger transition-colors duration-150 ease-ir-standard hover:bg-ir-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                   onClick={() => onDelete(item)}
                   type="button"
                 >

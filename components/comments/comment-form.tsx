@@ -9,6 +9,7 @@ import { useIsEmbed } from "@/components/embed/use-is-embed";
 import { Button } from "@/components/ui/button";
 import { embedFetch } from "@/lib/embed/fetch";
 import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
+import { countCharacters } from "@/lib/text-metrics";
 import { type CommentApi, type CommentData, postsCommentApi } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
 
@@ -75,10 +76,10 @@ export default function CommentForm({
     const currentText = textRef.current;
     const currentHtml = htmlRef.current;
     // Validation + duplicate-submit / mid-upload guards.
-    if (!currentText.trim() || isPending || uploading) {
+    if (countCharacters(currentText) === 0 || isPending || uploading) {
       return;
     }
-    if (currentText.length > MAX) {
+    if (countCharacters(currentText) > MAX) {
       setError(`Comment must be ${MAX.toLocaleString()} characters or fewer.`);
       return;
     }
@@ -149,7 +150,7 @@ export default function CommentForm({
         <p className="py-2 text-sm text-ir-muted">
           {isEmbed ? (
             <button
-              className="font-medium text-ir-primary hover:underline"
+              className="cursor-pointer font-medium text-ir-primary hover:underline"
               onClick={() => setAuthOpen(true)}
               type="button"
             >
@@ -205,12 +206,12 @@ export default function CommentForm({
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-ir-muted">
-          {text.length > 0
-            ? `${(MAX - text.length).toLocaleString()} characters remaining`
+          {countCharacters(text) > 0
+            ? `${(MAX - countCharacters(text)).toLocaleString()} characters remaining`
             : ""}
         </span>
         <Button
-          disabled={isPending || uploading || !text.trim()}
+          disabled={isPending || uploading || countCharacters(text) === 0}
           size="sm"
           type="submit"
         >

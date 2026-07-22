@@ -7,6 +7,7 @@ import { user, workspaces } from "@/db/schema";
 import { requireSession } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { blockUser, unblockUser } from "@/lib/moderation/block";
+import { maxMeaningfulLength } from "@/lib/validation/text-length";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 type ActionResult<T = undefined> =
@@ -18,7 +19,10 @@ type ActionResult<T = undefined> =
 const blockSchema = z.object({
   workspaceId: z.string().min(1),
   email: z.string().email("Must be a valid email address."),
-  reason: z.string().max(300).optional(),
+  reason: z
+    .string()
+    .refine(maxMeaningfulLength(300), "Reason must be 300 characters or fewer.")
+    .optional(),
 });
 
 export async function blockUserAction(input: {

@@ -350,23 +350,40 @@
 
     let open = false;
     let hostOverflow = "";
+    let hostPaddingRight = "";
 
     // Locks the host page's own scroll while the panel is open — without
     // this, the panel floats over a still-scrollable page, and the page's
     // scrollbar ends up sitting right beside (and fighting with) the panel's
-    // own, reading as a broken "double scrollbar".
+    // own, reading as a broken "double scrollbar". Setting overflow:hidden
+    // removes the host's scrollbar, which shrinks the content width by
+    // however wide that scrollbar was — every open/close jerks the whole
+    // page sideways as it reflows to fill (then give back) that space.
+    // Adding matching padding-right while locked keeps the content width
+    // constant, so nothing shifts either time.
     function setOpen(next) {
       open = next;
       panel.style.display = open ? "block" : "none";
       launcher.setAttribute("aria-expanded", String(open));
       if (open) {
+        const scrollbarWidth =
+          window.innerWidth - document.documentElement.clientWidth;
         hostOverflow = document.body.style.overflow;
+        hostPaddingRight = document.body.style.paddingRight;
         document.body.style.overflow = "hidden";
+        if (scrollbarWidth > 0) {
+          const currentPaddingRight =
+            Number.parseFloat(getComputedStyle(document.body).paddingRight) ||
+            0;
+          document.body.style.paddingRight =
+            currentPaddingRight + scrollbarWidth + "px";
+        }
         // Wait a frame so display:block has taken effect before focusing —
         // an element that's still display:none can't receive focus.
         requestAnimationFrame(() => iframe.focus());
       } else {
         document.body.style.overflow = hostOverflow;
+        document.body.style.paddingRight = hostPaddingRight;
         launcher.focus();
       }
     }

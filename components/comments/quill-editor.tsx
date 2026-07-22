@@ -331,7 +331,7 @@ export default function QuillEditor({
       {hoveredImage && !disabled && (
         <button
           aria-label="Remove image"
-          className="absolute flex size-6 items-center justify-center rounded-ir-full bg-ir-heading/70 text-white shadow-ir-sm transition-colors duration-150 ease-ir-standard hover:bg-ir-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+          className="absolute flex size-6 cursor-pointer items-center justify-center rounded-ir-full bg-ir-heading/70 text-white shadow-ir-sm transition-colors duration-150 ease-ir-standard hover:bg-ir-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
           onClick={handleRemoveHoveredImage}
           onMouseLeave={(e) => {
             if (e.relatedTarget === hoveredImage.img) {

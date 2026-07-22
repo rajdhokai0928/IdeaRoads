@@ -190,7 +190,7 @@ export function RoadmapStatusManagerDialog({
                     style={{ backgroundColor: s.color }}
                   />
                   <button
-                    className="min-w-0 flex-1 truncate text-left text-sm font-medium text-ir-heading hover:underline"
+                    className="min-w-0 flex-1 cursor-pointer truncate text-left text-sm font-medium text-ir-heading hover:underline"
                     onClick={() => startEdit(s)}
                     type="button"
                   >
@@ -200,7 +200,7 @@ export function RoadmapStatusManagerDialog({
                   <div className="flex items-center gap-0.5">
                     <button
                       aria-label="Move up"
-                      className="rounded-ir-sm p-1 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading disabled:opacity-30"
+                      className="cursor-pointer rounded-ir-sm p-1 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading disabled:opacity-30"
                       disabled={isPending || i === 0}
                       onClick={() => move(i, -1)}
                       type="button"
@@ -209,7 +209,7 @@ export function RoadmapStatusManagerDialog({
                     </button>
                     <button
                       aria-label="Move down"
-                      className="rounded-ir-sm p-1 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading disabled:opacity-30"
+                      className="cursor-pointer rounded-ir-sm p-1 text-ir-muted transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface hover:text-ir-heading disabled:opacity-30"
                       disabled={isPending || i === statuses.length - 1}
                       onClick={() => move(i, 1)}
                       type="button"
@@ -218,7 +218,7 @@ export function RoadmapStatusManagerDialog({
                     </button>
                     <button
                       aria-label="Delete column"
-                      className="rounded-ir-sm p-1 text-ir-danger transition-colors duration-150 ease-ir-standard hover:bg-ir-danger/10 disabled:opacity-30"
+                      className="cursor-pointer rounded-ir-sm p-1 text-ir-danger transition-colors duration-150 ease-ir-standard hover:bg-ir-danger/10 disabled:opacity-30"
                       disabled={isPending || s.itemCount > 0}
                       onClick={() => handleDelete(s)}
                       title={

@@ -49,7 +49,7 @@ export function FollowRoadmapButton({
 
   return (
     <button
-      className={`inline-flex items-center gap-1.5 rounded-ir-button border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:opacity-50 ${
+      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-ir-button border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 disabled:cursor-not-allowed disabled:opacity-50 ${
         following
           ? "border-ir-border bg-ir-muted-surface text-ir-heading"
           : "border-ir-border text-ir-muted hover:bg-ir-muted-surface hover:text-ir-heading"

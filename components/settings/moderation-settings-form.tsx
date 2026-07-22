@@ -168,7 +168,7 @@ export function ModerationSettingsForm({
               {kw}
               <button
                 aria-label={`Remove ${kw}`}
-                className="ml-0.5 text-ir-muted hover:text-ir-heading focus-visible:outline-none"
+                className="ml-0.5 cursor-pointer text-ir-muted hover:text-ir-heading focus-visible:outline-none"
                 onClick={() => removeKeyword(kw)}
                 type="button"
               >

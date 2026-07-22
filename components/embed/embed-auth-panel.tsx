@@ -297,7 +297,7 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
 
         <div className="flex items-center justify-between text-xs">
           <button
-            className="font-medium text-ir-muted hover:text-ir-heading hover:underline"
+            className="cursor-pointer font-medium text-ir-muted hover:text-ir-heading hover:underline"
             onClick={() => {
               setStep("email");
               setOtp("");
@@ -308,7 +308,7 @@ export function EmbedAuthPanel({ onAuthenticated }: EmbedAuthPanelProps) {
             Use a different email
           </button>
           <button
-            className="font-medium text-ir-primary hover:underline disabled:opacity-50"
+            className="cursor-pointer font-medium text-ir-primary hover:underline disabled:opacity-50"
             disabled={resending}
             onClick={handleResend}
             type="button"

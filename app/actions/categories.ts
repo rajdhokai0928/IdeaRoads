@@ -16,6 +16,10 @@ import {
   updateCategory,
 } from "@/lib/categories/update";
 import { getPost, updatePostCategory } from "@/lib/posts/queries";
+import {
+  maxMeaningfulLength,
+  minMeaningfulLength,
+} from "@/lib/validation/text-length";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 type ActionResult<T = undefined> =
@@ -28,9 +32,15 @@ const createCategorySchema = z.object({
   workspaceId: z.string().min(1),
   name: z
     .string()
-    .min(1, "Name is required.")
-    .max(64, "Name must be 64 characters or fewer."),
-  description: z.string().max(200).optional(),
+    .refine(minMeaningfulLength(1), "Name is required.")
+    .refine(maxMeaningfulLength(64), "Name must be 64 characters or fewer."),
+  description: z
+    .string()
+    .refine(
+      maxMeaningfulLength(200),
+      "Description must be 200 characters or fewer."
+    )
+    .optional(),
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Invalid color.")
@@ -104,8 +114,19 @@ export async function createCategoryAction(input: {
 const updateCategorySchema = z.object({
   categoryId: z.string().min(1),
   workspaceId: z.string().min(1),
-  name: z.string().min(1).max(64).optional(),
-  description: z.string().max(200).nullable().optional(),
+  name: z
+    .string()
+    .refine(minMeaningfulLength(1), "Name is required.")
+    .refine(maxMeaningfulLength(64), "Name must be 64 characters or fewer.")
+    .optional(),
+  description: z
+    .string()
+    .refine(
+      maxMeaningfulLength(200),
+      "Description must be 200 characters or fewer."
+    )
+    .nullable()
+    .optional(),
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/)

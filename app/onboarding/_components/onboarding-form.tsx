@@ -207,15 +207,15 @@ export function OnboardingForm({
     (slugState === "available" || slugState === "idle");
 
   return (
-    <main className="grid min-h-screen place-items-center bg-page px-4 py-10">
+    <main className="grid min-h-screen place-items-center bg-page px-4 py-4">
       <div className="w-full max-w-lg">
         <Link
-          className="mb-8 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mb-5 flex justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           href="/"
         >
           <Image
             alt={PRODUCT_NAME}
-            className="h-12 w-auto"
+            className="h-16 w-auto"
             height={164}
             priority
             src={LOGO_PATH}
@@ -279,7 +279,7 @@ export function OnboardingForm({
                   </label>
                   {slugLocked && (
                     <button
-                      className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors duration-150"
+                      className="cursor-pointer text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors duration-150"
                       onClick={resetSlugToAuto}
                       type="button"
                     >

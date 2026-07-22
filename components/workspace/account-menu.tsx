@@ -75,7 +75,7 @@ export function AccountMenu({
               </span>
               <motion.span
                 animate={{ rotate: open ? 180 : 0 }}
-                className="shrink-0 text-sidebar-foreground/40"
+                className="shrink-0 text-sidebar-foreground/60"
                 transition={{
                   duration: shouldReduceMotion ? 0 : 0.15,
                   ease: "easeOut",

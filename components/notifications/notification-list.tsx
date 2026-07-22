@@ -224,7 +224,7 @@ export function NotificationList({
             <div className="flex items-center gap-1 rounded-ir-md bg-muted/50 p-0.5">
               <button
                 className={cn(
-                  "rounded-ir-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                  "cursor-pointer rounded-ir-sm px-2.5 py-1 text-xs font-medium transition-colors",
                   filter === "all"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -236,7 +236,7 @@ export function NotificationList({
               </button>
               <button
                 className={cn(
-                  "flex items-center gap-1.5 rounded-ir-sm px-2.5 py-1 text-xs font-medium transition-colors",
+                  "flex cursor-pointer items-center gap-1.5 rounded-ir-sm px-2.5 py-1 text-xs font-medium transition-colors",
                   filter === "unread"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -256,7 +256,7 @@ export function NotificationList({
             <div className="flex items-center gap-4">
               {unreadCount > 0 && (
                 <button
-                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                   disabled={isPending}
                   onClick={handleMarkAllRead}
                   type="button"
@@ -265,7 +265,7 @@ export function NotificationList({
                 </button>
               )}
               <button
-                className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+                className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 disabled={isPending}
                 onClick={() => setClearConfirmOpen(true)}
                 type="button"
@@ -307,7 +307,7 @@ export function NotificationList({
           {hasMore && filter === "all" && (
             <div className="px-5 py-4 text-center">
               <button
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 disabled={isPending}
                 onClick={handleLoadMore}
                 type="button"

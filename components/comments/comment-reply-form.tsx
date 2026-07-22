@@ -9,6 +9,7 @@ import { useIsEmbed } from "@/components/embed/use-is-embed";
 import { Button } from "@/components/ui/button";
 import { embedFetch } from "@/lib/embed/fetch";
 import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
+import { countCharacters } from "@/lib/text-metrics";
 import { type CommentApi, postsCommentApi, type ReplyData } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
 
@@ -74,10 +75,10 @@ export default function CommentReplyForm({
   async function submit() {
     const currentText = textRef.current;
     const currentHtml = htmlRef.current;
-    if (!currentText.trim() || isPending || uploading) {
+    if (countCharacters(currentText) === 0 || isPending || uploading) {
       return;
     }
-    if (currentText.length > MAX) {
+    if (countCharacters(currentText) > MAX) {
       setError(`Reply must be ${MAX.toLocaleString()} characters or fewer.`);
       return;
     }
@@ -143,7 +144,7 @@ export default function CommentReplyForm({
         <p className="mt-3 ml-10 py-2 text-sm text-ir-muted">
           {isEmbed ? (
             <button
-              className="font-medium text-ir-primary hover:underline"
+              className="cursor-pointer font-medium text-ir-primary hover:underline"
               onClick={() => setAuthOpen(true)}
               type="button"
             >
@@ -159,7 +160,7 @@ export default function CommentReplyForm({
           )}{" "}
           to reply.{" "}
           <button
-            className="text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+            className="cursor-pointer text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
             onClick={onCancel}
             type="button"
           >
@@ -215,7 +216,7 @@ export default function CommentReplyForm({
           Cancel
         </Button>
         <Button
-          disabled={isPending || uploading || !text.trim()}
+          disabled={isPending || uploading || countCharacters(text) === 0}
           size="sm"
           type="submit"
         >

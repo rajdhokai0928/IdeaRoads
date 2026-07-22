@@ -99,7 +99,7 @@ export function LinkedPostsSelector({
               <span className="max-w-50 truncate">{post.title}</span>
               <button
                 aria-label={`Remove ${post.title}`}
-                className="text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none"
+                className="cursor-pointer text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none"
                 onClick={() => removePost(post.id)}
                 type="button"
               >
@@ -133,7 +133,7 @@ export function LinkedPostsSelector({
             <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-ir-md border border-ir-border bg-ir-surface shadow-ir-lg">
               {results.map((post) => (
                 <button
-                  className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:bg-ir-muted-surface focus-visible:outline-none"
+                  className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface focus-visible:bg-ir-muted-surface focus-visible:outline-none"
                   key={post.id}
                   onClick={() => addPost(post)}
                   type="button"

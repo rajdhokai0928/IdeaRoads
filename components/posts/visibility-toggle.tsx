@@ -77,7 +77,7 @@ export default function VisibilityToggle({
       aria-label={
         isApproved ? "Hide from public (pending review)" : "Make visible"
       }
-      className={`rounded-ir-sm p-1 transition-all duration-150 ease-ir-standard hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
+      className={`cursor-pointer rounded-ir-sm p-1 transition-all duration-150 ease-ir-standard hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
         isApproved
           ? "text-ir-success hover:text-ir-warning"
           : "text-ir-warning hover:text-ir-success"

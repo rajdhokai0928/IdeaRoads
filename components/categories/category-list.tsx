@@ -319,7 +319,7 @@ export function CategoryList({
             <p className="text-sm text-ir-muted">No categories yet.</p>
             {canManage && (
               <button
-                className="mt-3 rounded-ir-sm text-sm text-ir-primary hover:underline focus-visible:outline-none"
+                className="mt-3 cursor-pointer rounded-ir-sm text-sm text-ir-primary hover:underline focus-visible:outline-none"
                 onClick={openCreate}
                 type="button"
               >
@@ -352,7 +352,7 @@ export function CategoryList({
                       {!cat.isDefault && (
                         <button
                           aria-label={`Set ${cat.name} as default`}
-                          className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          className="cursor-pointer rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                           onClick={() => handleSetDefault(cat)}
                           title="Set as default"
                           type="button"
@@ -362,7 +362,7 @@ export function CategoryList({
                       )}
                       <button
                         aria-label={`Edit ${cat.name}`}
-                        className="rounded-ir-xs p-1.5 text-ir-primary transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        className="cursor-pointer rounded-ir-xs p-1.5 text-ir-primary transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => openEdit(cat)}
                         title="Edit"
                         type="button"
@@ -372,7 +372,7 @@ export function CategoryList({
                       {!cat.isDefault && (
                         <button
                           aria-label={`Archive ${cat.name}`}
-                          className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          className="cursor-pointer rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                           onClick={() => setArchiveTarget(cat)}
                           title="Archive"
                           type="button"
@@ -383,7 +383,7 @@ export function CategoryList({
                       {!cat.isDefault && (
                         <button
                           aria-label={`Delete ${cat.name}`}
-                          className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          className="cursor-pointer rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                           onClick={() => setDeleteTarget(cat)}
                           title="Delete"
                           type="button"
@@ -421,7 +421,7 @@ export function CategoryList({
                     <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
                       <button
                         aria-label={`Restore ${cat.name}`}
-                        className="rounded-ir-xs p-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        className="cursor-pointer rounded-ir-xs p-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setArchiveTarget(cat)}
                         title="Restore"
                         type="button"
@@ -430,7 +430,7 @@ export function CategoryList({
                       </button>
                       <button
                         aria-label={`Delete ${cat.name}`}
-                        className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        className="cursor-pointer rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setDeleteTarget(cat)}
                         title="Delete"
                         type="button"

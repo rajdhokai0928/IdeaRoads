@@ -40,7 +40,7 @@ export function NotificationBell({
         collapsed ? "justify-center px-0 py-2" : "px-3 py-2",
         isActive
           ? "bg-ir-primary/15 font-medium text-ir-primary-light"
-          : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground"
       )}
       href={`/${workspaceSlug}/notifications`}
       title={collapsed ? "Notifications" : undefined}

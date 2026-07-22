@@ -369,7 +369,7 @@ export function StatusList({
                     <div className="ml-auto flex items-center gap-1.5">
                       <button
                         aria-pressed={s.showOnPublicFeed}
-                        className={`inline-flex items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
+                        className={`inline-flex cursor-pointer items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
                           s.showOnPublicFeed
                             ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
                             : "border-ir-border text-ir-muted hover:text-ir-heading"
@@ -391,7 +391,7 @@ export function StatusList({
                       </button>
                       <button
                         aria-pressed={s.showOnRoadmap}
-                        className={`inline-flex items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
+                        className={`inline-flex cursor-pointer items-center gap-1 rounded-ir-sm border px-1.5 py-0.5 text-2xs font-medium transition-colors duration-150 ease-ir-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40 ${
                           s.showOnRoadmap
                             ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
                             : "border-ir-border text-ir-muted hover:text-ir-heading"
@@ -415,7 +415,7 @@ export function StatusList({
                       {!s.isDefault && (
                         <button
                           aria-label={`Set ${s.name} as default`}
-                          className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          className="cursor-pointer rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                           disabled={isPending}
                           onClick={() => handleSetDefault(s)}
                           title="Set as default"
@@ -426,7 +426,7 @@ export function StatusList({
                       )}
                       <button
                         aria-label={`Edit ${s.name}`}
-                        className="rounded-ir-xs p-1.5 text-ir-primary transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        className="cursor-pointer rounded-ir-xs p-1.5 text-ir-primary transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => openEdit(s)}
                         title="Edit"
                         type="button"
@@ -435,7 +435,7 @@ export function StatusList({
                       </button>
                       <button
                         aria-label={`Archive ${s.name}`}
-                        className="rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        className="cursor-pointer rounded-ir-xs p-1.5 text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setArchiveTarget(s)}
                         title="Archive"
                         type="button"
@@ -445,7 +445,7 @@ export function StatusList({
                       {!s.isDefault && (
                         <button
                           aria-label={`Delete ${s.name}`}
-                          className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                          className="cursor-pointer rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                           onClick={() => setDeleteTarget(s)}
                           title="Delete"
                           type="button"
@@ -490,7 +490,7 @@ export function StatusList({
                     <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
                       <button
                         aria-label={`Restore ${s.name}`}
-                        className="rounded-ir-xs p-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none"
+                        className="cursor-pointer rounded-ir-xs p-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:text-ir-heading focus-visible:outline-none"
                         onClick={() => setArchiveTarget(s)}
                         type="button"
                       >
@@ -498,7 +498,7 @@ export function StatusList({
                       </button>
                       <button
                         aria-label={`Delete ${s.name}`}
-                        className="rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        className="cursor-pointer rounded-ir-xs p-1.5 text-ir-danger transition-opacity duration-150 ease-ir-standard hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => setDeleteTarget(s)}
                         type="button"
                       >

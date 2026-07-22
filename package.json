@@ -19,7 +19,7 @@
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
-    "db:reset": "CONFIRM_RESET=1 tsx db/reset.ts && pnpm db:migrate",
+    "db:reset": "tsx db/reset.ts --confirm && pnpm db:migrate",
     "make:admin": "tsx scripts/make-admin.ts",
     "collapse-boards": "tsx scripts/collapse-boards.ts",
     "test": "vitest run",

@@ -194,7 +194,7 @@ export function ManualRoadmapBoard({
             No roadmap columns yet.
             {canManage && (
               <button
-                className="ml-1 text-ir-primary underline"
+                className="ml-1 cursor-pointer text-ir-primary underline"
                 onClick={() => setManageOpen(true)}
                 type="button"
               >
@@ -333,7 +333,7 @@ export function ManualRoadmapBoard({
 
                     {canManage && (
                       <button
-                        className="mt-1 flex items-center justify-center gap-1 rounded-ir-sm border border-dashed border-ir-border py-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
+                        className="mt-1 flex cursor-pointer items-center justify-center gap-1 rounded-ir-sm border border-dashed border-ir-border py-1.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ir-primary/40"
                         onClick={() => {
                           setEditItem(null);
                           setAddStatusId(s.id);

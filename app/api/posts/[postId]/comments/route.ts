@@ -9,6 +9,7 @@ import {
 } from "@/lib/comments";
 import { isPostAccessible } from "@/lib/posts/access";
 import { getPost } from "@/lib/posts/queries";
+import { countCharacters } from "@/lib/text-metrics";
 import { getWorkspaceMember } from "@/lib/workspaces/queries";
 
 interface Params {
@@ -96,7 +97,8 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   // Validate body
   const rawBody = typeof body.body === "string" ? body.body.trim() : "";
-  if (!rawBody || rawBody.length < 1 || rawBody.length > 5000) {
+  const bodyLength = countCharacters(rawBody);
+  if (bodyLength < 1 || bodyLength > 5000) {
     return NextResponse.json(
       { error: "Comment must be between 1 and 5000 characters." },
       { status: 422 }

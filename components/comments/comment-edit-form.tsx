@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { truncateHtmlToText } from "@/lib/changelog/html";
+import { embedFetch } from "@/lib/embed/fetch";
 import type { CommentApi } from "./types";
 import { uploadCommentImage } from "./upload-comment-image";
 
@@ -66,7 +67,7 @@ export default function CommentEditForm({
     setError(null);
     setIsPending(true);
     try {
-      const res = await fetch(`${commentBaseUrl}/${commentId}`, {
+      const res = await embedFetch(`${commentBaseUrl}/${commentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body: currentHtml }),

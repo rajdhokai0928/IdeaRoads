@@ -15,10 +15,18 @@ import {
 import { useDirtyState } from "@/hooks/use-dirty-state";
 import type { EmbedMode, EmbedPosition, EmbedTheme } from "@/lib/embed/queries";
 
+interface BoardOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface Props {
   appUrl: string;
+  boards: BoardOption[];
   initialConfig: {
     accentColor: string;
+    boardId: string | null;
     height: number;
     mode: EmbedMode;
     position: EmbedPosition;
@@ -52,6 +60,7 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 function buildSnippet(input: {
   accentColor: string;
   appUrl: string;
+  boardSlug: string;
   height: number;
   mode: EmbedMode;
   position: EmbedPosition;
@@ -61,6 +70,7 @@ function buildSnippet(input: {
 }): string {
   const attrs = [
     `data-workspace="${input.workspaceSlug}"`,
+    `data-board="${input.boardSlug}"`,
     `data-mode="${input.mode}"`,
   ];
   if (input.mode === "button") {
@@ -76,7 +86,13 @@ function buildSnippet(input: {
   return `<script src="${input.appUrl}/widget.js"\n        ${attrs.join("\n        ")}></script>`;
 }
 
-function CopyButton({ value }: { value: string }) {
+function CopyButton({
+  disabled,
+  value,
+}: {
+  disabled?: boolean;
+  value: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   function copy() {
@@ -87,7 +103,13 @@ function CopyButton({ value }: { value: string }) {
   }
 
   return (
-    <Button onClick={copy} size="xs" type="button" variant="outline">
+    <Button
+      disabled={disabled}
+      onClick={copy}
+      size="xs"
+      type="button"
+      variant="outline"
+    >
       {copied ? "Copied!" : "Copy"}
     </Button>
   );
@@ -97,8 +119,10 @@ export function EmbedSection({
   workspaceId,
   workspaceSlug,
   appUrl,
+  boards,
   initialConfig,
 }: Props) {
+  const [boardId, setBoardId] = useState(initialConfig.boardId ?? "");
   const [mode, setMode] = useState(initialConfig.mode);
   const [position, setPosition] = useState(initialConfig.position);
   const [theme, setTheme] = useState(initialConfig.theme);
@@ -108,6 +132,7 @@ export function EmbedSection({
   const [accentColorError, setAccentColorError] = useState("");
   const [isPending, startTransition] = useTransition();
   const { isDirty, markClean } = useDirtyState({
+    boardId,
     mode,
     position,
     theme,
@@ -118,21 +143,30 @@ export function EmbedSection({
 
   const widthNum = Number(width) || initialConfig.width;
   const heightNum = Number(height) || initialConfig.height;
+  const selectedBoard = boards.find((b) => b.id === boardId);
 
-  const snippet = buildSnippet({
-    accentColor,
-    appUrl,
-    height: heightNum,
-    mode,
-    position,
-    theme,
-    width: widthNum,
-    workspaceSlug,
-  });
+  const snippet = selectedBoard
+    ? buildSnippet({
+        accentColor,
+        appUrl,
+        boardSlug: selectedBoard.slug,
+        height: heightNum,
+        mode,
+        position,
+        theme,
+        width: widthNum,
+        workspaceSlug,
+      })
+    : null;
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setAccentColorError("");
+
+    if (!boardId) {
+      toast.error("Choose a board to embed.");
+      return;
+    }
 
     if (!HEX_COLOR.test(accentColor)) {
       setAccentColorError("Must be a hex color like #2563eb.");
@@ -142,6 +176,7 @@ export function EmbedSection({
     startTransition(async () => {
       const result = await updateEmbedConfigAction({
         workspaceId,
+        boardId,
         mode,
         position,
         theme,
@@ -156,14 +191,56 @@ export function EmbedSection({
       }
 
       toast.success("Embed settings saved");
-      markClean({ mode, position, theme, width, height, accentColor });
+      markClean({ boardId, mode, position, theme, width, height, accentColor });
     });
+  }
+
+  if (boards.length === 0) {
+    return (
+      <div className="rounded-ir-card border border-dashed border-ir-border bg-ir-muted-surface p-6 text-center">
+        <h2 className="text-sm font-semibold text-ir-heading">
+          No public boards yet
+        </h2>
+        <p className="mt-1 text-xs text-ir-muted">
+          The embed widget shows one board's feedback. Create a board and
+          mark it public before generating a snippet.
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-8">
       <form className="space-y-5" onSubmit={handleSave}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label
+              className="mb-1 block text-xs font-medium text-ir-heading"
+              htmlFor="embed-board"
+            >
+              Board
+            </label>
+            <Select
+              disabled={isPending || boards.length < 2}
+              onValueChange={setBoardId}
+              value={boardId}
+            >
+              <SelectTrigger className="w-full" id="embed-board">
+                <SelectValue placeholder="Select a board" />
+              </SelectTrigger>
+              <SelectContent>
+                {boards.map((board) => (
+                  <SelectItem key={board.id} value={board.id}>
+                    {board.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-ir-muted">
+              Which public board the widget shows.
+            </p>
+          </div>
+
           <div>
             <label
               className="mb-1 block text-xs font-medium text-ir-heading"
@@ -327,14 +404,15 @@ export function EmbedSection({
       <section>
         <h2 className="text-sm font-semibold text-ir-heading">Embed snippet</h2>
         <p className="mt-0.5 text-xs text-ir-muted">
-          Paste this where you want the widget to appear on your site. It
-          updates live as you change the settings above.
+          {snippet
+            ? "Paste this where you want the widget to appear on your site. It updates live as you change the settings above."
+            : "Select a board above to generate a valid embed snippet."}
         </p>
         <div className="mt-3 flex items-start gap-2 rounded-ir-sm border border-ir-border bg-ir-muted-surface p-3">
           <pre className="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-pre text-ir-heading">
-            {snippet}
+            {snippet ?? "// select a board to generate this snippet"}
           </pre>
-          <CopyButton value={snippet} />
+          <CopyButton disabled={!snippet} value={snippet ?? ""} />
         </div>
       </section>
     </div>

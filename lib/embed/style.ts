@@ -2,6 +2,12 @@ import type { CSSProperties } from "react";
 
 export interface ParsedEmbedParams {
   accentColor?: string;
+  // The board this widget INSTANCE is configured for (widget.js's data-board)
+  // — not necessarily the board of the page currently being viewed. Carried
+  // across in-widget navigation (e.g. Feedback -> Roadmap -> Feedback) so
+  // EmbedNav's "Feedback" tab can always return to the right board instead of
+  // guessing from a workspace's public-boards list.
+  board?: string;
   isEmbed: boolean;
   // True when rendering inside the widget's fixed-size floating panel (as
   // opposed to an inline embed, which grows to fit its content) — see
@@ -30,6 +36,7 @@ const BARE_HEX_COLOR = /^[0-9a-fA-F]{6}$/;
 // where it's actually used as a CSS value sidesteps the whole problem.
 export function parseEmbedParams(searchParams: {
   accentColor?: string;
+  board?: string;
   embed?: string;
   layout?: string;
   theme?: string;
@@ -44,7 +51,8 @@ export function parseEmbedParams(searchParams: {
     searchParams.accentColor && BARE_HEX_COLOR.test(searchParams.accentColor)
       ? `#${searchParams.accentColor}`
       : undefined;
-  return { accentColor, isEmbed, isPanel, theme };
+  const board = searchParams.board || undefined;
+  return { accentColor, board, isEmbed, isPanel, theme };
 }
 
 // Builds the query string used on internal links so embed mode (and the
@@ -54,6 +62,9 @@ export function buildEmbedQuery(params: ParsedEmbedParams): string {
     return "";
   }
   const qs = new URLSearchParams({ embed: "1" });
+  if (params.board) {
+    qs.set("board", params.board);
+  }
   if (params.theme) {
     qs.set("theme", params.theme);
   }

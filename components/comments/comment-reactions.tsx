@@ -1,13 +1,19 @@
 "use client";
 
 import { SmileyIcon } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
+import { useIsEmbed } from "@/components/embed/use-is-embed";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { REACTION_EMOJIS } from "@/config/platform";
+import { embedFetch } from "@/lib/embed/fetch";
+import { useEmbedReactionCorrections } from "@/lib/embed/personalization-context";
+import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
 import type { CommentApi, ReactionGroup } from "./types";
 
 function formatReactorNames(names: string[]): string {
@@ -34,18 +40,39 @@ export default function CommentReactions({
   isSignedIn,
 }: CommentReactionsProps) {
   const commentBaseUrl = api?.commentBaseUrl ?? "/api/comments";
+  const router = useRouter();
+  const isEmbed = useIsEmbed();
   const [reactions, setReactions] = useState<ReactionGroup[]>(initialReactions);
   const [showPicker, setShowPicker] = useState(false);
   const [pendingEmoji, setPendingEmoji] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useEmbedSignedIn(isEmbed, isSignedIn);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [afterAuthEmoji, setAfterAuthEmoji] = useState<string | null>(null);
 
-  async function handleReact(emoji: string) {
-    if (!isSignedIn) {
+  // Server-rendered `hasReacted` is computed from a cookie session, always
+  // false for a bearer-authenticated embed visitor — correct it once at
+  // mount, the same way VoteButton corrects `hasVoted` (see
+  // lib/embed/personalization-context.tsx). Guarded by a ref: the
+  // personalization fetch is re-triggered by a sign-in that can happen in
+  // this SAME flow (e.g. sign in via this row's own dialog, which
+  // immediately reacts) and can resolve AFTER that reaction's own request —
+  // a slower correction response carrying pre-reaction data would otherwise
+  // clobber it. Once the visitor has reacted locally, that action is
+  // authoritative for the rest of this component's lifetime.
+  const hasLocalActionRef = useRef(false);
+  const correctedReactions = useEmbedReactionCorrections(
+    commentId,
+    initialReactions
+  );
+  useEffect(() => {
+    if (hasLocalActionRef.current) {
       return;
     }
-    if (pendingEmoji) {
-      return;
-    }
+    setReactions(correctedReactions);
+  }, [correctedReactions]);
 
+  async function castReaction(emoji: string) {
+    hasLocalActionRef.current = true;
     setPendingEmoji(emoji);
     setShowPicker(false);
 
@@ -92,11 +119,24 @@ export default function CommentReactions({
     }
 
     try {
-      await fetch(`${commentBaseUrl}/${commentId}/reactions`, {
+      const res = await embedFetch(`${commentBaseUrl}/${commentId}/reactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emoji }),
       });
+      // A session can go stale between page load and this click (expiry, a
+      // sign-out elsewhere) — reopen the in-place prompt instead of leaving
+      // the visitor stuck behind a silently-reverted reaction.
+      if (res.status === 401 && isEmbed) {
+        setReactions(initialReactions);
+        setSignedIn(false);
+        setAfterAuthEmoji(emoji);
+        setAuthOpen(true);
+        return;
+      }
+      if (!res.ok) {
+        setReactions(initialReactions);
+      }
     } catch {
       // Revert on error - refetch would be ideal but keep simple
       setReactions(initialReactions);
@@ -104,6 +144,42 @@ export default function CommentReactions({
       setPendingEmoji(null);
     }
   }
+
+  function handleReact(emoji: string) {
+    if (!signedIn) {
+      if (isEmbed) {
+        setAfterAuthEmoji(emoji);
+        setAuthOpen(true);
+      }
+      return;
+    }
+    if (pendingEmoji) {
+      return;
+    }
+    castReaction(emoji);
+  }
+
+  function handleAddReactionClick() {
+    if (!signedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    setShowPicker((v) => !v);
+  }
+
+  function handleAuthenticated() {
+    setSignedIn(true);
+    router.refresh();
+    if (afterAuthEmoji) {
+      const emoji = afterAuthEmoji;
+      setAfterAuthEmoji(null);
+      castReaction(emoji);
+    } else {
+      setShowPicker(true);
+    }
+  }
+
+  const canReact = signedIn || isEmbed;
 
   useEffect(() => {
     if (!showPicker) {
@@ -128,7 +204,7 @@ export default function CommentReactions({
                 ? "border-ir-primary/40 bg-ir-primary-light/15 text-ir-primary"
                 : "border-ir-border bg-transparent text-ir-body hover:border-ir-primary/30"
             }`}
-            disabled={!isSignedIn || !!pendingEmoji}
+            disabled={!canReact || !!pendingEmoji}
             onClick={() => handleReact(r.emoji)}
             type="button"
           >
@@ -151,20 +227,20 @@ export default function CommentReactions({
         );
       })}
 
-      {isSignedIn && (
+      {canReact && (
         <div className="relative">
           <button
             aria-expanded={showPicker}
             aria-label="Add reaction"
             className="inline-flex items-center gap-1 rounded-ir-full border border-ir-border px-2 py-0.5 text-xs text-ir-muted transition-colors duration-150 ease-ir-standard hover:border-ir-primary/30 hover:text-ir-heading focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ir-primary/40"
             disabled={!!pendingEmoji}
-            onClick={() => setShowPicker((v) => !v)}
+            onClick={handleAddReactionClick}
             type="button"
           >
             <SmileyIcon className="size-3" />
           </button>
 
-          {showPicker && (
+          {showPicker && signedIn && (
             <>
               <button
                 aria-label="Close emoji picker"
@@ -188,6 +264,14 @@ export default function CommentReactions({
             </>
           )}
         </div>
+      )}
+
+      {isEmbed && (
+        <EmbedAuthDialog
+          onAuthenticated={handleAuthenticated}
+          onOpenChange={setAuthOpen}
+          open={authOpen}
+        />
       )}
     </div>
   );

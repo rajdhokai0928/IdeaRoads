@@ -21,8 +21,6 @@ export * from "@/db/schema/changelog-labels";
 export * from "@/db/schema/notifications";
 export * from "@/db/schema/roadmap-followers";
 export * from "@/db/schema/blocked-users";
-export * from "@/db/schema/webhooks";
-export * from "@/db/schema/api-keys";
 export * from "@/db/schema/embed";
 export * from "@/db/schema/pending-email-changes";
 export * from "@/db/schema/orbit";

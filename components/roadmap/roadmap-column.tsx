@@ -15,7 +15,9 @@ interface RoadmapColumnProps {
   canManage?: boolean;
   color: string;
   draggingId?: string | null;
+  embedQuery?: string;
   isDropTarget?: boolean;
+  isFiltering?: boolean;
   isSignedIn: boolean;
   name: string;
   onDragEnd?: () => void;
@@ -35,9 +37,11 @@ export function RoadmapColumn({
   workspaceSlug,
   isSignedIn,
   useWorkspaceLinks,
+  embedQuery,
   canManage = false,
   draggingId = null,
   isDropTarget = false,
+  isFiltering = false,
   onDragEnd,
   onDragLeaveColumn,
   onDragOverColumn,
@@ -82,7 +86,9 @@ export function RoadmapColumn({
       >
         {visible.length === 0 ? (
           <div className="rounded-ir-card border border-dashed border-ir-border">
-            <RoadmapEmptyState label={`Nothing in ${name} yet.`} />
+            <RoadmapEmptyState
+              label={isFiltering ? "No matches" : `Nothing in ${name} yet.`}
+            />
           </div>
         ) : (
           <>
@@ -116,6 +122,7 @@ export function RoadmapColumn({
                   >
                     <RoadmapPostCard
                       canManage={canManage}
+                      embedQuery={embedQuery}
                       isSignedIn={isSignedIn}
                       post={post}
                       useWorkspaceLinks={useWorkspaceLinks}

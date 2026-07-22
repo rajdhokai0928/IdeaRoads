@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNull } from "drizzle-orm";
 import { comments } from "@/db/schema";
 import { db } from "@/lib/db";
 
@@ -111,6 +111,28 @@ export async function getCommentById(commentId: string) {
     .where(eq(comments.id, commentId))
     .limit(1);
   return row ?? null;
+}
+
+// Batch ownership check across a set of posts — mirrors getBatchVotedSet's
+// shape (lib/voting/list.ts) for the same "is this mine" purpose, just over
+// comments/replies instead of votes. Used by the embed personalization
+// endpoint, which resolves identity from a bearer token instead of a cookie.
+export async function getOwnCommentIds(
+  postIds: string[],
+  userId: string
+): Promise<Set<string>> {
+  if (postIds.length === 0) {
+    return new Set();
+  }
+
+  const rows = await db
+    .select({ id: comments.id })
+    .from(comments)
+    .where(
+      and(inArray(comments.postId, postIds), eq(comments.authorId, userId))
+    );
+
+  return new Set(rows.map((r) => r.id));
 }
 
 export async function getCommentCount(postId: string): Promise<number> {

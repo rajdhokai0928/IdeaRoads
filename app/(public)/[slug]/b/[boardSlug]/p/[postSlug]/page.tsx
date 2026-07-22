@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PostDetailContent } from "@/components/posts/post-detail-content";
@@ -12,6 +13,7 @@ import {
   listBoardsForWorkspace,
 } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
+import { EmbedPersonalizationProvider } from "@/lib/embed/personalization-context";
 import {
   buildEmbedQuery,
   embedWrapperProps,
@@ -56,6 +58,10 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   const { slug, boardSlug, postSlug } = await params;
   const { embed, theme, accentColor, from, fromLabel } = await searchParams;
   const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  // This page's own route param is the authoritative "current board" —
+  // override whatever (if anything) was in the incoming URL so outgoing
+  // links (Roadmap/Changelog nav, etc.) always carry the right one forward.
+  embedParams.board = boardSlug;
   const { isEmbed } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
@@ -150,55 +156,76 @@ export default async function PostDetailPage({ params, searchParams }: Props) {
   const back = resolveBackTarget({
     from,
     fromLabel,
-    fallbackHref: `/${slug}/b/${boardSlug}`,
+    fallbackHref: `/${slug}/b/${boardSlug}${embedQuery}`,
     fallbackLabel: board.name,
   });
 
   return (
-    <div
-      className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
-      style={embedWrapper.style}
+    <EmbedPersonalizationProvider
+      includeCommentOwnership
+      includeModerator
+      isEmbed={isEmbed}
+      postIds={[post.id]}
+      workspaceId={workspace.id}
     >
-      {isEmbed && <EmbedResizeReporter />}
-      {!isEmbed && (
-        <PortalHeader
-          boards={publicBoards}
-          changelogPublic={workspace.changelogPublic}
-          isMember={isMember}
-          isSignedIn={isSignedIn}
-          logoUrl={workspace.logoUrl}
-          roadmapPublic={workspace.roadmapPublic}
-          slug={slug}
-          userEmail={session?.user.email}
-          userImage={session?.user.image}
-          userName={session?.user.name}
-          workspaceName={workspace.name}
-        />
-      )}
-      {!isEmbed && <PoweredByBadge />}
+      <div
+        className={`min-h-screen bg-ir-background ${embedWrapper.className}`}
+        style={embedWrapper.style}
+      >
+        {isEmbed && <EmbedResizeReporter />}
+        {isEmbed && (
+          <EmbedNav
+            active="feedback"
+            boards={publicBoards}
+            changelogPublic={workspace.changelogPublic}
+            embedQuery={embedQuery}
+            feedbackBoardSlug={boardSlug}
+            isSignedIn={isSignedIn}
+            roadmapPublic={workspace.roadmapPublic}
+            slug={slug}
+          />
+        )}
+        {!isEmbed && (
+          <PortalHeader
+            boards={publicBoards}
+            changelogPublic={workspace.changelogPublic}
+            currentPath={`/${slug}/b/${boardSlug}/p/${postSlug}${embedQuery}`}
+            isMember={isMember}
+            isSignedIn={isSignedIn}
+            logoUrl={workspace.logoUrl}
+            roadmapPublic={workspace.roadmapPublic}
+            slug={slug}
+            userEmail={session?.user.email}
+            userImage={session?.user.image}
+            userName={session?.user.name}
+            workspaceName={workspace.name}
+          />
+        )}
+        {!isEmbed && <PoweredByBadge />}
 
-      <main id="main-content">
-        <PostDetailContent
-          assignees={assignees}
-          backLabel={back.label}
-          boardHref={back.href}
-          boardIsArchived={board.isArchived}
-          categories={categories}
-          currentUserId={session?.user.id ?? null}
-          embedQuery={embedQuery}
-          isAdminOrOwner={isAdminOrOwner}
-          isEmbed={isEmbed}
-          isMember={isMember}
-          isPublicPortal
-          isSignedIn={isSignedIn}
-          mergedTarget={mergedTarget}
-          post={post}
-          statusHistory={statusHistory}
-          votedByUser={votedByUser}
-          workspaceId={workspace.id}
-          workspaceStatuses={workspaceStatuses}
-        />
-      </main>
-    </div>
+        <main id="main-content">
+          <PostDetailContent
+            assignees={assignees}
+            backLabel={back.label}
+            boardHref={back.href}
+            boardIsArchived={board.isArchived}
+            categories={categories}
+            currentUserId={session?.user.id ?? null}
+            embedQuery={embedQuery}
+            isAdminOrOwner={isAdminOrOwner}
+            isEmbed={isEmbed}
+            isMember={isMember}
+            isPublicPortal
+            isSignedIn={isSignedIn}
+            mergedTarget={mergedTarget}
+            post={post}
+            statusHistory={statusHistory}
+            votedByUser={votedByUser}
+            workspaceId={workspace.id}
+            workspaceStatuses={workspaceStatuses}
+          />
+        </main>
+      </div>
+    </EmbedPersonalizationProvider>
   );
 }

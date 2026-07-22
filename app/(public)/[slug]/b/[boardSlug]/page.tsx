@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CategoryChip } from "@/components/categories/category-chip";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { CategorySidebar } from "@/components/portal/category-sidebar";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
@@ -20,6 +21,7 @@ import { getCurrentSession } from "@/lib/authz";
 import { getBoardBySlug, listBoardsForWorkspace } from "@/lib/boards/queries";
 import { getActiveCategoriesForWorkspace } from "@/lib/categories/queries";
 import { truncateHtmlToText } from "@/lib/changelog/html";
+import { EmbedPersonalizationProvider } from "@/lib/embed/personalization-context";
 import {
   buildEmbedQuery,
   embedWrapperProps,
@@ -76,6 +78,10 @@ export default async function BoardPage({ params, searchParams }: Props) {
     accentColor,
   } = await searchParams;
   const embedParams = parseEmbedParams({ accentColor, embed, layout, theme });
+  // This page's own route param is the authoritative "current board" —
+  // override whatever (if anything) was in the incoming URL so outgoing
+  // links (Roadmap/Changelog nav, etc.) always carry the right one forward.
+  embedParams.board = boardSlug;
   const { isEmbed, isPanel } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
@@ -206,236 +212,258 @@ export default async function BoardPage({ params, searchParams }: Props) {
     return `/${slug}/b/${boardSlug}${qs ? `?${qs}` : ""}`;
   }
 
+  // Inside the embed, always go straight to the form — it handles a
+  // signed-out guest itself (in-place auth at submit time) rather than
+  // bouncing them to /signin before they can even start typing.
   const newPostHref = board.isArchived
     ? undefined
-    : isSignedIn
+    : isSignedIn || isEmbed
       ? `/${slug}/b/${boardSlug}/new${embedQuery}`
       : `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`;
 
   return (
-    <div
-      className={`${
-        isPanel ? "flex h-dvh flex-col overflow-hidden" : "min-h-screen"
-      } bg-ir-background ${embedWrapper.className}`}
-      style={embedWrapper.style}
+    <EmbedPersonalizationProvider
+      isEmbed={isEmbed}
+      postIds={boardPosts.map((p) => p.id)}
+      workspaceId={workspace.id}
     >
-      {/* Panel mode (the widget's floating launcher) is a fixed-size iframe
-          with its own internal scroll region below — growing to fit content
-          would just get clipped by the panel, so there's nothing to report. */}
-      {isEmbed && !isPanel && <EmbedResizeReporter />}
-      {!isEmbed && (
-        <PortalHeader
-          boards={publicBoards}
-          changelogPublic={workspace.changelogPublic}
-          currentPath={`/${slug}/b/${boardSlug}${embedQuery}`}
-          isMember={isMember}
-          isSignedIn={isSignedIn}
-          logoUrl={workspace.logoUrl}
-          roadmapPublic={workspace.roadmapPublic}
-          slug={slug}
-          userEmail={session?.user.email}
-          userImage={session?.user.image}
-          userName={session?.user.name}
-          workspaceName={workspace.name}
-        />
-      )}
-      {!isEmbed && <PoweredByBadge />}
-
-      <main
-        className={
-          isPanel
-            ? "mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden"
-            : "mx-auto flex max-w-5xl flex-col"
-        }
-        id="main-content"
+      <div
+        className={`${
+          isPanel ? "flex h-dvh flex-col overflow-hidden" : "min-h-screen"
+        } bg-ir-background ${embedWrapper.className}`}
+        style={embedWrapper.style}
       >
-        {/* Page header — pinned in panel mode so only the content below scrolls */}
-        <div
-          className={`border-b border-ir-border px-4 py-6 sm:px-8 ${isPanel ? "shrink-0" : ""}`}
-        >
-          <h1 className="text-xl font-semibold text-ir-heading">
-            {board.name}
-          </h1>
-          {board.description && (
-            <p className="mt-1 text-sm text-ir-muted">{board.description}</p>
-          )}
-          {board.isArchived && (
-            <p className="mt-3 rounded-ir-sm border-l-2 border-ir-warning bg-ir-warning/10 py-1.5 pl-3 text-xs text-ir-muted">
-              This board is archived and no longer accepting new feedback. Its
-              posts remain readable below.
-            </p>
-          )}
-        </div>
+        {/* Panel mode (the widget's floating launcher) is a fixed-size iframe
+            with its own internal scroll region below — growing to fit content
+            would just get clipped by the panel, so there's nothing to report. */}
+        {isEmbed && !isPanel && <EmbedResizeReporter />}
+        {isEmbed && (
+          <EmbedNav
+            active="feedback"
+            boards={publicBoards}
+            changelogPublic={workspace.changelogPublic}
+            embedQuery={embedQuery}
+            feedbackBoardSlug={boardSlug}
+            isSignedIn={isSignedIn}
+            roadmapPublic={workspace.roadmapPublic}
+            slug={slug}
+          />
+        )}
+        {!isEmbed && (
+          <PortalHeader
+            boards={publicBoards}
+            changelogPublic={workspace.changelogPublic}
+            currentPath={`/${slug}/b/${boardSlug}${embedQuery}`}
+            isMember={isMember}
+            isSignedIn={isSignedIn}
+            logoUrl={workspace.logoUrl}
+            roadmapPublic={workspace.roadmapPublic}
+            slug={slug}
+            userEmail={session?.user.email}
+            userImage={session?.user.image}
+            userName={session?.user.name}
+            workspaceName={workspace.name}
+          />
+        )}
+        {!isEmbed && <PoweredByBadge />}
 
-        <div
-          className={`flex flex-col gap-6 px-4 py-6 sm:px-8 lg:flex-row lg:items-start lg:gap-8 ${
+        <main
+          className={
             isPanel
-              ? "min-h-0 flex-1 overflow-y-scroll [scrollbar-gutter:stable]"
-              : ""
-          }`}
+              ? "mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-hidden"
+              : "mx-auto flex max-w-5xl flex-col"
+          }
+          id="main-content"
         >
-          {/* Main content */}
-          <div className="min-w-0 flex-1 rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
-            <BoardFilters
+          {/* Page header — pinned in panel mode so only the content below scrolls */}
+          <div
+            className={`border-b border-ir-border px-4 py-6 sm:px-8 ${isPanel ? "shrink-0" : ""}`}
+          >
+            <h1 className="text-xl font-semibold text-ir-heading">
+              {board.name}
+            </h1>
+            {board.description && (
+              <p className="mt-1 text-sm text-ir-muted">{board.description}</p>
+            )}
+            {board.isArchived && (
+              <p className="mt-3 rounded-ir-sm border-l-2 border-ir-warning bg-ir-warning/10 py-1.5 pl-3 text-xs text-ir-muted">
+                This board is archived and no longer accepting new feedback. Its
+                posts remain readable below.
+              </p>
+            )}
+          </div>
+
+          <div
+            className={`flex flex-col gap-6 px-4 py-6 sm:px-8 lg:flex-row lg:items-start lg:gap-8 ${
+              isPanel
+                ? "min-h-0 flex-1 overflow-y-scroll [scrollbar-gutter:stable]"
+                : ""
+            }`}
+          >
+            {/* Main content */}
+            <div className="min-w-0 flex-1 rounded-ir-card border border-ir-border bg-ir-surface shadow-ir-xs">
+              <BoardFilters
+                activeSearch={searchQuery}
+                activeSort={validSort}
+                activeStatus={validStatus}
+                myVotesActive={myVotesActive}
+                showMyVotes={isSignedIn}
+                workspaceStatuses={publicWorkspaceStatuses}
+              />
+
+              {/* Post list */}
+              {boardPosts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center px-4 py-24 text-center sm:px-8">
+                  {searchQuery ||
+                  validStatus ||
+                  validCategoryId ||
+                  myVotesActive ||
+                  mineActive ? (
+                    <>
+                      <p className="text-sm font-medium text-ir-heading">
+                        No posts match your filters
+                      </p>
+                      <p className="mt-1 text-xs text-ir-muted">
+                        Try a different search term, status, or category.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-ir-heading">
+                        No feedback yet
+                      </p>
+                      <p className="mt-1 text-xs text-ir-muted">
+                        Be the first to submit an idea or request.
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="divide-y divide-ir-border">
+                  {boardPosts.map((post) => {
+                    const postCategory = post.categoryId
+                      ? categoryMap.get(post.categoryId)
+                      : undefined;
+
+                    return (
+                      <div
+                        className="group flex items-start gap-3 px-4 py-5 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:px-6"
+                        key={post.id}
+                      >
+                        {/* Post content */}
+                        <Link
+                          className="min-w-0 flex-1"
+                          href={`/${slug}/b/${boardSlug}/p/${post.slug}${embedQuery}`}
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            {post.isPinned && (
+                              <PushPinIcon
+                                className="size-3 shrink-0 text-ir-primary"
+                                weight="fill"
+                              />
+                            )}
+                            <p className="text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard group-hover:text-ir-primary">
+                              {post.title}
+                            </p>
+                          </div>
+                          {post.body && (
+                            <p className="mt-1 line-clamp-2 text-xs text-ir-muted">
+                              {truncateHtmlToText(post.body, 240)}
+                            </p>
+                          )}
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                            {postCategory && (
+                              <CategoryChip
+                                color={postCategory.color}
+                                name={postCategory.name}
+                                size="xs"
+                              />
+                            )}
+                            <PostStatusBadge
+                              status={post.status}
+                              workspaceStatuses={workspaceStatuses}
+                            />
+                            <span className="text-xs text-ir-muted">
+                              {post.authorName || post.authorEmail} ·{" "}
+                              {formatDistanceToNow(post.createdAt, {
+                                addSuffix: true,
+                              })}
+                            </span>
+                            {post.commentCount > 0 && (
+                              <span className="flex items-center gap-1 text-xs text-ir-muted">
+                                <ChatCircleIcon className="size-3" />
+                                {post.commentCount}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+
+                        {/* Vote control */}
+                        <div className="shrink-0">
+                          <VoteButton
+                            compact
+                            initialCount={post.upvotes}
+                            initialHasVoted={post.hasVoted}
+                            isArchived={board.isArchived}
+                            isLocked={false}
+                            isSignedIn={isSignedIn}
+                            postId={post.id}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Pagination — numbered, shown only when there's more than one page */}
+              {totalPages > 1 && (
+                <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-ir-border px-4 py-3 sm:flex-row sm:px-6">
+                  <span className="text-xs text-ir-muted">
+                    Showing {rangeStart.toLocaleString()}–
+                    {rangeEnd.toLocaleString()} of {totalCount.toLocaleString()}
+                  </span>
+                  <PostsPagination
+                    currentPage={currentPage}
+                    hrefForPage={pageHref}
+                    totalPages={totalPages}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar — in panel mode its own "+ Feedback" button is
+                suppressed in favor of the pinned footer below, so the CTA
+                stays reachable without scrolling through the post list. */}
+            <CategorySidebar
+              activeCategoryId={validCategoryId}
               activeSearch={searchQuery}
               activeSort={validSort}
               activeStatus={validStatus}
-              myVotesActive={myVotesActive}
-              showMyVotes={isSignedIn}
-              workspaceStatuses={publicWorkspaceStatuses}
+              boardSlug={boardSlug}
+              categories={categories}
+              embedQuery={embedQuery}
+              isMine={mineActive}
+              isSignedIn={isSignedIn}
+              newPostHref={isPanel ? undefined : newPostHref}
+              slug={slug}
             />
-
-            {/* Post list */}
-            {boardPosts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center px-4 py-24 text-center sm:px-8">
-                {searchQuery ||
-                validStatus ||
-                validCategoryId ||
-                myVotesActive ||
-                mineActive ? (
-                  <>
-                    <p className="text-sm font-medium text-ir-heading">
-                      No posts match your filters
-                    </p>
-                    <p className="mt-1 text-xs text-ir-muted">
-                      Try a different search term, status, or category.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-ir-heading">
-                      No feedback yet
-                    </p>
-                    <p className="mt-1 text-xs text-ir-muted">
-                      Be the first to submit an idea or request.
-                    </p>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="divide-y divide-ir-border">
-                {boardPosts.map((post) => {
-                  const postCategory = post.categoryId
-                    ? categoryMap.get(post.categoryId)
-                    : undefined;
-
-                  return (
-                    <div
-                      className="group flex items-start gap-3 px-4 py-5 transition-colors duration-150 ease-ir-standard hover:bg-ir-muted-surface sm:px-6"
-                      key={post.id}
-                    >
-                      {/* Post content */}
-                      <Link
-                        className="min-w-0 flex-1"
-                        href={`/${slug}/b/${boardSlug}/p/${post.slug}${embedQuery}`}
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          {post.isPinned && (
-                            <PushPinIcon
-                              className="size-3 shrink-0 text-ir-primary"
-                              weight="fill"
-                            />
-                          )}
-                          <p className="text-sm font-medium text-ir-heading transition-colors duration-150 ease-ir-standard group-hover:text-ir-primary">
-                            {post.title}
-                          </p>
-                        </div>
-                        {post.body && (
-                          <p className="mt-1 line-clamp-2 text-xs text-ir-muted">
-                            {truncateHtmlToText(post.body, 240)}
-                          </p>
-                        )}
-                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                          {postCategory && (
-                            <CategoryChip
-                              color={postCategory.color}
-                              name={postCategory.name}
-                              size="xs"
-                            />
-                          )}
-                          <PostStatusBadge
-                            status={post.status}
-                            workspaceStatuses={workspaceStatuses}
-                          />
-                          <span className="text-xs text-ir-muted">
-                            {post.authorName || post.authorEmail} ·{" "}
-                            {formatDistanceToNow(post.createdAt, {
-                              addSuffix: true,
-                            })}
-                          </span>
-                          {post.commentCount > 0 && (
-                            <span className="flex items-center gap-1 text-xs text-ir-muted">
-                              <ChatCircleIcon className="size-3" />
-                              {post.commentCount}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
-
-                      {/* Vote control */}
-                      <div className="shrink-0">
-                        <VoteButton
-                          compact
-                          initialCount={post.upvotes}
-                          initialHasVoted={post.hasVoted}
-                          isArchived={board.isArchived}
-                          isLocked={false}
-                          isSignedIn={isSignedIn}
-                          postId={post.id}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Pagination — numbered, shown only when there's more than one page */}
-            {totalPages > 1 && (
-              <div className="flex flex-col-reverse items-center justify-between gap-3 border-t border-ir-border px-4 py-3 sm:flex-row sm:px-6">
-                <span className="text-xs text-ir-muted">
-                  Showing {rangeStart.toLocaleString()}–
-                  {rangeEnd.toLocaleString()} of {totalCount.toLocaleString()}
-                </span>
-                <PostsPagination
-                  currentPage={currentPage}
-                  hrefForPage={pageHref}
-                  totalPages={totalPages}
-                />
-              </div>
-            )}
           </div>
 
-          {/* Sidebar — in panel mode its own "+ Feedback" button is
-              suppressed in favor of the pinned footer below, so the CTA
-              stays reachable without scrolling through the post list. */}
-          <CategorySidebar
-            activeCategoryId={validCategoryId}
-            activeSearch={searchQuery}
-            activeSort={validSort}
-            activeStatus={validStatus}
-            boardSlug={boardSlug}
-            categories={categories}
-            isMine={mineActive}
-            isSignedIn={isSignedIn}
-            newPostHref={isPanel ? undefined : newPostHref}
-            slug={slug}
-          />
-        </div>
-
-        {/* Pinned footer — panel mode only; the standalone page keeps the
-            "+ Feedback" button in the sidebar above instead. */}
-        {isPanel && newPostHref && (
-          <div className="shrink-0 border-t border-ir-border bg-ir-surface px-4 py-3 sm:px-8">
-            <Button asChild className="w-full">
-              <Link href={newPostHref}>
-                <PlusIcon data-icon="inline-start" />
-                Feedback
-              </Link>
-            </Button>
-          </div>
-        )}
-      </main>
-    </div>
+          {/* Pinned footer — panel mode only; the standalone page keeps the
+              "+ Feedback" button in the sidebar above instead. */}
+          {isPanel && newPostHref && (
+            <div className="shrink-0 border-t border-ir-border bg-ir-surface px-4 py-3 sm:px-8">
+              <Button asChild className="w-full">
+                <Link href={newPostHref}>
+                  <PlusIcon data-icon="inline-start" />
+                  Feedback
+                </Link>
+              </Button>
+            </div>
+          )}
+        </main>
+      </div>
+    </EmbedPersonalizationProvider>
   );
 }

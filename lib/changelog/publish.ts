@@ -1,8 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { changelogEntries, changelogPosts, user, votes } from "@/db/schema";
 import { db } from "@/lib/db";
-import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
-import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 import { enqueueJob } from "@/lib/worker/enqueue";
 import { JOB_NAMES } from "@/lib/worker/job-types";
 
@@ -40,12 +38,6 @@ export async function publishChangelogEntry(
     })
     .where(eq(changelogEntries.id, entryId))
     .returning();
-
-  dispatchWebhookEvent(workspaceId, WEBHOOK_EVENTS.CHANGELOG_PUBLISHED, {
-    id: entryId,
-    title: entry.title,
-    label: entry.label,
-  });
 
   // Only notify once per entry
   if (!entry.notifiedAt) {

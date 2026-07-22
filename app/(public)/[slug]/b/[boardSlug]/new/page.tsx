@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { EmbedNav } from "@/components/embed/embed-nav";
 import { EmbedResizeReporter } from "@/components/embed/resize-reporter";
 import { PoweredByBadge } from "@/components/portal/powered-by-badge";
 import { PortalHeader } from "@/components/workspace/portal-header";
@@ -40,13 +41,20 @@ export default async function NewPostPage({ params, searchParams }: Props) {
   const { slug, boardSlug } = await params;
   const { embed, theme, accentColor } = await searchParams;
   const embedParams = parseEmbedParams({ embed, theme, accentColor });
+  // This page's own route param is the authoritative "current board" —
+  // override whatever (if anything) was in the incoming URL so outgoing
+  // links (Roadmap/Changelog nav, etc.) always carry the right one forward.
+  embedParams.board = boardSlug;
   const { isEmbed } = embedParams;
   const embedQuery = buildEmbedQuery(embedParams);
   const embedWrapper = embedWrapperProps(embedParams);
 
-  // Submitting feedback requires a signed-in User — send visitors to sign in.
+  // Submitting feedback requires a signed-in User. Outside the embed, send
+  // visitors to sign in before rendering anything. Inside the embed, render
+  // the form for guests too — it handles sign-in in place at submit time,
+  // so a signed-out visitor's draft is never lost to a redirect.
   const session = await getCurrentSession();
-  if (!session) {
+  if (!session && !isEmbed) {
     redirect(
       `/signin?next=${encodeURIComponent(`/${slug}/b/${boardSlug}/new${embedQuery}`)}`
     );
@@ -62,10 +70,13 @@ export default async function NewPostPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const member = await getWorkspaceMember(workspace.id, session.user.id);
+  const member = session
+    ? await getWorkspaceMember(workspace.id, session.user.id)
+    : null;
 
   // Anyone signed in may submit on a public board; private/archived boards are
-  // restricted to workspace members.
+  // restricted to workspace members. A signed-out embed guest is treated the
+  // same as any other non-member for this check.
   if ((!board.isPublic || board.isArchived) && !member) {
     notFound();
   }
@@ -82,6 +93,18 @@ export default async function NewPostPage({ params, searchParams }: Props) {
       style={embedWrapper.style}
     >
       {isEmbed && <EmbedResizeReporter />}
+      {isEmbed && (
+        <EmbedNav
+          active="feedback"
+          boards={publicBoards}
+          changelogPublic={workspace.changelogPublic}
+          embedQuery={embedQuery}
+          feedbackBoardSlug={boardSlug}
+          isSignedIn={!!session}
+          roadmapPublic={workspace.roadmapPublic}
+          slug={slug}
+        />
+      )}
       {!isEmbed && (
         <PortalHeader
           boards={publicBoards}
@@ -91,9 +114,9 @@ export default async function NewPostPage({ params, searchParams }: Props) {
           logoUrl={workspace.logoUrl}
           roadmapPublic={workspace.roadmapPublic}
           slug={slug}
-          userEmail={session.user.email}
-          userImage={session.user.image}
-          userName={session.user.name}
+          userEmail={session?.user.email}
+          userImage={session?.user.image}
+          userName={session?.user.name}
           workspaceName={workspace.name}
         />
       )}
@@ -106,6 +129,7 @@ export default async function NewPostPage({ params, searchParams }: Props) {
           categories={categories}
           embedQuery={embedQuery}
           isEmbed={isEmbed}
+          isSignedIn={!!session}
           workspaceId={workspace.id}
           workspaceSlug={slug}
         />

@@ -88,7 +88,6 @@ export default async function CommentSection({
 
       <CommentThread
         canModerate={canModerate}
-        currentUserId={currentUserId}
         initialComments={allComments}
         isLocked={isLocked}
         isSignedIn={isSignedIn}

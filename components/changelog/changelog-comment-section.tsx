@@ -94,7 +94,6 @@ export async function ChangelogCommentSection({
       <CommentThread
         api={api}
         canModerate={canModerate}
-        currentUserId={currentUserId}
         initialComments={allComments}
         isLocked={false}
         isSignedIn={isSignedIn}

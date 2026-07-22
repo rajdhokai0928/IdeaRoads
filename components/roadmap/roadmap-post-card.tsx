@@ -12,6 +12,10 @@ interface RoadmapPostCardProps {
   // Shows the drag handle — only the admin-shelled board passes this (see
   // RoadmapBoard/RoadmapColumn), matching the manual roadmap card's same prop.
   canManage?: boolean;
+  // Carries embed=1/theme/accentColor into the post-detail navigation so
+  // opening an item from the embedded roadmap doesn't fall back to the full
+  // Public Portal chrome — see RoadmapPage. Empty outside the embed.
+  embedQuery?: string;
   isSignedIn: boolean;
   post: RoadmapPost;
   useWorkspaceLinks?: boolean;
@@ -24,21 +28,26 @@ export function RoadmapPostCard({
   isSignedIn,
   useWorkspaceLinks,
   canManage,
+  embedQuery = "",
 }: RoadmapPostCardProps) {
   // Carry the roadmap as the navigation origin so the detail page's Back button
   // returns here instead of the board / All Feedback. Read by both post-detail
-  // pages via resolveBackTarget(); falls back gracefully when absent.
+  // pages via resolveBackTarget(); falls back gracefully when absent. The
+  // `from` value itself must carry embedQuery too — it's used verbatim as the
+  // Back link's href, not re-derived on the target page.
   const roadmapHref = useWorkspaceLinks
     ? `/${workspaceSlug}/settings/roadmap`
-    : `/${workspaceSlug}/roadmap`;
-  const backParams = `?from=${encodeURIComponent(roadmapHref)}&fromLabel=Roadmap`;
+    : `/${workspaceSlug}/roadmap${embedQuery}`;
+  const backSeparator = embedQuery ? "&" : "?";
+  const backParams = `${backSeparator}from=${encodeURIComponent(roadmapHref)}&fromLabel=Roadmap`;
 
   // Fixed by which route rendered this card, never by who's viewing — the
   // public roadmap never redirects into the workspace app on its own.
   const postHref =
     (useWorkspaceLinks
       ? `/${workspaceSlug}/feedback/${post.id}`
-      : `/${workspaceSlug}/b/${post.boardSlug}/p/${post.slug}`) + backParams;
+      : `/${workspaceSlug}/b/${post.boardSlug}/p/${post.slug}${embedQuery}`) +
+    backParams;
 
   return (
     // `relative` anchors the title's stretched-link overlay to the whole card.

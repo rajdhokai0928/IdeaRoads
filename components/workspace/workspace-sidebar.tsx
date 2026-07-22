@@ -4,7 +4,6 @@ import {
   CaretLeft,
   CircleDashed,
   Code,
-  Key,
   List,
   MapTrifold,
   Megaphone,
@@ -13,7 +12,6 @@ import {
   Tag,
   Tray,
   Users,
-  WebhooksLogo,
 } from "@phosphor-icons/react";
 import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
@@ -276,20 +274,6 @@ export function WorkspaceSidebar({
                 icon={CircleDashed}
               >
                 Statuses
-              </NavLink>
-              <NavLink
-                collapsed={effectiveCollapsed}
-                href={`/${workspaceSlug}/settings/api-keys`}
-                icon={Key}
-              >
-                API Keys
-              </NavLink>
-              <NavLink
-                collapsed={effectiveCollapsed}
-                href={`/${workspaceSlug}/settings/webhooks`}
-                icon={WebhooksLogo}
-              >
-                Webhooks
               </NavLink>
               <NavLink
                 collapsed={effectiveCollapsed}

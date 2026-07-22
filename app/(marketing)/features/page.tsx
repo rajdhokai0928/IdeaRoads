@@ -95,7 +95,6 @@ const ALL_FEATURES = [
       "Team roles & permissions",
       "Custom branding & domain",
       "Email notifications",
-      "REST API & webhooks",
       "Self-hosted option",
     ],
   },

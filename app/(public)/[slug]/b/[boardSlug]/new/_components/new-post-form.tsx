@@ -1,11 +1,17 @@
 "use client";
 
-import { ArrowLeftIcon, ImageIcon, XIcon } from "@phosphor-icons/react";
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ImageIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { createPostAction, uploadPostImageAction } from "@/app/actions/posts";
+import { EmbedAuthDialog } from "@/components/embed/embed-auth-dialog";
 import { Button } from "@/components/ui/button";
 import { ImagePreviewThumbnail } from "@/components/ui/image-preview-thumbnail";
 import {
@@ -15,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { embedFetch } from "@/lib/embed/fetch";
+import { useEmbedSignedIn } from "@/lib/embed/use-embed-signed-in";
 
 const QuillEditor = dynamic(
   () => import("@/components/comments/quill-editor"),
@@ -43,8 +51,51 @@ interface Props {
   categories: Category[];
   embedQuery?: string;
   isEmbed?: boolean;
+  isSignedIn: boolean;
   workspaceId: string;
   workspaceSlug: string;
+}
+
+interface Draft {
+  body: string;
+  categoryId: string;
+  title: string;
+}
+
+function draftKey(boardId: string) {
+  return `ir-draft:${boardId}`;
+}
+
+// A visitor's in-progress title/description/category survives an actual
+// reload of the widget's iframe via sessionStorage — but a File object
+// can't be serialized this way, so an attached image only survives the
+// auth-modal interruption (the component stays mounted for that), not a
+// real page reload. Wrapped in try/catch since sessionStorage can throw in
+// private-browsing or storage-partitioned contexts; the draft just isn't
+// recoverable there, no worse than before this existed.
+function readDraft(boardId: string): Draft | null {
+  try {
+    const raw = sessionStorage.getItem(draftKey(boardId));
+    return raw ? (JSON.parse(raw) as Draft) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(boardId: string, draft: Draft) {
+  try {
+    sessionStorage.setItem(draftKey(boardId), JSON.stringify(draft));
+  } catch {
+    // no-op — see readDraft
+  }
+}
+
+function clearDraft(boardId: string) {
+  try {
+    sessionStorage.removeItem(draftKey(boardId));
+  } catch {
+    // no-op — see readDraft
+  }
 }
 
 export default function NewPostForm({
@@ -56,22 +107,47 @@ export default function NewPostForm({
   categories,
   isEmbed = false,
   embedQuery = "",
+  isSignedIn,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
   const defaultCategoryId =
     categories.find((c) => c.isDefault)?.id ?? categories[0]?.id ?? "";
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
   const [categoryId, setCategoryId] = useState(defaultCategoryId);
   const [titleError, setTitleError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useEmbedSignedIn(isEmbed, isSignedIn);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const boardHref = `/${workspaceSlug}/b/${boardSlug}${embedQuery}`;
+
+  // Recover a draft left behind by an actual reload — the auth-modal
+  // interruption never unmounts this component in the first place, so it
+  // doesn't need this; this is specifically for "closed the tab / refreshed
+  // mid-fill" recovery.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only restore
+  useEffect(() => {
+    const draft = readDraft(boardId);
+    if (draft) {
+      setTitle(draft.title);
+      setBody(draft.body);
+      setCategoryId(draft.categoryId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (title || body || (categoryId && categoryId !== defaultCategoryId)) {
+      writeDraft(boardId, { title, body, categoryId });
+    }
+  }, [boardId, title, body, categoryId, defaultCategoryId]);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -100,9 +176,115 @@ export default function NewPostForm({
     }
   }
 
+  // Inside the embed, mutations go through embedFetch to the bearer-
+  // authenticated /api/embed/* routes instead of these Server Actions,
+  // since a Server Action invocation can't carry an Authorization header
+  // (see the implementation plan). Outside the embed this is byte-for-byte
+  // the same createPostAction/uploadPostImageAction flow as before —
+  // nothing about the direct Public Portal path changes.
+  async function doSubmitEmbed() {
+    let imageUrl: string | undefined;
+
+    if (imageFile) {
+      const imageFormData = new FormData();
+      imageFormData.set("image", imageFile);
+      const uploadRes = await embedFetch("/api/embed/posts/upload-image", {
+        method: "POST",
+        body: imageFormData,
+      });
+      if (uploadRes.status === 401) {
+        setSignedIn(false);
+        setAuthOpen(true);
+        return;
+      }
+      if (!uploadRes.ok) {
+        const data = await uploadRes.json().catch(() => null);
+        setImageError(data?.error ?? "Something went wrong.");
+        return;
+      }
+      imageUrl = (await uploadRes.json()).url;
+    }
+
+    const postRes = await embedFetch("/api/embed/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        boardId,
+        workspaceId,
+        title: title.trim(),
+        body: body.trim() || undefined,
+        categoryId: categoryId || undefined,
+        imageUrl,
+      }),
+    });
+
+    if (postRes.status === 401) {
+      setSignedIn(false);
+      setAuthOpen(true);
+      return;
+    }
+    if (!postRes.ok) {
+      const data = await postRes.json().catch(() => null);
+      if (data?.field === "title") {
+        setTitleError(data.error);
+      } else {
+        setGeneralError(data?.error ?? "Something went wrong.");
+      }
+      return;
+    }
+
+    clearDraft(boardId);
+    setSubmitted(true);
+  }
+
+  async function doSubmit() {
+    if (isEmbed) {
+      await doSubmitEmbed();
+      return;
+    }
+
+    let imageUrl: string | undefined;
+
+    if (imageFile) {
+      const imageFormData = new FormData();
+      imageFormData.set("image", imageFile);
+      const uploadResult = await uploadPostImageAction(imageFormData);
+      if (!uploadResult.success) {
+        setImageError(uploadResult.error);
+        return;
+      }
+      imageUrl = uploadResult.data.url;
+    }
+
+    const result = await createPostAction({
+      boardId,
+      workspaceId,
+      title: title.trim(),
+      body: body.trim() || undefined,
+      categoryId: categoryId || undefined,
+      imageUrl,
+    });
+
+    if (!result.success) {
+      if (result.field === "title") {
+        setTitleError(result.error);
+      } else {
+        setGeneralError(result.error);
+      }
+      return;
+    }
+
+    clearDraft(boardId);
+
+    router.push(
+      `/${workspaceSlug}/b/${boardSlug}/p/${result.data.postSlug}${embedQuery}`
+    );
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setTitleError(null);
+    setCategoryError(null);
     setGeneralError(null);
 
     if (title.trim().length < 3) {
@@ -110,42 +292,61 @@ export default function NewPostForm({
       return;
     }
 
-    startTransition(async () => {
-      let imageUrl: string | undefined;
+    if (categories.length > 0 && !categoryId) {
+      setCategoryError("Choose a category.");
+      return;
+    }
 
-      if (imageFile) {
-        const imageFormData = new FormData();
-        imageFormData.set("image", imageFile);
-        const uploadResult = await uploadPostImageAction(imageFormData);
-        if (!uploadResult.success) {
-          setImageError(uploadResult.error);
-          return;
-        }
-        imageUrl = uploadResult.data.url;
-      }
-
-      const result = await createPostAction({
-        boardId,
-        workspaceId,
-        title: title.trim(),
-        body: body.trim() || undefined,
-        categoryId: categoryId || undefined,
-        imageUrl,
-      });
-
-      if (!result.success) {
-        if (result.field === "title") {
-          setTitleError(result.error);
-        } else {
-          setGeneralError(result.error);
-        }
+    // Gate before touching the image upload at all, so a pre-auth attempt
+    // never uploads anything — the resubmit after auth uploads exactly once.
+    if (!signedIn) {
+      if (isEmbed) {
+        setAuthOpen(true);
         return;
       }
+      // Unreachable in practice: the non-embed page redirects signed-out
+      // visitors to /signin before this component ever mounts.
+      return;
+    }
 
-      router.push(
-        `/${workspaceSlug}/b/${boardSlug}/p/${result.data.postSlug}${embedQuery}`
-      );
-    });
+    startTransition(doSubmit);
+  }
+
+  function handleAuthenticated() {
+    setSignedIn(true);
+    startTransition(doSubmit);
+  }
+
+  function handleSubmitAnother() {
+    setSubmitted(false);
+    setTitle("");
+    setBody("");
+    setCategoryId(defaultCategoryId);
+    removeImage();
+  }
+
+  if (submitted) {
+    return (
+      <div className="flex flex-col items-center gap-4 px-8 py-16 text-center">
+        <div className="flex size-12 items-center justify-center rounded-ir-full bg-ir-success/10">
+          <CheckCircleIcon className="size-6 text-ir-success" weight="fill" />
+        </div>
+        <div>
+          <h1 className="text-lg font-semibold text-ir-heading">
+            Feedback submitted
+          </h1>
+          <p className="mt-1 text-sm text-ir-muted">
+            Thanks — your idea is on its way to the team.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button onClick={() => router.push(boardHref)} variant="outline">
+            Back to Feedback
+          </Button>
+          <Button onClick={handleSubmitAnother}>Submit another</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -217,6 +418,7 @@ export default function NewPostForm({
               </span>
             </span>
             <QuillEditor
+              ariaLabel="Feedback description"
               disabled={isPending}
               minHeight={120}
               onChange={(html) => setBody(html)}
@@ -236,10 +438,19 @@ export default function NewPostForm({
               </label>
               <Select
                 disabled={isPending}
-                onValueChange={setCategoryId}
+                onValueChange={(v) => {
+                  setCategoryId(v);
+                  if (categoryError) {
+                    setCategoryError(null);
+                  }
+                }}
                 value={categoryId}
               >
-                <SelectTrigger className="w-full" id="post-category">
+                <SelectTrigger
+                  aria-invalid={!!categoryError}
+                  className="w-full"
+                  id="post-category"
+                >
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -250,6 +461,9 @@ export default function NewPostForm({
                   ))}
                 </SelectContent>
               </Select>
+              {categoryError && (
+                <p className="mt-1 text-xs text-ir-danger">{categoryError}</p>
+              )}
             </div>
           )}
 
@@ -321,6 +535,14 @@ export default function NewPostForm({
           </div>
         </form>
       </div>
+
+      {isEmbed && (
+        <EmbedAuthDialog
+          onAuthenticated={handleAuthenticated}
+          onOpenChange={setAuthOpen}
+          open={authOpen}
+        />
+      )}
     </div>
   );
 }

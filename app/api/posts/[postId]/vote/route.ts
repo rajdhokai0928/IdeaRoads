@@ -9,8 +9,6 @@ import {
   VoteBlockedError,
   VoteNotFoundError,
 } from "@/lib/voting";
-import { dispatchWebhookEvent } from "@/lib/webhooks/dispatch";
-import { WEBHOOK_EVENTS } from "@/lib/webhooks/events";
 
 interface Params {
   params: Promise<{ postId: string }>;
@@ -54,14 +52,6 @@ export async function POST(_req: NextRequest, { params }: Params) {
       description: `Voted on: ${post.title}`,
       metadata: { workspaceId: post.workspaceId },
     });
-
-    // Only dispatch for a genuinely new vote, not an idempotent re-request.
-    if (!existingVote) {
-      dispatchWebhookEvent(post.workspaceId, WEBHOOK_EVENTS.VOTE_CAST, {
-        postId,
-        userId: session.user.id,
-      });
-    }
 
     // Refetch updated vote count
     const updated = await getPost(postId);

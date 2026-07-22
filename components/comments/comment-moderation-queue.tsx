@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { commentPreviewText } from "@/lib/comments/preview";
+import { embedFetch } from "@/lib/embed/fetch";
 import type { CommentApi, CommentData, ReplyData } from "./types";
 
 type PendingComment = (CommentData | ReplyData) & { replies?: ReplyData[] };
@@ -34,7 +35,7 @@ function PendingCommentRow({
   async function handleApprove() {
     setIsApproving(true);
     try {
-      const res = await fetch(`${commentBaseUrl}/${comment.id}/approve`, {
+      const res = await embedFetch(`${commentBaseUrl}/${comment.id}/approve`, {
         method: "PATCH",
       });
       if (res.ok) {
@@ -50,7 +51,7 @@ function PendingCommentRow({
   async function handleConfirmDelete() {
     setIsDeleting(true);
     try {
-      const res = await fetch(`${commentBaseUrl}/${comment.id}`, {
+      const res = await embedFetch(`${commentBaseUrl}/${comment.id}`, {
         method: "DELETE",
       });
       if (res.ok || res.status === 204) {

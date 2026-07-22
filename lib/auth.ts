@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins/admin";
+import { bearer } from "better-auth/plugins/bearer";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { magicLink } from "better-auth/plugins/magic-link";
 import { headers } from "next/headers";
@@ -74,6 +75,28 @@ export const auth = betterAuth({
     fallback: adminBaseUrl(),
   },
   trustedOrigins: TRUSTED_ORIGINS,
+  // The embed widget renders Portal pages inside an iframe on a customer's own
+  // (third-party) site. Browsers treat ANY request made from within that iframe
+  // as cross-site for cookie purposes — relative to the customer's top-level
+  // page, not this app's own origin — regardless of same-origin navigation
+  // happening inside the iframe itself. Better Auth's session cookie defaults
+  // to SameSite=Lax, which browsers refuse to store for such cross-site
+  // requests: confirmed live via Chrome's own network stack, which reports
+  // `blockedReasons: ["SameSiteLax"]` on the Set-Cookie response when signing
+  // in from inside a cross-site embed. That's why in-widget auth silently
+  // never persists a session — every subsequent authenticated action gets
+  // "signed out" again and reopens the sign-in dialog.
+  // SameSite=None (paired with Secure, which the spec requires and which
+  // Better Auth already sets whenever the resolved protocol is https) is the
+  // standard fix for auth that must work inside a third-party iframe — the
+  // same approach embeddable widgets like Intercom/Crisp use. Restricted to
+  // production only: `Secure` cookies are refused outright by browsers over
+  // plain http://, so applying this in local dev would break sign-in
+  // entirely there instead of fixing anything.
+  advanced:
+    env.NODE_ENV === "production"
+      ? { defaultCookieAttributes: { sameSite: "none", secure: true } }
+      : undefined,
   socialProviders: {
     ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? {
@@ -89,6 +112,17 @@ export const auth = betterAuth({
     trustedProviders: ["google", "magic-link", "email-otp"],
   },
   plugins: [
+    // Bearer-token auth is additive: cookies keep working exactly as
+    // before for the Admin Panel and Public Portal. This exists solely
+    // for the embed widget, whose iframe is always cross-site relative
+    // to whatever page embeds it — its session cookie gets
+    // SameSite=Lax-blocked by the browser and never persists (confirmed
+    // live via the Chrome DevTools Protocol; see the implementation
+    // plan). A request with no Authorization header is completely
+    // unaffected by this plugin — see node_modules/better-auth/dist/
+    // plugins/bearer/index.mjs, whose `before` hook only activates when
+    // one is present.
+    bearer(),
     admin({
       impersonationSessionDuration: 3600,
       allowImpersonatingAdmins: false,

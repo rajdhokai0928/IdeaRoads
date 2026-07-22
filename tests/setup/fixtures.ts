@@ -2,21 +2,16 @@ import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 import { user as userTable } from "@/db/schema/auth";
 import { posts } from "@/db/schema/posts";
-import { outboundWebhookEndpoints } from "@/db/schema/webhooks";
-import { generateApiKey } from "@/lib/api-keys/create";
 import { createBoard } from "@/lib/boards/create";
 import { createChangelogEntry } from "@/lib/changelog/create";
 import { publishChangelogEntry } from "@/lib/changelog/publish";
 import { db } from "@/lib/db";
-import { encrypt } from "@/lib/encrypt";
 import { createPost } from "@/lib/posts/queries";
 import { createWorkspace } from "@/lib/workspaces/create";
 
 // Fixture helpers for integration tests. These call the same lib-level
 // functions the app uses (no duplicated business logic) wherever one exists
-// with no Next.js request/session dependency; webhook endpoints have no such
-// helper (only the "use server" action does), so that one is a direct insert
-// using the same encrypt() the action uses.
+// with no Next.js request/session dependency.
 
 export async function createTestUser(overrides?: {
   email?: string;
@@ -92,18 +87,6 @@ export async function createTestPost(input: {
   return post;
 }
 
-export async function createTestApiKey(input: {
-  workspaceId: string;
-  userId: string;
-  name?: string;
-}) {
-  return generateApiKey(
-    input.workspaceId,
-    input.userId,
-    input.name ?? "Test key"
-  );
-}
-
 export async function createTestChangelogEntry(input: {
   workspaceId: string;
   createdBy: string;
@@ -123,24 +106,4 @@ export async function createTestChangelogEntry(input: {
   }
 
   return entry;
-}
-
-export async function createTestWebhookEndpoint(input: {
-  workspaceId: string;
-  url?: string;
-  events: string[];
-  isEnabled?: boolean;
-}) {
-  const rawSecret = `whsec_${createId()}`;
-  const [row] = await db
-    .insert(outboundWebhookEndpoints)
-    .values({
-      workspaceId: input.workspaceId,
-      url: input.url ?? "https://example.test/webhook",
-      encryptedSecret: encrypt(rawSecret),
-      events: input.events,
-      isEnabled: input.isEnabled ?? true,
-    })
-    .returning();
-  return { endpoint: row!, rawSecret };
 }
